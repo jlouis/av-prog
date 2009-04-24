@@ -19,7 +19,10 @@ find seq f = _find f 0 (viewl seq)
 
 instance State (Word, Seq (Word, (Seq Word))) where
 
-    empty = (0, fromList [])
+    empty initializer =
+        let s = fromList initializer
+        in
+          (1, singleton (0, s))
 
     lookupE s arr off =
         let (nidx, env) = s in 
