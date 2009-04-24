@@ -20,7 +20,7 @@ initStore opcodes =
     empty opcodes
 
 initRegs :: State s => s
-initRegs = empty []
+initRegs = empty [0 | x <- [1..8]]
 
 interpret' :: State s => [Word] -> IO (s, s)
 interpret' opcodes = do
