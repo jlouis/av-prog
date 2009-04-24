@@ -54,8 +54,9 @@ instance State (Word, Seq (Word, (Seq Word))) where
     copy s from to = 
         let (nidx, env) = s in 
         do {
-          (idx0, arr0) <- find env (\(x,_) -> x == from) ; 
-          return (nidx, update (fromIntegral to) arr0 env) 
+          (_, arr0) <- find env (\(x,_) -> x == from) ; 
+          (idx1, _) <- find env (\(x,_) -> x == to)   ;
+          return (nidx, update idx1 arr0 env) 
         }
 
     free s arr = 
@@ -63,8 +64,9 @@ instance State (Word, Seq (Word, (Seq Word))) where
         case find env (\(idx,_) -> idx == arr) of
           Nothing -> Nothing
           Just (index, (idx, arr)) -> 
-              let (head, tail)  = Data.Sequence.splitAt index env in
-              let (head' :> _)  = viewr head                      in 
-              Just (nidx, head' >< tail)
+              let (head, tail)  = Data.Sequence.splitAt (index+1) env in
+              case viewr head of
+                EmptyR     -> Just (nidx, tail)
+                head' :> _ -> Just (nidx, head' >< tail)
 
     load s arr = copy s arr 0 
