@@ -21,7 +21,7 @@ instance State (Word, [(Word, Word, Word)]) where
         }
 
 
-    update s arr off val =
+    updateE s arr off val =
         let (nextidx, env) = s in
         Just (nextidx, ((arr, off, val) : filter (\(a,b,_) -> a /= arr || b /= off) env))
 

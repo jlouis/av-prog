@@ -20,7 +20,7 @@ initStore opcodes =
     let l = length opcodes
         copy store idx [] = store
         copy store idx (opcode : rest) =
-            case update store 0 idx opcode of
+            case updateE store 0 idx opcode of
               Nothing -> error "We have full control of indexes"
               Just newstore -> copy newstore (idx+1) rest
 
@@ -60,7 +60,7 @@ lookupR :: State s => s -> Word -> Maybe Word
 lookupR rs idx = lookupE rs 0 idx
 
 updateR :: State s => s -> Word -> Word -> Maybe s
-updateR rs idx val = update rs 0 idx val
+updateR rs idx val = updateE rs 0 idx val
 
 interpOpBin :: State s =>
                s -> s -> Word -> Word -> Word -> Word
@@ -98,7 +98,7 @@ interpOp s rs op_ptr opc =
              return $ do ptr'            <- lookupR   rs ptr
                          offset'         <- lookupR   rs offset
                          val'            <- lookupR   rs value
-                         s'              <- update    s  offset' ptr' val'
+                         s'              <- updateE   s  offset' ptr' val'
                          return (s', rs, op_ptr+1)
          Move { src=src, reg=reg, guard=guard } ->
              return $ do guard'          <- lookupR   rs guard

@@ -11,7 +11,7 @@ class State s where
     lookupE  :: s -> Word -> Word -> Maybe Word
 
     {- update S arr off val -> return S, st. index S arr off == val -}
-    update   :: s -> Word -> Word -> Word-> Maybe s
+    updateE  :: s -> Word -> Word -> Word-> Maybe s
 
     {- allocate S cap, return id != 0 to Array with Capacity cap AND S where id is taken (new array contains zero) -}
     allocate :: s -> Word -> Maybe (s, Word)

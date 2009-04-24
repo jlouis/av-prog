@@ -20,7 +20,7 @@ find seq f = _find f 0 (viewl seq)
 instance State (Word, Seq (Word, (Seq Word))) where
 
     empty = (1, fromList [])
-{-
+
     lookupE s arr off =
         let (next, env) = s in 
         case find env (\x -> fst x == arr) of
@@ -29,15 +29,17 @@ instance State (Word, Seq (Word, (Seq Word))) where
               let (idx, arr') = index env (fromIntegral index') in
               Just (index arr' (fromIntegral off))
 
-    update s arr off val = 
+    updateE s arr off val = 
         let (next, env) = s in 
         case find env (\x -> fst x == arr) of 
           Nothing -> Nothing
           Just index' -> 
-              
+              let (idx, arr') = index env (fromIntegral index') in 
+              let arr'' = update (fromIntegral off) val arr'  in 
+              let env'  = update index' (idx, arr'') env in 
+              Just (next, env')
                   
-        
-
+{-        
 
     update s arr off val = 
         let (nextidx, env) = s in 
