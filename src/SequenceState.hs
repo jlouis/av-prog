@@ -24,7 +24,7 @@ instance State (Word, Seq (Word, (Seq Word))) where
     lookupE s arr off =
         let (nidx, env) = s in 
         do {
-          (index', (idx, arr')) <- find env (\x -> fst x == arr) ; 
+          (index', (idx, arr')) <- find env (\(x,_) -> x == arr) ; 
           return (index arr' (fromIntegral off))
         }
 
@@ -46,15 +46,15 @@ instance State (Word, Seq (Word, (Seq Word))) where
     swap s arr0 arr1 = 
         let (nidx, env) = s in 
         do {
-          (idx0, arr0') <- find env (\x -> fst x == arr0) ; 
-          (idx1, arr1') <- find env (\x -> fst x == arr1) ; 
+          (idx0, arr0') <- find env (\(x,_) -> x == arr0) ; 
+          (idx1, arr1') <- find env (\(x,_) -> x == arr1) ; 
           return (nidx, update idx1 arr0' (update idx0 arr1' env))
         }
 
     copy s from to = 
         let (nidx, env) = s in 
         do {
-          (idx0, arr0) <- find env (\x -> fst x == from) ; 
+          (idx0, arr0) <- find env (\(x,_) -> x == from) ; 
           return (nidx, update (fromIntegral to) arr0 env) 
         }
 
