@@ -11,7 +11,8 @@ c_MAX_SIZE = 2**32-1
 
 instance State (Word, [(Word, Word, Word)]) where
 
-    empty = (0, [])
+    -- Wrong!
+    empty initializer = (0, [])
 
     lookupE s arr off =
         let (nextidx, env) = s in

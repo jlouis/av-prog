@@ -5,7 +5,7 @@ import Data.Word
 
 class State s where
     {- init () generate new S -}
-    empty     :: s
+    empty     :: [Word] -> s
 
     {- index S arr off, return val, the value stored in Array arr, Offset off -}
     lookupE  :: s -> Word -> Word -> Maybe Word

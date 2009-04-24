@@ -17,21 +17,10 @@ type WordState = (Word, Seq (Word, Seq Word))
 
 initStore :: State s => [Word] -> s
 initStore opcodes =
-    let l = length opcodes
-        copy store idx [] = store
-        copy store idx (opcode : rest) =
-            case updateE store 0 idx opcode of
-              Nothing -> error "We have full control of indexes"
-              Just newstore -> copy newstore (idx+1) rest
-
-    in case allocate empty (fromIntegral l) of
-         Nothing -> error "Can't happen (initStore)"
-         Just (ns, 0) -> copy ns 0 opcodes
-         Just (ns, k) -> error $ "Can't happen as well (initStore): " ++ (show k)
-
+    empty opcodes
 
 initRegs :: State s => s
-initRegs = empty
+initRegs = empty []
 
 interpret' :: State s => [Word] -> IO (s, s)
 interpret' opcodes = do
