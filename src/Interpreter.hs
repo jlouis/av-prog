@@ -5,13 +5,15 @@ where
 
 import State
 import SimpleState
+import SequenceState
 import Decode
 import Data.Bits
 import Data.Word
+import Data.Sequence (Seq)
 import Char
 
 -- Change this to use the new Sequence State system
-type WordState = (Word, [(Word, Word, Word)])
+type WordState = (Word, Seq (Seq Word))
 
 initStore :: State s => [Word] -> s
 initStore opcodes =
