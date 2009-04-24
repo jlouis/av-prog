@@ -1,11 +1,15 @@
 module SimpleState (State (..)) where 
+
 import State
 import List
+
+import Data.Word
+
 
 c_MAX_SIZE = 2**32-1
 
 
-instance State (Int, [(Int, Int, Int)]) where
+instance State (Word, [(Word, Word, Word)]) where
 
     empty = (0, [])
 
