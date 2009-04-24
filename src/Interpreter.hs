@@ -13,7 +13,7 @@ import Data.Sequence (Seq)
 import Char
 
 -- Change this to use the new Sequence State system
-type WordState = (Word, Seq (Word, Seq Word))
+type WordState = (Word, Seq (Maybe (Seq Word)))
 
 initStore :: State s => [Word] -> s
 initStore opcodes =
@@ -67,6 +67,7 @@ interpOp s rs op_ptr opc =
     do instr <- case decode opc of
                   Just instr -> return instr
                   Nothing -> error "Opcode decode failure"
+       putStrLn $ show instr
        case instr of
          Arr_Idx { ptr=ptr, offset=offset, reg=reg } ->
              return $ do ptr'            <- lookupR rs ptr
