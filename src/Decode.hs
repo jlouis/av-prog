@@ -43,6 +43,7 @@ data Instruction a = Arr_Idx { offset :: a,
                    | Input { reg :: a }
                    | Load { from :: a, jumppoint :: a }
                    | LoadImm { value :: a, reg :: a }
+  deriving Show
 
 decode :: (Bits a, Ord a) => a -> Maybe (Instruction a)
 decode w =
