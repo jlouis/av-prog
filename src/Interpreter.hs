@@ -10,8 +10,10 @@ import Data.Bits
 import Data.Word
 import Char
 
+-- Change this to use the new Sequence State system
 type WordState = (Word, [(Word, Word, Word)])
 
+initStore :: State s => [Word] -> s
 initStore opcodes =
     let l = length opcodes
         copy store idx [] = store
@@ -39,6 +41,7 @@ interpret :: [Word] -> IO ()
 interpret opcodes = do (s, rs) <- (interpret' opcodes :: IO (WordState, WordState))
                        interpOps s rs 0
 
+c_BIT_MASK :: Word
 c_BIT_MASK = 0xFFFFFFFF
 
 interpOps :: State s => s -> s -> Word -> IO ()
@@ -51,9 +54,16 @@ interpOps s rs op_ptr =
        Just (s, rs, op_ptr) -> interpOps s rs op_ptr
        Nothing -> return ()
 
+lookupR :: State s => s -> Word -> Maybe Word
 lookupR rs idx = index rs 0 idx
+
+updateR :: State s => s -> Word -> Word -> Maybe s
 updateR rs idx val = update rs 0 idx val
 
+interpOpBin :: State s =>
+               s -> s -> Word -> Word -> Word -> Word
+                 -> (Word -> Word -> Word)
+                 -> Maybe (s, s, Word)
 interpOpBin s rs op_ptr op1 op2 reg f = do
   op1'    <- lookupR rs op1
   op2'    <- lookupR rs op2

@@ -72,4 +72,3 @@ decode_loadi w = LoadImm { value = value, reg = reg}
     where
       value = shiftR (shiftL w 7) 7
       reg   = shiftR (shiftL w 4) (32 - 7)
-
