@@ -1,4 +1,4 @@
-module SequenceState (State (..)) where 
+module SequenceState (State (..)) where
 
 import State
 
@@ -25,51 +25,37 @@ instance State (Word, Seq (Word, (Seq Word))) where
           (1, singleton (0, s))
 
     lookupE s arr off =
-        let (nidx, env) = s in 
-        do {
-          (index', (idx, arr')) <- find env (\(x,_) -> x == arr) ; 
-          return (index arr' (fromIntegral off))
-        }
+        let (nidx, env) = s in
+        do (index', (idx, arr')) <- find env (\(x,_) -> x == arr)
+           return (index arr' (fromIntegral off))
 
-    updateE s arr off val = 
-        let (nidx, env) = s in 
-        case find env (\x -> fst x == arr) of 
-          Nothing -> Nothing
-          Just (index', (idx, arr')) -> 
-              let arr'' = update (fromIntegral off) val arr'  in 
-              let env'  = update index' (idx, arr'') env in 
-              Just (nidx, env')
+    updateE (nidx, env) arr off val =
+        do (index', (idx, arr')) <- find env (\x -> fst x == arr)
+           arr'' <- return $ update (fromIntegral off) val arr'
+           env' <- return $ update index' (idx, arr'') env
+           return $ (nidx, env')
 
-    allocate s cap = 
-        let (nidx, env) = s in 
-        let seq = fromList [ 0 | x <- [0..cap] ] in
-        let env' = (nidx, seq) <| env in
-        Just ((nidx+1, env'), nidx)
+    allocate (nidx, env) cap =
+        let seq = fromList [ 0 | x <- [0..cap] ]
+            env' = (nidx, seq) <| env
+        in
+          Just ((nidx+1, env'), nidx)
 
-    swap s arr0 arr1 = 
-        let (nidx, env) = s in 
-        do {
-          (idx0, arr0') <- find env (\(x,_) -> x == arr0) ; 
-          (idx1, arr1') <- find env (\(x,_) -> x == arr1) ; 
-          return (nidx, update idx1 arr0' (update idx0 arr1' env))
-        }
+    swap (nidx, env) arr0 arr1 =
+        do (idx0, arr0') <- find env (\(x,_) -> x == arr0) ;
+           (idx1, arr1') <- find env (\(x,_) -> x == arr1) ;
+           return (nidx, update idx1 arr0' (update idx0 arr1' env))
 
-    copy s from to = 
-        let (nidx, env) = s in 
-        do {
-          (_, arr0) <- find env (\(x,_) -> x == from) ; 
-          (idx1, _) <- find env (\(x,_) -> x == to)   ;
-          return (nidx, update idx1 arr0 env) 
-        }
+    copy (nidx, env) from to =
+        do (_, arr0) <- find env (\(x,_) -> x == from) ;
+           (idx1, _) <- find env (\(x,_) -> x == to)   ;
+           return (nidx, update idx1 arr0 env)
 
-    free s arr = 
-        let (nidx, env) = s in 
-        case find env (\(idx,_) -> idx == arr) of
-          Nothing -> Nothing
-          Just (index, (idx, arr)) -> 
-              let (head, tail)  = Data.Sequence.splitAt (index+1) env in
-              case viewr head of
-                EmptyR     -> Just (nidx, tail)
-                head' :> _ -> Just (nidx, head' >< tail)
+    free (nidx, env) arr =
+        do (index, (idx, arr)) <- find env (\(idx, _) -> idx == arr)
+           (head, tail) <- return $ Data.Sequence.splitAt (index+1) env
+           case viewr head of
+             EmptyR     -> return (nidx, tail)
+             head' :> _ -> return $ (nidx, head' >< tail)
 
-    load s arr = copy s arr 0 
+    load s arr = copy s arr 0
