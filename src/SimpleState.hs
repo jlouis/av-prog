@@ -13,7 +13,7 @@ instance State (Word, [(Word, Word, Word)]) where
 
     empty = (0, [])
 
-    index s arr off =
+    lookupE s arr off =
         let (nextidx, env) = s in
         do {
           (_,_,val) <- (List.find (\(a,b,c) -> a == arr && b == off ) env) ;

@@ -46,7 +46,7 @@ c_BIT_MASK = 0xFFFFFFFF
 
 interpOps :: State s => s -> s -> Word -> IO ()
 interpOps s rs op_ptr =
-  do opcode <- case index s 0 op_ptr of
+  do opcode <- case lookupE s 0 op_ptr of
                  Just opc -> return opc
                  Nothing -> error "Could not lookup opcode"
      s <- interpOp s rs op_ptr opcode -- Don't use fromIntegral here
@@ -55,7 +55,7 @@ interpOps s rs op_ptr =
        Nothing -> return ()
 
 lookupR :: State s => s -> Word -> Maybe Word
-lookupR rs idx = index rs 0 idx
+lookupR rs idx = lookupE rs 0 idx
 
 updateR :: State s => s -> Word -> Word -> Maybe s
 updateR rs idx val = update rs 0 idx val
@@ -80,7 +80,7 @@ interpOp s rs op_ptr opc =
          Arr_Idx { ptr=ptr, offset=offset, reg=reg } ->
              return $ do ptr'            <- lookupR rs ptr
                          offset'         <- lookupR rs offset
-                         val'            <- index   s  ptr' offset'
+                         val'            <- lookupE s  ptr' offset'
                          rs'             <- updateR rs reg val'
                          return (s, rs', op_ptr+1)
          Output { value=value } ->

@@ -8,7 +8,7 @@ class State s where
     empty     :: s
 
     {- index S arr off, return val, the value stored in Array arr, Offset off -}
-    index    :: s -> Word -> Word -> Maybe Word
+    lookupE  :: s -> Word -> Word -> Maybe Word
 
     {- update S arr off val -> return S, st. index S arr off == val -}
     update   :: s -> Word -> Word -> Word-> Maybe s
