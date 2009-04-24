@@ -10,6 +10,8 @@ import Data.Bits
 import Data.Word
 import Char
 
+type WordState = (Word, [(Word, Word, Word)])
+
 initStore opcodes =
     let l = length opcodes
         copy store idx [] = store
@@ -34,9 +36,8 @@ interpret' opcodes = do
   return (initial_store, initial_regs)
 
 interpret :: [Word] -> IO ()
-interpret opcodes = do (s, rs) <- interpret' opcodes
+interpret opcodes = do (s, rs) <- (interpret' opcodes :: IO (WordState, WordState))
                        interpOps s rs 0
-
 
 c_BIT_MASK = 0xFFFFFFFF
 
@@ -74,9 +75,13 @@ interpOp s rs op_ptr opc =
                          return (s, rs', op_ptr+1)
          Output { value=value } ->
              case lookupR rs value of
-               Just v -> do putStr [chr (fromEnum v)]
+               Just v -> do putStr [chr (fromIntegral v)]
                             return (Just (s, rs, op_ptr+1))
                Nothing -> error "Lookup failure"
+         Input { reg=reg } ->
+             do c <- getChar
+                return $ do rs' <- updateR rs reg $ (fromIntegral . ord) c
+                            return (s, rs', op_ptr+1)
          Arr_Update { ptr=ptr, offset=offset, value=value } ->
              return $ do ptr'            <- lookupR   rs ptr
                          offset'         <- lookupR   rs offset
