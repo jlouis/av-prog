@@ -1,0 +1,45 @@
+%% This file is my default inclusion of packages I need when writing
+%% things in LaTeX. The list here is pretty comprehensive, but sets up
+%% the main stuff I use in all projects I start on.
+
+%% This part sets up the font basics. I like mathpazo a lot. It sets
+%% up Palatino as a clone with pazo math. It is much more beautiful
+%% than many other fonts you can choose from. I also like some of the
+%% mathdesign variants, in particular [utopia,osf]{mathdesign} with no
+%% linespread. We could make it a setting here.
+%%
+%% Also, add microtype. We can't really live without it.
+\usepackage{microtype}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+%\usepackage[osf]{mathpazo}
+%\linespread{1.05}
+%\usepackage[sc,osf,utopia]{mathdesign}
+
+%% AMS gives us the basic math-support
+\usepackage{amsmath}
+
+%% AMS Theorem support. We set up a good list of theorems and make
+%% sure that they are numbered appropriately in the order of main
+%% theorems. I hate when a document contains too many counters so this
+%% keeps the number of live counters down to a minimum.
+\usepackage{amsthm}
+\theoremstyle{plain}
+\newtheorem{axm}{Axiom}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem*{cor}{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{conj}[thm]{Conjecture}
+\newtheorem{exmp}[thm]{Example}
+\theoremstyle{remark}
+\newtheorem*{rem}{Remark}
+\newtheorem*{note}{Note}
+\newtheorem{case}{Case}
+
+
+%% Hyperref should be last
+\usepackage{hyperref}

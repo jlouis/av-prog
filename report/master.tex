@@ -1,0 +1,33 @@
+\documentclass[a4paper, oneside, 10pt, draft]{memoir}
+\chapterstyle{culver}
+\usepackage{fixme}
+\usepackage[osf,sc]{mathpazo}
+\linespread{1.05}
+%\usepackage[utopia]{mathdesign}
+\input{preamble_memoir.tex}
+
+\usepackage{semantic}
+\author{Jesper Louis
+  Andersen\\jesper.louis.andersen@gmail.com\\140280-2029}
+\title{PIRC - Exam}
+\date{\today}
+
+\renewcommand*{\titleM}{\begingroup% Misericords, T&H p 153
+  \drop = 0.08\textheight
+  \centering
+  {\Huge\bfseries CORRECT ME!}\\[\baselineskip]
+  {\scshape And me! And authors!}\\[\baselineskip]
+  {\scshape by}\\[\baselineskip]
+  {\large\scshape Jesper Louis Andersen\\jesper.louis.andersen@gmail.com}\par
+  \endgroup}
+
+\bibliographystyle{plain}
+\begin{document}
+\titleM
+
+\input{introduction}
+%\input{tooling}
+%\input{janus-syntax}
+%\input{syntax}
+\bibliography{biblio}
+\end{document}

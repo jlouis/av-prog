@@ -1,0 +1,22 @@
+\input{packages}
+
+%% Copy this down to 'mytitle' or similar in the document at hand
+\newlength{\drop}
+\newcommand*{\titleM}{\begingroup% Misericords, T&H p 153
+  \drop = 0.08\textheight
+  \centering
+  \vspace*{\drop}
+  {\Huge\bfseries Conundrums}\\[\baselineskip]
+  {\scshape puzzles for the mind}\\[\baselineskip]
+  {\scshape by}\\[\baselineskip]
+  {\large\scshape the author}\par
+  \vfill
+  {\plogo}\\[0.5\baselineskip]
+  {\scshape the publisher}\par
+  \vspace*{2\drop}
+  \endgroup}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
