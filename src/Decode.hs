@@ -18,35 +18,35 @@ standard_operator_positions = (6, 3, 0)
 find_opcode :: Bits a => a -> a
 find_opcode w = shiftR w opcode_pos
 
-find_regs :: Bits a => a -> (Int, Int, Int)
+find_regs :: Bits a => a -> (a, a, a)
 find_regs w = (regA, regB, regC)
     where
       regC = w .&. 7
       regB = (shiftR w 3) .&. 7
       regA = (shiftR w 6) .&. 7
 
-data Instruction = Arr_Idx { offset :: Int,
-                             ptr :: Int,
-                             reg :: Int }
-                 | Arr_Update { value :: Int,
-                                ptr :: Int,
-                                offset :: Int }
-                 | Move { reg :: Int,
-                          src :: Int,
-                          guard ::Int }
-                 | Add  { reg :: Int, op1 :: Int, op2 :: Int }
-                 | Mul  { reg :: Int, op1 :: Int, op2 :: Int }
-                 | Div  { reg :: Int, op1 :: Int, op2 :: Int } -- op1 / op2
-                 | Nand { reg :: Int, b :: Int, c :: Int }
+data Instruction a = Arr_Idx { offset :: a,
+                             ptr :: a,
+                             reg :: a }
+                 | Arr_Update { value :: a,
+                                ptr :: a,
+                                offset :: a }
+                 | Move { reg :: a,
+                          src :: a,
+                          guard ::a }
+                 | Add  { reg :: a, op1 :: a, op2 :: a }
+                 | Mul  { reg :: a, op1 :: a, op2 :: a }
+                 | Div  { reg :: a, op1 :: a, op2 :: a } -- op1 / op2
+                 | Nand { reg :: a, b :: a, c :: a }
                  | Halt
-                 | Malloc { size :: Int, reg :: Int }
-                 | Free { reg :: Int }
-                 | Output { value :: Int }
-                 | Input { reg :: Int }
-                 | Load { from :: Int, jumppoint :: Int }
-                 | LoadImm { value :: Int, reg :: Int }
+                 | Malloc { size :: a, reg :: a }
+                 | Free { reg :: a }
+                 | Output { value :: a }
+                 | Input { reg :: a }
+                 | Load { from :: a, jumppoint :: a }
+                 | LoadImm { value :: a, reg :: a }
 
-decode :: Bits a => a -> Maybe Instruction
+decode :: Bits a => a -> Maybe (Instruction a)
 decode w =
     case find_opcode w of
       -- Standard operators
@@ -68,6 +68,7 @@ decode w =
       13 -> return $ decode_loadi w
       _ -> Nothing
 
+decode_conditional_move :: Bits a => a -> (Instruction a)
 decode_conditional_move w =
     let (regA, regB, regC) = find_regs w
     in
@@ -130,9 +131,8 @@ decode_load w =
     in
       Load { from = regB, jumppoint = regC }
 
-decode_loadi :: Bits a => a -> Instruction
-decode_loadi i = LoadImm { value = value, reg = reg}
+decode_loadi w = LoadImm { value = value, reg = reg}
     where
-      value = shiftR (shiftL i 7) 7
-      reg   = shiftR (shiftL i 4) (32 - 7)
+      value = shiftR (shiftL w 7) 7
+      reg   = shiftR (shiftL w 4) (32 - 7)
 
