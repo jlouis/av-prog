@@ -26,7 +26,11 @@ instance State (Word, Seq (Word, (Seq Word))) where
 
     lookupE (nidx, env) arr off =
         do (index', (idx, arr')) <- find env (\(x,_) -> x == arr)
-           return (index arr' (fromIntegral off))
+           if (fromIntegral off) >= Data.Sequence.length arr' then 
+               error ("lookupE: Index out of bounds: "++
+                      (show arr)++","++(show off)++" - length "++
+                      (show (Data.Sequence.length arr'))) else 
+               return (index arr' (fromIntegral off))
 
     updateE (nidx, env) arr off val =
         do (index', (idx, arr')) <- find env (\x -> fst x == arr)
