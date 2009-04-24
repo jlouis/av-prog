@@ -1,7 +1,6 @@
 module SequenceState (State (..)) where 
 
 import State
-import List
 
 import Data.Word
 import Data.Sequence
@@ -10,18 +9,35 @@ import Data.Sequence
 c_MAX_SIZE = 2**32-1
 
 
-instance State (Word, Seq (Seq Word)) where
+_find f n EmptyL = Nothing
+_find f n (x :< xs) =
+    if f x then Just n
+    else _find f (n+1) (viewl xs)
 
-    empty = (1, fromList [fromList []])
+find seq f = _find f 0 (viewl seq)
 
-    {-
-    index s arr off = 
-        let (nextidx, env) = s in 
-        do {
-          (_,_,val) <- (List.find (\(a,b,c) -> a == arr && b == off ) env) ; 
-                       return val 
-        } 
+
+instance State (Word, Seq (Word, (Seq Word))) where
+
+    empty = (1, fromList [])
+{-
+    lookupE s arr off =
+        let (next, env) = s in 
+        case find env (\x -> fst x == arr) of
+          Nothing -> Nothing
+          Just index' -> 
+              let (idx, arr') = index env (fromIntegral index') in
+              Just (index arr' (fromIntegral off))
+
+    update s arr off val = 
+        let (next, env) = s in 
+        case find env (\x -> fst x == arr) of 
+          Nothing -> Nothing
+          Just index' -> 
+              
+                  
         
+
 
     update s arr off val = 
         let (nextidx, env) = s in 
