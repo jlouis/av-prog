@@ -1,11 +1,15 @@
 module UmixVM ()
 where
 
-foo :: String
-foo = "wheee"
+import Interpreter
+
+import Data.Word
+
+
+foo :: [ Word ]
+foo =  [ 0x70000000 ]
 
 
 main :: IO ()
 main = do
-  f <- return foo
-  putStrLn f
+  putStr "good"
