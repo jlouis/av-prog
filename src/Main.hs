@@ -2,6 +2,8 @@ module Main (main)
 where
 
 import qualified UmixVM as UVM
+import qualified Interpreter
+
 import System ( getArgs )
 
 main :: IO ()
@@ -10,6 +12,5 @@ main = do
   prog <- return $ head args
   contents <- readFile prog
   opcodes <- return $ UVM.chop_opcodes contents
-  putStrLn $ show $ length opcodes
-  putStrLn $ show $ (length opcodes) * 4
+  Interpreter.interpret opcodes
 
