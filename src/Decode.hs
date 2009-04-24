@@ -1,7 +1,4 @@
 -- Decode Umix instructions
-
-
-
 module Decode (decode,
                Instruction(..))
 
