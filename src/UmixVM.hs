@@ -1,3 +1,6 @@
+module UmixVM ()
+where
+
 foo :: String
 foo = "wheee"
 
