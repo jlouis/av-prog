@@ -24,8 +24,7 @@ instance State (Word, Seq (Word, (Seq Word))) where
         in
           (1, singleton (0, s))
 
-    lookupE s arr off =
-        let (nidx, env) = s in
+    lookupE (nidx, env) arr off =
         do (index', (idx, arr')) <- find env (\(x,_) -> x == arr)
            return (index arr' (fromIntegral off))
 
