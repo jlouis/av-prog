@@ -2,8 +2,11 @@ module Main (main)
 where
 
 import qualified UmixVM as UVM
+import System ( getArgs )
 
 main :: IO ()
 main = do
-  f <- return UVM.foo
-  putStrLn f
+  args <- getArgs
+  prog <- return $ head args
+  contents <- readFile prog
+  putStrLn $ show $ length contents
