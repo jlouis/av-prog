@@ -1,5 +1,12 @@
 -- Decode Umix instructions
 
+
+
+module Decode (decode,
+               Instruction(..))
+
+where
+
 import Data.Bits
 
 opcode_pos :: Int
@@ -59,12 +66,12 @@ decode w =
       12 -> return $ decode_load w
       -- Special operators
       13 -> return $ decode_loadi w
-      _ -> fail
+      _ -> Nothing
 
 decode_conditional_move w =
     let (regA, regB, regC) = find_regs w
     in
-      Move { reg = regA, guard = regC, value = regB}
+      Move { reg = regA, guard = regC, src = regB}
 
 decode_array_index w =
     let (regA, regB, regC) = find_regs w
@@ -116,7 +123,7 @@ decode_output w =
 decode_input w =
     let (regA, regB, regC) = find_regs w
     in
-      Input { value = regC }
+      Input { reg = regC }
 
 decode_load w =
     let (regA, regB, regC) = find_regs w
