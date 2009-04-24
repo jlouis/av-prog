@@ -43,23 +43,23 @@ decode :: Bits a => a -> Maybe Instruction
 decode w =
     case find_opcode w of
       -- Standard operators
-      0 -> decode_conditional_move w
-      1 -> decode_array_index w
-      2 -> decode_array_update w
-      3 -> decode_add w
-      4 -> decode_mul w
-      5 -> decode_div w
-      6 -> decode_nand w
+      0 -> return $ decode_conditional_move w
+      1 -> return $ decode_array_index w
+      2 -> return $ decode_array_update w
+      3 -> return $ decode_add w
+      4 -> return $ decode_mul w
+      5 -> return $ decode_div w
+      6 -> return $ decode_nand w
       -- Other operators
-      7 -> decode_halt w
-      8 -> decode_malloc w
-      9 -> decode_free w
-      10 -> decode_output w
-      11 -> decode_input w
-      12 -> decode_load w
+      7 -> return $ decode_halt w
+      8 -> return $ decode_malloc w
+      9 -> return $ decode_free w
+      10 -> return $ decode_output w
+      11 -> return $ decode_input w
+      12 -> return $ decode_load w
       -- Special operators
-      13 -> decode_loadi w
-      _ -> Nothing
+      13 -> return $ decode_loadi w
+      _ -> fail
 
 decode_conditional_move w =
     let (regA, regB, regC) = find_regs w
@@ -123,8 +123,8 @@ decode_load w =
     in
       Load { from = regB, jumppoint = regC }
 
-decode_loadi :: Bits a => a -> Maybe Instruction
-decode_loadi i = Just $ LoadImm { value = value, reg = reg}
+decode_loadi :: Bits a => a -> Instruction
+decode_loadi i = LoadImm { value = value, reg = reg}
     where
       value = shiftR (shiftL i 7) 7
       reg   = shiftR (shiftL i 4) (32 - 7)
