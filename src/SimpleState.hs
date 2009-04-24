@@ -7,7 +7,7 @@ c_MAX_SIZE = 2**32-1
 
 instance State (Int, [(Int, Int, Int)]) where
 
-    empty = (1, [])
+    empty = (0, [])
 
     index s arr off = 
         let (nextidx, env) = s in 
