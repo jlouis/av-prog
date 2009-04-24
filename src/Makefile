@@ -3,7 +3,7 @@
 all: build
 
 build:
-	ghc -XFlexibleInstances --make *.hs
+	ghc -XFlexibleInstances --make *.hs -o uvm
 
 clean:
-	rm *.o *.hi UmixVM
+	rm *.o *.hi uvm

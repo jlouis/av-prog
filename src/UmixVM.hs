@@ -1,11 +1,6 @@
-module UmixVM ()
+module UmixVM (foo)
 where
 
 foo :: String
 foo = "wheee"
 
-
-main :: IO ()
-main = do
-  f <- return foo
-  putStrLn f
