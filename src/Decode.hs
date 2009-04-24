@@ -46,27 +46,31 @@ data Instruction a = Arr_Idx { offset :: a,
                    | Load { from :: a, jumppoint :: a }
                    | LoadImm { value :: a, reg :: a }
 
-decode :: Bits a => a -> Maybe (Instruction a)
-decode w =
+decode :: (Bits a, Ord a) => a -> Maybe (Instruction a)
+decode w | w < 0 || w > 13 = Nothing
+            | otherwise       = return $ decode_op w
+
+decode_op :: Bits a => a -> Instruction a
+decode_op w =
     case find_opcode w of
       -- Standard operators
-      0 -> return $ decode_conditional_move w
-      1 -> return $ decode_array_index w
-      2 -> return $ decode_array_update w
-      3 -> return $ decode_add w
-      4 -> return $ decode_mul w
-      5 -> return $ decode_div w
-      6 -> return $ decode_nand w
+      0 -> decode_conditional_move w
+      1 -> decode_array_index w
+      2 -> decode_array_update w
+      3 -> decode_add w
+      4 -> decode_mul w
+      5 -> decode_div w
+      6 -> decode_nand w
       -- Other operators
-      7 -> return $ decode_halt w
-      8 -> return $ decode_malloc w
-      9 -> return $ decode_free w
-      10 -> return $ decode_output w
-      11 -> return $ decode_input w
-      12 -> return $ decode_load w
+      7 -> decode_halt w
+      8 -> decode_malloc w
+      9 -> decode_free w
+      10 -> decode_output w
+      11 -> decode_input w
+      12 -> decode_load w
       -- Special operators
-      13 -> return $ decode_loadi w
-      _ -> Nothing
+      13 -> decode_loadi w
+
 
 decode_conditional_move :: Bits a => a -> (Instruction a)
 decode_conditional_move w =
