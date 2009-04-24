@@ -22,6 +22,7 @@ find_regs w = (regA, regB, regC)
       regB = (shiftR w 3) .&. 7
       regA = (shiftR w 6) .&. 7
 
+
 data Instruction a = Arr_Idx { offset :: a,
                                ptr :: a,
                                reg :: a }
