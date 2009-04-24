@@ -9,4 +9,7 @@ main = do
   args <- getArgs
   prog <- return $ head args
   contents <- readFile prog
-  putStrLn $ show $ length contents
+  opcodes <- return $ UVM.chop_opcodes contents
+  putStrLn $ show $ length opcodes
+  putStrLn $ show $ (length opcodes) * 4
+
