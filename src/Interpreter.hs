@@ -57,7 +57,7 @@ interp s rs op_ptr =
          Arr_Idx { ptr=ptr, offset=offset, reg=reg } ->
              do ptr'            <- R.getReg rs ptr
                 offset'         <- R.getReg rs offset
-                val'            <- case lookupE s  ptr' offset' of
+                val'            <- case lookupE s ptr' offset' of
                                      Just v -> return v
                                      Nothing -> error "Array out of bounds"
                 R.writeReg rs reg val'
