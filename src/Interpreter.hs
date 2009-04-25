@@ -33,9 +33,6 @@ interpret :: [Word32] -> IO ()
 interpret opcodes = do (s, rs) <- (interpret' opcodes :: IO (WordState, R.Reg))
                        interpOps s rs 0
 
-c_BIT_MASK :: Word32
-c_BIT_MASK = 0xFFFFFFFF
-
 interpOps :: State s => s -> R.Reg -> Word32 -> IO ()
 interpOps s rs op_ptr =
   do opcode <- case lookupE s 0 op_ptr of
@@ -62,9 +59,7 @@ interpOp s rs op_ptr opc =
     do instr <- case decode opc of
                   Just instr -> return instr
                   Nothing -> error "Opcode decode failure"
-       putStrLn $ let i = show instr
-                      orig = showHex opc ""
-                  in i ++ "\t\t" ++ orig
+--       putStrLn $ (show instr)  ++ "\t\t" ++ ( showHex opc "")
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard
@@ -109,6 +104,7 @@ interpOp s rs op_ptr opc =
                 return $ Just (s', rs, op_ptr+1)
          Output { value=value } ->
              do v <- R.getReg rs value
+                putChar (chr (fromIntegral v))
                 return $ Just (s, rs, op_ptr+1)
          Input { reg=reg } ->
              do c <- getChar
