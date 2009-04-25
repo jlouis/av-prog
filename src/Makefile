@@ -10,6 +10,9 @@ build:
 run: build
 	./uvm ${UMFILE}
 
+prof-sandmark: build
+	./uvm +RTS -p --RTS ${SANDMARK}
+
 sandmark: build
 	./uvm ${SANDMARK}
 
