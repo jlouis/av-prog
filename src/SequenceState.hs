@@ -79,8 +79,9 @@ instance State (Word32, Seq (Maybe (Seq Word32))) where
 
     allocate (n, s) cap =
         let seq = Just $ fromList (Prelude.take (fromIntegral cap) $ repeat 0)
+            news = s |> seq
         in
-           Just ((n+1, s |> seq), n)
+          if Data.Sequence.length news == (fromIntegral (n+1)) then Just ((n+1, s |> seq), n) else error "FAIL"
 
     swap (n, s) a1 a2 =
         let a1' = fromIntegral a1
