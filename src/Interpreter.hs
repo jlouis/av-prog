@@ -13,8 +13,8 @@ import Data.Sequence (Seq)
 import Char
 
 -- Change this to use the new Sequence State system
---type WordState = (Word, Seq (Maybe (Seq Word)))
-type WordState = (Word, Seq (Word, (Seq Word))) 
+type WordState = (Word, Seq (Maybe (Seq Word)))
+--type WordState = (Word, Seq (Word, (Seq Word))) 
 
 initStore :: State s => [Word] -> s
 initStore opcodes =
