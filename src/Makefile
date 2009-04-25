@@ -10,7 +10,7 @@ build:
 	ghc ${GHCFLAGS} --make *.hs -o uvm
 
 build-prof:
-	ghc ${GHCFLAGS} --prof --make *.hs -o uvm
+	ghc ${GHCFLAGS} -prof --make *.hs -o uvm
 
 run: build
 	./uvm ${UMFILE}
