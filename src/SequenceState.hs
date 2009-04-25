@@ -6,7 +6,7 @@ import Data.Word
 import Data.Sequence
 
 
-c_MAX_SIZE = 2**32-1
+c_MAX_SIZE = (2 ^ 32) - 1
 
 
 _find f n EmptyL = Nothing
@@ -15,6 +15,58 @@ _find f n (x :< xs) =
     else _find f (n+1) (viewl xs)
 
 find seq f = _find f 0 (viewl seq)
+
+
+
+
+
+instance State ([Word], Seq (Maybe (Seq Word))) where
+
+    empty initializer = ([], singleton (Just $ fromList initializer))
+
+    lookupE (_, s) a off =
+        do s' <- index s (fromIntegral a)
+           return $ index s' (fromIntegral off)
+
+    updateE (n, s) a off v =
+        let f (Just s') = Just $ update (fromIntegral off) v s'
+        in Just (n, adjust f (fromIntegral a) s)
+
+    allocate (n, s) cap =
+        let seq  = Just $ fromList (Prelude.take (fromIntegral cap) $ repeat 0) in
+        case n of 
+          [] ->
+              let s' = s |> seq in 
+              Just (([], s'), fromIntegral (Data.Sequence.length s' - 1))
+          i : n' -> 
+              let s' = update (fromIntegral i) seq s in
+              Just ((n', s'), i)
+
+
+    swap (n, s) a1 a2 =
+        let a1' = fromIntegral a1
+            a2' = fromIntegral a2
+            v1 = index s a1'
+            v2 = index s a2'
+        in
+          Just (n, update a1' v2 (update a2' v1 s))
+
+    copy (n, s) from to =
+        let from' = fromIntegral from
+        in
+          Just (n, update (fromIntegral to) (index s from') s)
+
+    free (n, s) x =
+        let f Nothing = error "Double free"
+            f (Just e) = Nothing
+        in
+          Just (x:n, adjust f (fromIntegral x) s)
+
+    load s arr = copy s arr 0
+
+
+
+
 
 
 instance State (Word, Seq (Maybe (Seq Word))) where
@@ -54,6 +106,11 @@ instance State (Word, Seq (Maybe (Seq Word))) where
           Just (n, adjust f (fromIntegral x) s)
 
     load s arr = copy s arr 0
+
+
+
+
+
 
 
 instance State (Word, Seq (Word, (Seq Word))) where
