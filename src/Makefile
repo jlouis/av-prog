@@ -1,4 +1,5 @@
-UMFILE=data/codex.umz
+UMFILE=data/codex.um
+UMZFILE=data/codex.umz
 SANDMARK=data/sandmark.umz
 DECRYPTOR=data/decrypt.command
 
@@ -13,11 +14,14 @@ build:
 build-prof:
 	ghc ${GHCFLAGS} -prof --make *.hs -o uvm
 
+run-umz: build
+	./uvm ${UMZFILE}
+
 run: build
 	./uvm ${UMFILE}
 
 decrypt: build
-	./uvm ${UMFILE} < ${DECRYPTOR} > codex.um
+	./uvm ${UMZFILE} < ${DECRYPTOR} > codex.um
 
 prof-sandmark: build
 	./uvm +RTS -p --RTS ${SANDMARK}
