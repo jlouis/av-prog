@@ -43,7 +43,7 @@ interpOps s rs op_ptr =
                  Nothing -> error "Could not lookup opcode" 
      s <- interpOp s rs op_ptr opcode -- Don't use fromIntegral here
      case s of
-       Just (s, rs, op_ptr) -> interpOps s rs op_ptr
+       Just (s, op_ptr) -> interpOps s rs op_ptr
        Nothing -> return ()
 
 
@@ -56,17 +56,17 @@ updateR rs idx val = updateE rs 0 idx val
 interpOpBin :: State s =>
                s -> R.Reg -> Word32 -> Word32 -> Word32 -> Word32
                  -> (Word32 -> Word32 -> Word32)
-                 -> IO (Maybe (s, R.Reg, Word32))
+                 -> IO (Maybe (s, Word32))
 interpOpBin s rs op_ptr op1 op2 reg f = do
   op1'    <- R.getReg rs op1
   op2'    <- R.getReg rs op2
   R.writeReg rs reg (f op1' op2')
-  return $ Just (s, rs, op_ptr+1)
+  return $ Just (s, op_ptr+1)
 
 
 pad orig = (take (8-(length orig)) (repeat '0')) ++ orig
 
-interpOp :: State s => s -> R.Reg -> Word32 -> Word32 -> IO (Maybe (s, R.Reg, Word32))
+interpOp :: State s => s -> R.Reg -> Word32 -> Word32 -> IO (Maybe (s, Word32))
 interpOp s rs op_ptr opc =
     let binop = interpOpBin s rs op_ptr in
     do instr <- case decode opc of
@@ -77,10 +77,10 @@ interpOp s rs op_ptr opc =
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard
                 case guard' of
-                  0 -> return $ Just (s, rs, op_ptr+1)
+                  0 -> return $ Just (s, op_ptr+1)
                   _ -> do v <- R.getReg rs src
                           R.writeReg rs reg v
-                          return $ Just (s, rs, op_ptr+1)
+                          return $ Just (s, op_ptr+1)
          Arr_Idx { ptr=ptr, offset=offset, reg=reg } ->
              do ptr'            <- R.getReg rs ptr
                 offset'         <- R.getReg rs offset
@@ -88,7 +88,7 @@ interpOp s rs op_ptr opc =
                                      Just v -> return v
                                      Nothing -> error "Array out of bounds"
                 R.writeReg rs reg val'
-                return $ Just (s, rs, op_ptr+1)
+                return $ Just (s, op_ptr+1)
          Arr_Update { ptr=ptr, offset=offset, value=value } ->
              do ptr' <- R.getReg rs ptr
                 offset' <- R.getReg rs offset
@@ -96,7 +96,7 @@ interpOp s rs op_ptr opc =
                 s' <- case updateE s ptr' offset' val' of
                         Just s' -> return s'
                         Nothing -> error "Arr_Update error"
-                return $ Just (s', rs, op_ptr+1)
+                return $ Just (s', op_ptr+1)
          Add { reg=reg, op1=op1, op2=op2 } -> binop op1 op2 reg (+)
          Mul { reg=reg, op1=op1, op2=op2 } -> binop op1 op2 reg (*)
          Div { reg=reg, op1=op1, op2=op2 } -> binop op1 op2 reg div
@@ -108,29 +108,29 @@ interpOp s rs op_ptr opc =
                                Just (s', idx) -> return (s', idx)
                                Nothing -> error "Allocation failure"
                 R.writeReg rs reg idx
-                return $ Just (s', rs, op_ptr+1)
+                return $ Just (s', op_ptr+1)
          Free { reg=reg } ->
              do idx <- R.getReg rs reg
                 s' <- case free s idx of
                         Just s' -> return s'
                         Nothing -> error "Abandonment failure"
-                return $ Just (s', rs, op_ptr+1)
+                return $ Just (s', op_ptr+1)
          Output { value=value } ->
              do v <- R.getReg rs value
                 putChar (chr (fromIntegral v))
-                return $ Just (s, rs, op_ptr+1)
+                return $ Just (s, op_ptr+1)
          Input { reg=reg } ->
              do c <- getChar
                 R.writeReg rs reg $ (fromIntegral . ord) c
-                return $ Just (s, rs, op_ptr+1)
+                return $ Just (s, op_ptr+1)
          Load { from=from, jumppoint=jumppoint } ->
              do f <- R.getReg rs from
                 j <- R.getReg rs jumppoint
                 s' <- case load s f of
                         Just s' -> return s'
                         Nothing -> error "Couldn't load"
-                return $ Just (s', rs, j)
+                return $ Just (s', j)
          LoadImm { value=value, reg=reg } ->
              do R.writeReg rs reg value
-                return $ Just (s, rs, op_ptr+1)
+                return $ Just (s, op_ptr+1)
 
