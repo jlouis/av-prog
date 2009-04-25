@@ -38,15 +38,10 @@ pad orig = (take (8-(length orig)) (repeat '0')) ++ orig
 interp :: State s => s -> R.Reg -> Word32 -> IO ()
 interp s rs (-1)   = error "Wrapped around!"
 interp s rs op_ptr =
-    let opcode = s `seq` rs `seq` op_ptr `seq` case 
-                 lookupE s 0 op_ptr of
-                   Just opc -> opc
-                   Nothing -> error "Could not look up pos of PC"
-        binop = interpOpBin s rs op_ptr
+    let binop = interpOpBin s rs op_ptr
     in
-    do instr <- case decode opcode of
-                  Just instr -> return instr
-                  Nothing -> error "Opcode decode failure"
+    do opcode <- lookupE s 0 op_ptr
+       instr <- return $ decode opcode
 --       putStrLn $ (pad ( showHex opcode "")) ++ "\t" ++ (show op_ptr) ++ "\t" ++ (show instr) 
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
@@ -59,18 +54,14 @@ interp s rs op_ptr =
          Arr_Idx { ptr=ptr, offset=offset, reg=reg } ->
              do ptr'            <- R.getReg rs ptr
                 offset'         <- R.getReg rs offset
-                val'            <- case lookupE s ptr' offset' of
-                                     Just v -> return v
-                                     Nothing -> error "Array out of bounds"
+                val'            <- lookupE s ptr' offset'
                 R.writeReg rs reg val'
                 interp s rs (op_ptr+1)
          Arr_Update { ptr=ptr, offset=offset, value=value } ->
              do ptr' <- R.getReg rs ptr
                 offset' <- R.getReg rs offset
                 val' <- R.getReg rs value
-                s' <- case updateE s ptr' offset' val' of
-                        Just s' -> return s'
-                        Nothing -> error "Arr_Update error"
+                s' <- updateE s ptr' offset' val'
                 interp s' rs (op_ptr+1)
          Add { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! (+)
          Mul { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! (*)
@@ -79,16 +70,12 @@ interp s rs op_ptr =
          Halt -> putStrLn "*** HALT ***"
          Malloc { reg=reg, size=size } ->
              do sz <- R.getReg rs size
-                (s', idx) <- case allocate s sz of
-                               Just (s', idx) -> return (s', idx)
-                               Nothing -> error "Allocation failure"
+                (s', idx) <- allocate s sz
                 R.writeReg rs reg idx
                 interp s' rs (op_ptr+1)
          Free { reg=reg } ->
              do idx <- R.getReg rs reg
-                s' <- case free s idx of
-                        Just s' -> return s'
-                        Nothing -> error "Abandonment failure"
+                s' <- free s idx
                 interp s' rs (op_ptr+1)
          Output { value=value } ->
              do v <- R.getReg rs value
@@ -101,9 +88,7 @@ interp s rs op_ptr =
          Load { from=from, jumppoint=jumppoint } ->
              do f <- R.getReg rs from
                 j <- R.getReg rs jumppoint
-                s' <- case load s f of
-                        Just s' -> return s'
-                        Nothing -> error "Couldn't load"
+                s' <- load s f
                 interp s' rs j
          LoadImm { value=value, reg=reg } ->
              do R.writeReg rs reg value

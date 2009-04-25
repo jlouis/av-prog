@@ -5,23 +5,14 @@ module Decode (decode,decode_loadi,
 where
 
 import Data.Bits
+import Data.Word
 
-opcode_pos :: Int
-opcode_pos = 32 - 4
-
-standard_operator_positions :: (Int, Int, Int)
-standard_operator_positions = (6, 3, 0)
-
-find_opcode :: Bits a => a -> a
-find_opcode w = shiftR w opcode_pos
-
-find_regs :: Bits a => a -> (a, a, a)
+find_regs :: Word32 -> (Word32, Word32, Word32)
 find_regs w = (regA, regB, regC)
     where
       regC = w .&. 7
       regB = (shiftR w 3) .&. 7
       regA = (shiftR w 6) .&. 7
-
 
 data Instruction a = Arr_Idx { offset :: a,
                                ptr :: a,
@@ -45,29 +36,26 @@ data Instruction a = Arr_Idx { offset :: a,
                    | LoadImm { value :: a, reg :: a }
   deriving Show
 
-decode :: (Bits a, Ord a) => a -> Maybe (Instruction a)
+decode :: Word32 -> Instruction Word32
 decode w =
    let (regA, regB, regC) = find_regs w
-   in case find_opcode w of
-        k | k >= 0 && k < 13 ->
-              return $ case k of
-                         -- Standard operators
-                         0 -> Move { reg = regA, guard = regC, src = regB}
-                         1 -> Arr_Idx { offset = regC, ptr = regB, reg = regA }
-                         2 -> Arr_Update { value = regC, offset = regB, ptr = regA }
-                         3 -> Add { reg = regA, op1 = regB, op2 = regC }
-                         4 -> Mul{ reg = regA, op1 = regB, op2 = regC }
-                         5 -> Div { reg = regA, op1 = regB, op2 = regC }
-                         6 -> Nand { reg = regA, b = regB, c = regC }
-                         -- Other operators
-                         7 -> Halt
-                         8 -> Malloc { size = regC, reg = regB }
-                         9 -> Free { reg = regC }
-                         10 -> Output { value = regC }
-                         11 -> Input { reg = regC }
-                         12 -> Load { from = regB, jumppoint = regC }
-        k | k == 13 -> return $ decode_loadi w
-        k | otherwise -> Nothing
+   in case shiftR w 28 of
+        0 -> Move { reg = regA, guard = regC, src = regB}
+        1 -> Arr_Idx { offset = regC, ptr = regB, reg = regA }
+        2 -> Arr_Update { value = regC, offset = regB, ptr = regA }
+        3 -> Add { reg = regA, op1 = regB, op2 = regC }
+        4 -> Mul{ reg = regA, op1 = regB, op2 = regC }
+        5 -> Div { reg = regA, op1 = regB, op2 = regC }
+        6 -> Nand { reg = regA, b = regB, c = regC }
+        -- Other operators
+        7 -> Halt
+        8 -> Malloc { size = regC, reg = regB }
+        9 -> Free { reg = regC }
+        10 -> Output { value = regC }
+        11 -> Input { reg = regC }
+        12 -> Load { from = regB, jumppoint = regC }
+        13 -> decode_loadi w
+        _ -> error "Unkown opcode"
 
 decode_loadi :: Bits a => a -> (Instruction a)
 decode_loadi w = LoadImm { value = value, reg = reg}
