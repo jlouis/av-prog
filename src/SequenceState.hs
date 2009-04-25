@@ -20,7 +20,7 @@ find seq f = _find f 0 (viewl seq)
 
 
 
-instance State ([Word], Seq (Maybe (Seq Word))) where
+instance State ([Word32], Seq (Maybe (Seq Word32))) where
 
     empty initializer = ([], singleton (Just $ fromList initializer))
 
@@ -69,7 +69,7 @@ instance State ([Word], Seq (Maybe (Seq Word))) where
 
 
 
-instance State (Word, Seq (Maybe (Seq Word))) where
+instance State (Word32, Seq (Maybe (Seq Word32))) where
 
     empty initializer = (1, singleton (Just $ fromList initializer))
 
@@ -113,7 +113,7 @@ instance State (Word, Seq (Maybe (Seq Word))) where
 
 
 
-instance State (Word, Seq (Word, (Seq Word))) where
+instance State (Word32, Seq (Word32, (Seq Word32))) where
 
     empty initializer =
         let s = fromList initializer
