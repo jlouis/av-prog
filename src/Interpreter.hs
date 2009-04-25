@@ -16,12 +16,15 @@ import Numeric (showHex)
 import qualified Register as R
 
 -- Change this to use the new Sequence State system
-type WordState = (Word32, Seq (Maybe (Seq Word32)))
---type WordState = (Word, Seq (Word, (Seq Word))) 
+type WordState = ([Word32], Seq (Maybe (Seq Word32)))
+--type WordState = (Word32, Seq (Word32, (Seq Word32))) 
 
 initStore :: State s => [Word32] -> s
-initStore opcodes =
-    empty opcodes
+initStore opcodes = empty opcodes
+
+initRegs :: State s => s
+initRegs = empty [0 | x <- [1..8]]
+
 
 interpret' :: State s => [Word32] -> IO (s, R.Reg)
 interpret' opcodes = do
@@ -43,6 +46,13 @@ interpOps s rs op_ptr =
        Just (s, rs, op_ptr) -> interpOps s rs op_ptr
        Nothing -> return ()
 
+
+lookupR :: State s => s -> Word32 -> Maybe Word32
+lookupR rs idx = lookupE rs 0 idx
+
+updateR :: State s => s -> Word32 -> Word32 -> Maybe s
+updateR rs idx val = updateE rs 0 idx val
+
 interpOpBin :: State s =>
                s -> R.Reg -> Word32 -> Word32 -> Word32 -> Word32
                  -> (Word32 -> Word32 -> Word32)
@@ -53,13 +63,16 @@ interpOpBin s rs op_ptr op1 op2 reg f = do
   R.writeReg rs reg (f op1' op2')
   return $ Just (s, rs, op_ptr+1)
 
+
+pad orig = (take (8-(length orig)) (repeat '0')) ++ orig
+
 interpOp :: State s => s -> R.Reg -> Word32 -> Word32 -> IO (Maybe (s, R.Reg, Word32))
 interpOp s rs op_ptr opc =
     let binop = interpOpBin s rs op_ptr in
     do instr <- case decode opc of
                   Just instr -> return instr
                   Nothing -> error "Opcode decode failure"
---       putStrLn $ (show instr)  ++ "\t\t" ++ ( showHex opc "")
+--       putStrLn $ (show instr)  ++ "\t" ++ (pad ( showHex opc ""))
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard
