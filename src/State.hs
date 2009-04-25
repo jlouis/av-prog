@@ -16,9 +16,6 @@ class State s where
     {- allocate S cap, return id != 0 to Array with Capacity cap AND S where id is taken (new array contains zero) -}
     allocate :: s -> Word32 -> Maybe (s, Word32)
 
-    {- swap S arr0 arr1, return S, st. arr0 and arr1 has been swapped -}
-    swap     :: s -> Word32 -> Word32 -> Maybe s
-
     {- copy S arr idx, return S, st. arr has been copied to idx -}
     copy     :: s -> Word32 -> Word32 -> Maybe s
 

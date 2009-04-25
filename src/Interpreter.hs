@@ -4,7 +4,6 @@ module Interpreter (
 where
 
 import State
-import SimpleState
 import SequenceState
 import Decode
 import Data.Bits
