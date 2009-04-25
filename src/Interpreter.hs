@@ -19,28 +19,10 @@ import qualified Register as R
 type WordState = ([Word32], Seq (Maybe (Seq Word32)))
 --type WordState = (Word32, Seq (Word32, (Seq Word32))) 
 
-initStore :: State s => [Word32] -> s
-initStore opcodes = empty opcodes
-
-initRegs :: State s => s
-initRegs = empty [0 | x <- [1..8]]
-
-
-interpret' :: State s => [Word32] -> IO (s, R.Reg)
-interpret' opcodes = do
-  initial_store <- return $ initStore opcodes
-  initial_regs <- R.empty
-  return (initial_store, initial_regs)
-
 interpret :: [Word32] -> IO ()
-interpret opcodes = do (s, rs) <- (interpret' opcodes :: IO (WordState, R.Reg))
-                       interp s rs 0
-
-lookupR :: State s => s -> Word32 -> Maybe Word32
-lookupR rs idx = lookupE rs 0 idx
-
-updateR :: State s => s -> Word32 -> Word32 -> Maybe s
-updateR rs idx val = updateE rs 0 idx val
+interpret opcodes = do initial_store <- return $ (empty opcodes :: WordState)
+                       initial_regs <- R.empty
+                       interp initial_store initial_regs 0
 
 interpOpBin :: State s =>
                s -> R.Reg -> Word32 -> Word32 -> Word32 -> Word32
