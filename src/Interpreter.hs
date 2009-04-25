@@ -72,7 +72,7 @@ interpOp s rs op_ptr opc =
     do instr <- case decode opc of
                   Just instr -> return instr
                   Nothing -> error "Opcode decode failure"
---       putStrLn $ (show instr)  ++ "\t" ++ (pad ( showHex opc ""))
+       putStrLn $ (pad ( showHex opc "")) ++ "\t" ++ (show instr) 
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard
