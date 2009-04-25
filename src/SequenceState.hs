@@ -38,15 +38,6 @@ instance State ([Word32], Seq (Maybe (Seq Word32))) where
               let s' = update (fromIntegral i) seq s in
               Just ((n', s'), i)
 
-
-    swap (n, s) a1 a2 =
-        let a1' = fromIntegral a1
-            a2' = fromIntegral a2
-            v1 = index s a1'
-            v2 = index s a2'
-        in
-          Just (n, update a1' v2 (update a2' v1 s))
-
     copy (n, s) from to =
         let from' = fromIntegral from
         in
@@ -67,29 +58,21 @@ instance State ([Word32], Seq (Maybe (Seq Word32))) where
 
 instance State (Word32, Seq (Maybe (Seq Word32))) where
 
-    empty initializer = (1, singleton (Just $ fromList initializer))
+    empty initializer = (1, singleton (Just $! fromList initializer))
 
     lookupE (_, s) a off =
         do s' <- index s (fromIntegral a)
-           return $ index s' (fromIntegral off)
+           return $! index s' (fromIntegral off)
 
     updateE (n, s) a off v =
-        let f (Just s') = Just $ update (fromIntegral off) v s'
+        let f (Just s') = Just $! update (fromIntegral off) v s'
         in Just (n, adjust f (fromIntegral a) s)
 
     allocate (n, s) cap =
-        let seq = Just $ fromList (Prelude.take (fromIntegral cap) $ repeat 0)
+        let seq = Just $! fromList (Prelude.take (fromIntegral cap) $ repeat 0)
             news = s |> seq
         in
           if Data.Sequence.length news == (fromIntegral (n+1)) then Just ((n+1, s |> seq), n) else error "FAIL"
-
-    swap (n, s) a1 a2 =
-        let a1' = fromIntegral a1
-            a2' = fromIntegral a2
-            v1 = index s a1'
-            v2 = index s a2'
-        in
-          Just (n, update a1' v2 (update a2' v1 s))
 
     copy (n, s) from to =
         let from' = fromIntegral from
@@ -103,12 +86,6 @@ instance State (Word32, Seq (Maybe (Seq Word32))) where
           Just (n, adjust f (fromIntegral x) s)
 
     load s arr = copy s arr 0
-
-
-
-
-
-
 
 instance State (Word32, Seq (Word32, (Seq Word32))) where
 
@@ -137,11 +114,6 @@ instance State (Word32, Seq (Word32, (Seq Word32))) where
             env' = (nidx, seq) <| env
         in
           Just ((nidx+1, env'), nidx)
-
-    swap (nidx, env) arr0 arr1 =
-        do (idx0, arr0') <- find env (\(x,_) -> x == arr0) ;
-           (idx1, arr1') <- find env (\(x,_) -> x == arr1) ;
-           return (nidx, update idx1 arr0' (update idx0 arr1' env))
 
     copy (nidx, env) from to =
         do (_, arr0) <- find env (\(x,_) -> x == from) ;
