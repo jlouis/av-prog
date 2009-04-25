@@ -1,5 +1,6 @@
 UMFILE=data/codex.umz
 SANDMARK=data/sandmark.umz
+DECRYPTOR=data/decrypt.command
 
 GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all
 
@@ -14,6 +15,9 @@ build-prof:
 
 run: build
 	./uvm ${UMFILE}
+
+decrypt: build
+	./uvm ${UMFILE} < ${DECRYPTOR} > codex.um
 
 prof-sandmark: build
 	./uvm +RTS -p --RTS ${SANDMARK}
