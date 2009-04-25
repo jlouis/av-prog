@@ -68,7 +68,7 @@ interp s rs op_ptr =
          Mul { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! (*)
          Div { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! div
          Nand { reg=reg, b=op1, c=op2 }    -> (binop op1 op2 reg) $! (\x y -> (complement (x .&. y)))
-         Halt -> putStrLn "*** HALT ***"
+         Halt -> return ()
          Malloc { reg=reg, size=size } ->
              do sz <- R.getReg rs size
                 (s', idx) <- allocate s sz
