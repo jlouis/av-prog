@@ -5,7 +5,7 @@ import Data.Word
 
 class State s where
     {- init () generate new S -}
-    empty     :: [Word32] -> s
+    empty     :: [Word32] -> IO s
 
     {- index S arr off, return val, the value stored in Array arr, Offset off -}
     lookupE  :: s -> Word32 -> Word32 -> IO Word32

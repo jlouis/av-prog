@@ -8,6 +8,7 @@ import SequenceState
 import Decode
 import Data.Bits
 import Data.Word
+import Data.Array.IO
 import Data.Sequence (Seq)
 import Char
 import Numeric (showHex)
@@ -15,11 +16,11 @@ import Numeric (showHex)
 import qualified Register as R
 
 -- Change this to use the new Sequence State system
-type WordState = ([Word32], Seq (Seq Word32))
+type WordState = IO ([Word32], Seq (IOUArray Word32 Word32))
 --type WordState = (Word32, Seq (Word32, (Seq Word32))) 
 
 interpret :: [Word32] -> IO ()
-interpret opcodes = do initial_store <- return $ (empty opcodes :: WordState)
+interpret opcodes = do initial_store <- (empty opcodes :: WordState)
                        initial_regs <- R.empty
                        interp initial_store initial_regs 0
 
