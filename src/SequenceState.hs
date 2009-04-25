@@ -18,23 +18,23 @@ find seq f = _find f 0 (viewl seq)
 
 instance State ([Word32], Seq (Maybe (Seq Word32))) where
 
-    empty initializer = ([], singleton (Just $ fromList initializer))
+    empty initializer = ([], singleton (Just $! fromList initializer))
 
     lookupE (_, s) a off =
         do s' <- index s (fromIntegral a)
-           return $ index s' (fromIntegral off)
+           return $! index s' (fromIntegral off)
 
     updateE (n, s) a off v =
-        let f (Just s') = Just $ update (fromIntegral off) v s'
+        let f (Just s') = Just $! update (fromIntegral off) v s'
         in Just (n, adjust f (fromIntegral a) s)
 
     allocate (n, s) cap =
-        let seq  = Just $ fromList (Prelude.take (fromIntegral cap) $ repeat 0) in
-        case n of 
+        let seq  = Just $! fromList (Prelude.take (fromIntegral cap) $ repeat 0) in
+        case n of
           [] ->
-              let s' = s |> seq in 
+              let s' = s |> seq in
               Just (([], s'), fromIntegral (Data.Sequence.length s' - 1))
-          i : n' -> 
+          i : n' ->
               let s' = update (fromIntegral i) seq s in
               Just ((n', s'), i)
 
@@ -50,11 +50,6 @@ instance State ([Word32], Seq (Maybe (Seq Word32))) where
           Just (x:n, adjust f (fromIntegral x) s)
 
     load s arr = copy s arr 0
-
-
-
-
-
 
 instance State (Word32, Seq (Maybe (Seq Word32))) where
 
@@ -96,11 +91,11 @@ instance State (Word32, Seq (Word32, (Seq Word32))) where
 
     lookupE (nidx, env) arr off =
         do (index', (idx, arr')) <- find env (\(x,_) -> x == arr)
-           if (fromIntegral off) >= Data.Sequence.length arr' then 
+           if (fromIntegral off) >= Data.Sequence.length arr' then
                error ("lookupE: Index out of bounds: "++
                       (show arr)++","++(show off)++" - length "++
                       (show (Data.Sequence.length arr'))++ " - env size "++
-                      (show (Data.Sequence.length env))) else 
+                      (show (Data.Sequence.length env))) else
                return (index arr' (fromIntegral off))
 
     updateE (nidx, env) arr off val =
