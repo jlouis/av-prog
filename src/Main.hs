@@ -3,7 +3,8 @@ where
 
 import qualified UmixVM as UVM
 import qualified Interpreter
-
+import qualified Decode
+import Numeric ( showHex )
 import System ( getArgs )
 
 main :: IO ()

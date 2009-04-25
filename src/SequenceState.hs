@@ -6,7 +6,7 @@ import Data.Word
 import Data.Sequence
 
 
-c_MAX_SIZE = (2 ^ 32) - 1
+c_MAX_SIZE = (2 ** 32) - 1
 
 
 _find f n EmptyL = Nothing
@@ -15,10 +15,6 @@ _find f n (x :< xs) =
     else _find f (n+1) (viewl xs)
 
 find seq f = _find f 0 (viewl seq)
-
-
-
-
 
 instance State ([Word32], Seq (Maybe (Seq Word32))) where
 
