@@ -1,5 +1,5 @@
 -- Decode Umix instructions
-module Decode (decode,
+module Decode (decode,decode_loadi,
                Instruction(..))
 
 where
@@ -73,4 +73,4 @@ decode_loadi :: Bits a => a -> (Instruction a)
 decode_loadi w = LoadImm { value = value, reg = reg}
     where
       value = shiftR (shiftL w 7) 7
-      reg   = shiftR (shiftL w 4) (32 - 7)
+      reg   = (shiftR w (32 - 7)) .&. 7
