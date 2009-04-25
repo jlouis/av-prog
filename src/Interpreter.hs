@@ -110,7 +110,7 @@ interpOp s rs op_ptr opc =
          Halt ->
              return Nothing
          Malloc { reg=reg, size=size } ->
-             return $ do size'     <- lookupR rs size 
+             return $ do size'     <- lookupR rs size
                          (s', idx) <- allocate s size'
                          rs'       <- updateR rs reg idx
                          return (s', rs', op_ptr+1)

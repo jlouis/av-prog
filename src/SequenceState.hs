@@ -55,6 +55,7 @@ instance State (Word, Seq (Maybe (Seq Word))) where
 
     load s arr = copy s arr 0
 
+
 instance State (Word, Seq (Word, (Seq Word))) where
 
     empty initializer =
@@ -67,7 +68,8 @@ instance State (Word, Seq (Word, (Seq Word))) where
            if (fromIntegral off) >= Data.Sequence.length arr' then 
                error ("lookupE: Index out of bounds: "++
                       (show arr)++","++(show off)++" - length "++
-                      (show (Data.Sequence.length arr'))) else 
+                      (show (Data.Sequence.length arr'))++ " - env size "++
+                      (show (Data.Sequence.length env))) else 
                return (index arr' (fromIntegral off))
 
     updateE (nidx, env) arr off val =
