@@ -16,7 +16,7 @@ import Numeric (showHex)
 import qualified Register as R
 
 -- Change this to use the new Sequence State system
-type WordState = IO ([Word32], Seq (IOUArray Word32 Word32))
+type WordState = IO ([Word32], IOUArray Word32 Word32, Seq (IOUArray Word32 Word32))
 --type WordState = (Word32, Seq (Word32, (Seq Word32))) 
 
 interpret :: [Word32] -> IO ()

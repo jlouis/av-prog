@@ -16,9 +16,6 @@ class State s where
     {- allocate S cap, return id != 0 to Array with Capacity cap AND S where id is taken (new array contains zero) -}
     allocate :: s -> Word32 -> IO (s, Word32)
 
-    {- copy S arr idx, return S, st. arr has been copied to idx -}
-    copy     :: s -> Word32 -> Word32 -> IO s
-
     {- return S where arr has been freed -}
     free     :: s -> Word32 -> IO s
 
