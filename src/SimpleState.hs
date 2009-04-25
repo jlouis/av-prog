@@ -9,7 +9,7 @@ import Data.Word
 c_MAX_SIZE = 2**32-1
 
 
-instance State (Word32, [(Word32, Word32, Word32)]) where
+instance State (Word, [(Word, Word, Word)]) where
 
     -- Wrong!
     empty initializer = (0, [])
