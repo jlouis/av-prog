@@ -11,6 +11,7 @@ import Data.Bits
 import Data.Word
 import Data.Sequence (Seq)
 import Char
+import Numeric (showHex)
 
 import qualified Register as R
 
@@ -61,7 +62,9 @@ interpOp s rs op_ptr opc =
     do instr <- case decode opc of
                   Just instr -> return instr
                   Nothing -> error "Opcode decode failure"
-       putStrLn $ show instr
+       putStrLn $ let i = show instr
+                      orig = showHex opc ""
+                  in i ++ "\t\t" ++ orig
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard

@@ -13,6 +13,5 @@ main = do
   prog <- return $ head args
   contents <- readFile prog
   opcodes <- return $ UVM.chop_opcodes contents
-  putStrLn $ show $ Decode.decode $ head opcodes
   Interpreter.interpret opcodes
 
