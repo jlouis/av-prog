@@ -1,11 +1,16 @@
 UMFILE=data/codex.umz
 SANDMARK=data/sandmark.umz
 
+GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all
+
 .phony: all build run clean
 all: build
 
 build:
-	ghc -O -fglasgow-exts -XFlexibleInstances -prof -auto-all --make *.hs -o uvm
+	ghc ${GHCFLAGS} --make *.hs -o uvm
+
+build-prof:
+	ghc ${GHCFLAGS} --prof --make *.hs -o uvm
 
 run: build
 	./uvm ${UMFILE}
