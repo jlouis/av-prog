@@ -7,7 +7,7 @@ import Data.Bits
 import Data.Word
 import Data.Char (ord)
 
-chop_opcodes :: [Char] -> [Word]
+chop_opcodes :: [Char] -> [Word32]
 chop_opcodes [] = []
 chop_opcodes (c1 : c2 : c3 : c4 : rest) = (fromIntegral $ decode c1 c2 c3 c4) : (chop_opcodes rest)
     where
