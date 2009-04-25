@@ -15,7 +15,7 @@ import Numeric (showHex)
 import qualified Register as R
 
 -- Change this to use the new Sequence State system
-type WordState = ([Word32], Seq (Maybe (Seq Word32)))
+type WordState = ([Word32], Seq (Seq Word32))
 --type WordState = (Word32, Seq (Word32, (Seq Word32))) 
 
 interpret :: [Word32] -> IO ()
@@ -28,16 +28,18 @@ interpOpBin :: State s =>
                  -> (Word32 -> Word32 -> Word32)
                  -> IO ()
 interpOpBin s rs op_ptr op1 op2 reg f = do
-  op1'    <- R.getReg rs op1
-  op2'    <- R.getReg rs op2
+  op1'    <- (R.getReg rs) op1
+  op2'    <- (R.getReg rs) op2
   R.writeReg rs reg (f op1' op2')
   interp s rs (op_ptr+1)
 
 pad orig = (take (8-(length orig)) (repeat '0')) ++ orig
 
 interp :: State s => s -> R.Reg -> Word32 -> IO ()
+interp s rs (-1)   = error "Wrapped around!"
 interp s rs op_ptr =
-    let opcode = case lookupE s 0 op_ptr of
+    let opcode = s `seq` rs `seq` op_ptr `seq` case 
+                 lookupE s 0 op_ptr of
                    Just opc -> opc
                    Nothing -> error "Could not look up pos of PC"
         binop = interpOpBin s rs op_ptr
@@ -70,10 +72,10 @@ interp s rs op_ptr =
                         Just s' -> return s'
                         Nothing -> error "Arr_Update error"
                 interp s' rs (op_ptr+1)
-         Add { reg=reg, op1=op1, op2=op2 } -> binop op1 op2 reg (+)
-         Mul { reg=reg, op1=op1, op2=op2 } -> binop op1 op2 reg (*)
-         Div { reg=reg, op1=op1, op2=op2 } -> binop op1 op2 reg div
-         Nand { reg=reg, b=op1, c=op2 } -> binop op1 op2 reg (\x y -> (complement (x .&. y)))
+         Add { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! (+)
+         Mul { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! (*)
+         Div { reg=reg, op1=op1, op2=op2 } -> (binop op1 op2 reg) $! div
+         Nand { reg=reg, b=op1, c=op2 }    -> (binop op1 op2 reg) $! (\x y -> (complement (x .&. y)))
          Halt -> putStrLn "*** HALT ***"
          Malloc { reg=reg, size=size } ->
              do sz <- R.getReg rs size
