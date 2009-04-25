@@ -13,7 +13,8 @@ import Data.Sequence (Seq)
 import Char
 
 -- Change this to use the new Sequence State system
-type WordState = (Word, Seq (Maybe (Seq Word)))
+--type WordState = (Word, Seq (Maybe (Seq Word)))
+type WordState = (Word, Seq (Word, (Seq Word))) 
 
 initStore :: State s => [Word] -> s
 initStore opcodes =
@@ -39,7 +40,7 @@ interpOps :: State s => s -> s -> Word -> IO ()
 interpOps s rs op_ptr =
   do opcode <- case lookupE s 0 op_ptr of
                  Just opc -> return opc
-                 Nothing -> error "Could not lookup opcode"
+                 Nothing -> error "Could not lookup opcode" 
      s <- interpOp s rs op_ptr opcode -- Don't use fromIntegral here
      case s of
        Just (s, rs, op_ptr) -> interpOps s rs op_ptr
@@ -88,7 +89,7 @@ interpOp s rs op_ptr opc =
              return $ do ptr'            <- lookupR   rs ptr
                          offset'         <- lookupR   rs offset
                          val'            <- lookupR   rs value
-                         s'              <- updateE   s  offset' ptr' val'
+                         s'              <- updateE   s  ptr' offset' val'
                          return (s', rs, op_ptr+1)
          Move { src=src, reg=reg, guard=guard } ->
              return $ do guard'          <- lookupR   rs guard
@@ -113,12 +114,13 @@ interpOp s rs op_ptr opc =
                          return (s', rs', op_ptr+1)
          Free { reg=reg } ->
              return $ do idx    <- lookupR rs reg
-                         s'     <- free s reg
+                         s'     <- free s idx
                          return (s', rs, op_ptr+1)
          Load { from=from, jumppoint=jumppoint } ->
              return $ do from'   <- lookupR rs from
+                         jump'   <- lookupR rs jumppoint
                          s'      <- load s from'
-                         return (s', rs, jumppoint)
+                         return (s', rs, jump')
          LoadImm { value=value, reg=reg } ->
              return $ do rs' <- updateR rs reg value
                          return (s, rs', op_ptr+1)
