@@ -85,6 +85,7 @@ interpOp s rs op_ptr opc =
              do c <- getChar
                 return $ do rs' <- updateR rs reg $ (fromIntegral . ord) c
                             return (s, rs', op_ptr+1)
+
          Arr_Update { ptr=ptr, offset=offset, value=value } ->
              return $ do ptr'            <- lookupR   rs ptr
                          offset'         <- lookupR   rs offset
@@ -109,7 +110,8 @@ interpOp s rs op_ptr opc =
          Halt ->
              return Nothing
          Malloc { reg=reg, size=size } ->
-             return $ do (s', idx) <- allocate s size
+             return $ do size'     <- lookupR rs size 
+                         (s', idx) <- allocate s size'
                          rs'       <- updateR rs reg idx
                          return (s', rs', op_ptr+1)
          Free { reg=reg } ->
