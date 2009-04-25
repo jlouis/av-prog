@@ -15,7 +15,7 @@ import Numeric (showHex)
 import qualified Register as R
 
 -- Change this to use the new Sequence State system
-type WordState = ([Word32], Seq (Maybe (Seq Word32)))
+type WordState = ([Word32], Seq (Seq Word32))
 --type WordState = (Word32, Seq (Word32, (Seq Word32))) 
 
 interpret :: [Word32] -> IO ()
@@ -45,7 +45,7 @@ interp s rs op_ptr =
     do instr <- case decode opcode of
                   Just instr -> return instr
                   Nothing -> error "Opcode decode failure"
-       putStrLn $ (pad ( showHex opcode "")) ++ "\t" ++ (show op_ptr) ++ "\t" ++ (show instr) 
+       -- putStrLn $ (pad ( showHex opcode "")) ++ "\t" ++ (show op_ptr) ++ "\t" ++ (show instr) 
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard

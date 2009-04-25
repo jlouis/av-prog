@@ -16,20 +16,20 @@ _find f n (x :< xs) =
 
 find seq f = _find f 0 (viewl seq)
 
-instance State ([Word32], Seq (Maybe (Seq Word32))) where
+instance State ([Word32], Seq (Seq Word32)) where
 
-    empty initializer = ([], singleton (Just $ fromList initializer))
+    empty initializer = ([], singleton (fromList initializer))
 
     lookupE (_, s) a off =
-        do s' <- index s (fromIntegral a)
-           return $ index s' (fromIntegral off)
+        let s' = index s (fromIntegral a) in
+        return $ index s' (fromIntegral off)
 
     updateE (n, s) a off v =
-        let f (Just s') = Just $ update (fromIntegral off) v s'
+        let f (s') = update (fromIntegral off) v s'
         in Just (n, adjust f (fromIntegral a) s)
 
     allocate (n, s) cap =
-        let seq  = Just $ fromList (Prelude.take (fromIntegral cap) $ repeat 0) in
+        let seq  = fromList (Prelude.take (fromIntegral cap) $ repeat 0) in
         case n of 
           [] ->
               let s' = s |> seq in 
@@ -44,10 +44,7 @@ instance State ([Word32], Seq (Maybe (Seq Word32))) where
           Just (n, update (fromIntegral to) (index s from') s)
 
     free (n, s) x =
-        let f Nothing = error "Double free"
-            f (Just e) = Nothing
-        in
-          Just (x:n, adjust f (fromIntegral x) s)
+        Just (x:n, s)
 
     load s arr = copy s arr 0
 
