@@ -5,7 +5,7 @@ SANDMARK=data/sandmark.umz
 all: build
 
 build:
-	ghc -fglasgow-exts -O -XFlexibleInstances --make *.hs -o uvm
+	ghc -O -fglasgow-exts -XFlexibleInstances -prof -auto-all --make *.hs -o uvm
 
 run: build
 	./uvm ${UMFILE}
