@@ -48,6 +48,16 @@ module_cons : name -> box_list -> module -> module.
 
 exp_eval : exp -> input -> input -> exp -> type.
 %mode exp_eval +Exp +I1 +I2 -Exp'.
+- : exp_eval (if we) (inp_exp I1) _ I1.
+- : exp_eval (if no) _ (inp_exp I2) I2.
+- : exp_eval unit _ _ unit.
+- : exp_eval (pair P1 P2) I1 I2 (pair P1' P2')
+     <- exp_eval P1 I1 I2 P1'
+     <- exp_eval P2 I1 I2 P2'.
+- : exp_eval (inl P) I1 I2 (inl P')
+     <- exp_eval P I1 I2 P'.
+- : exp_eval (inr P) I1 I2 (inr P')
+     <- exp_eval P I1 I2 P'.
 
 cmd_eval : cmd -> input -> input -> output -> output -> type.
 %mode cmd_eval +C +W' +N' -E' -S'.
