@@ -46,50 +46,65 @@ module : type.
 module_nil : module.
 module_cons : name -> box_list -> module -> module.
 
-exp_eval : exp -> input -> input -> exp -> type.
-%mode exp_eval +Exp +I1 +I2 -Exp'.
-- : exp_eval (if we) (inp_exp I1) _ I1.
-- : exp_eval (if no) _ (inp_exp I2) I2.
-- : exp_eval unit _ _ unit.
-- : exp_eval (pair P1 P2) I1 I2 (pair P1' P2')
-     <- exp_eval P1 I1 I2 P1'
-     <- exp_eval P2 I1 I2 P2'.
-- : exp_eval (inl P) I1 I2 (inl P')
-     <- exp_eval P I1 I2 P'.
-- : exp_eval (inr P) I1 I2 (inr P')
-     <- exp_eval P I1 I2 P'.
-%worlds () (exp_eval Exp I1 I1 _).
-%terminates E (exp_eval E _ _ _).
-%covers exp_eval +E *I *I -O.
+%% %% SEMANTICS BEGIN
 
-cmd_eval : cmd -> input -> input -> output -> output -> type.
-%mode cmd_eval +C +W' +N' -E' -S'.
-- : cmd_eval send_0 _ _ out_nil out_nil.
-- : cmd_eval (send_1 V ea) I1 I2 (out_exp V') out_nil
-     <- exp_eval V I1 I2 V'.
-- : cmd_eval (send_1 V so) I1 I2 out_nil (out_exp V')
-     <- exp_eval V I1 I2 V'.
-- : cmd_eval (send_2 V1 ea V2 so) I1 I2 (out_exp V1') (out_exp V2')
-     <- exp_eval V1 I1 I2 V1'
-     <- exp_eval V2 I1 I2 V2'.
-- : cmd_eval (send_2 V1 so V2 ea) I1 I2 (out_exp V2') (out_exp V1')
-     <- exp_eval V1 I1 I2 V1'
-     <- exp_eval V2 I1 I2 V2'.
-- : cmd_eval (split (pair V1 V2)) I1 I2 (out_exp V2') (out_exp V1')
-     <- exp_eval V1 I1 I2 V1'
-     <- exp_eval V2 I1 I2 V2'.
-- : cmd_eval (case V1 ea _) I1 I2 (out_exp P) out_nil
-     <- exp_eval V1 I1 I2 (inl P).
-- : cmd_eval (case V1 so _) I1 I2 out_nil (out_exp P)
-     <- exp_eval V1 I1 I2 (inl P).
-- : cmd_eval (case V1 _ ea) I1 I2 (out_exp P) out_nil
-     <- exp_eval V1 I1 I2 (inr P).
-- : cmd_eval (case V1 _ so) I1 I2 out_nil (out_exp P)
-     <- exp_eval V1 I1 I2 (inr P).
+%% A Map for inputs
+i_map : inface -> input -> type.
+%mode i_map +F -I.
+
+
+%block i_map_blk : block {i' : input} {i : input}
+		    {m : i_map no i} {m' : i_map we i'}.
+
+%worlds (i_map_blk) (i_map I _).
+%terminates E (i_map E _).
+
+exp_eval : exp -> exp -> type.
+%mode exp_eval +Exp -Exp'.
+- : exp_eval (if we) I1
+     <- i_map we (inp_exp I1).
+- : exp_eval (if no) I1
+     <- i_map no (inp_exp I1).
+- : exp_eval unit unit.
+- : exp_eval (pair P1 P2) (pair P1' P2')
+     <- exp_eval P1 P1'
+     <- exp_eval P2 P2'.
+- : exp_eval (inl P) (inl P')
+     <- exp_eval P P'.
+- : exp_eval (inr P) (inr P')
+     <- exp_eval P P'.
+%worlds (i_map_blk) (exp_eval Exp _).
+%terminates E (exp_eval E _).
+%covers exp_eval +E -O.
+
+cmd_eval : cmd -> output -> output -> type.
+%mode cmd_eval +C -E' -S'.
+- : cmd_eval send_0 out_nil out_nil.
+- : cmd_eval (send_1 V ea) (out_exp V') out_nil
+     <- exp_eval V V'.
+- : cmd_eval (send_1 V so) out_nil (out_exp V')
+     <- exp_eval V V'.
+- : cmd_eval (send_2 V1 ea V2 so) (out_exp V1') (out_exp V2')
+     <- exp_eval V1 V1'
+     <- exp_eval V2 V2'.
+- : cmd_eval (send_2 V1 so V2 ea) (out_exp V2') (out_exp V1')
+     <- exp_eval V1 V1'
+     <- exp_eval V2 V2'.
+- : cmd_eval (split (pair V1 V2)) (out_exp V2') (out_exp V1')
+     <- exp_eval V1 V1'
+     <- exp_eval V2 V2'.
+- : cmd_eval (case V1 ea _) (out_exp P) out_nil
+     <- exp_eval V1 (inl P).
+- : cmd_eval (case V1 so _) out_nil (out_exp P)
+     <- exp_eval V1 (inl P).
+- : cmd_eval (case V1 _ ea) (out_exp P) out_nil
+     <- exp_eval V1 (inr P).
+- : cmd_eval (case V1 _ so) out_nil (out_exp P)
+     <- exp_eval V1 (inr P).
 %% Todo: Use!
 
-%worlds () (cmd_eval Exp I1 I1 _ _).
-%terminates E (cmd_eval E _ _ _ _).
+%worlds (i_map_blk) (cmd_eval Exp _ _).
+%terminates E (cmd_eval E _ _).
 %% No coverage yet. Misses Use.
 % %covers exp_eval +E *I *I -O.
 
@@ -98,4 +113,4 @@ cmd_eval : cmd -> input -> input -> output -> output -> type.
 box_eval : box -> input -> input -> output -> output -> type.
 %mode box_eval +B +W' +N' -E' -S'.
 - : box_eval (box_cmd C) West North East South
-     <- cmd_eval C West North East South.
+     <- (i_map we West -> i_map no North -> cmd_eval C East South).
