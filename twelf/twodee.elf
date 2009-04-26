@@ -136,8 +136,18 @@ box_eval : box -> input -> input -> output -> output -> type.
 
 box_execute : store -> box -> wire -> wire -> wire -> wire -> store -> type.
 - : box_execute ST B W N E S ST'
-     <- store_lookup ST W IW
-     <- store_lookup ST N IN
-     <- box_eval B IW IN OE OS
+     <- store_lookup ST W (inp_exp IW)
+     <- store_lookup ST N (inp_exp IN)
+     <- box_eval B (inp_exp IW) (inp_exp IN) OE OS
+     <- store_update ST E OE ST''
+     <- store_update ST S OS ST'.
+- : box_execute ST B w_z N E S ST'
+     <- store_lookup ST N (inp_exp IN)
+     <- box_eval B inp_nil (inp_exp IN) OE OS
+     <- store_update ST E OE ST''
+     <- store_update ST S OS ST'.
+- : box_execute ST B W w_z E S ST'
+     <- store_lookup ST W (inp_exp IW)
+     <- box_eval B (inp_exp IW) inp_nil OE OS
      <- store_update ST E OE ST''
      <- store_update ST S OS ST'.
