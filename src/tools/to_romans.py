@@ -22,4 +22,4 @@ def to_roman(n):
         n, out = n-val, out+letter
     return out
 
-print re.sub(r'(\d+)', lambda m: to_roman(int(m.group(0))), open(sys.argv[0]).read())
+print re.sub(r'(\d+)', lambda m: to_roman(int(m.group(0))), open(sys.argv[1]).read())
