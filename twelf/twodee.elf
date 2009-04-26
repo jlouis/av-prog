@@ -12,6 +12,7 @@ E : outface.
 
 exp : type.
 unit : exp.
+pair : exp -> exp -> exp.
 app : exp -> exp -> exp.
 inl : exp -> exp.
 inr : exp -> exp.
@@ -24,6 +25,5 @@ send_2 : exp -> outface -> exp -> outface -> cmd.
 case : exp -> outface -> outface -> cmd.
 split : exp -> cmd.
 use : name -> cmd.
-
 
 
