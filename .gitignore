@@ -3,5 +3,7 @@
 *.o
 *.hi
 *.pdf
+*.bbl
+*.blg
 /report/auto
 src/uvm
