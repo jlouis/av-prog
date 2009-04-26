@@ -58,6 +58,9 @@ exp_eval : exp -> input -> input -> exp -> type.
      <- exp_eval P I1 I2 P'.
 - : exp_eval (inr P) I1 I2 (inr P')
      <- exp_eval P I1 I2 P'.
+%worlds () (exp_eval Exp I1 I1 _).
+%terminates E (exp_eval E _ _ _).
+%covers exp_eval +E *I *I -O.
 
 cmd_eval : cmd -> input -> input -> output -> output -> type.
 %mode cmd_eval +C +W' +N' -E' -S'.
@@ -83,8 +86,14 @@ cmd_eval : cmd -> input -> input -> output -> output -> type.
      <- exp_eval V1 I1 I2 (inr P).
 - : cmd_eval (case V1 _ so) I1 I2 out_nil (out_exp P)
      <- exp_eval V1 I1 I2 (inr P).
-
 %% Todo: Use!
+
+%worlds () (cmd_eval Exp I1 I1 _ _).
+%terminates E (cmd_eval E _ _ _ _).
+%% No coverage yet. Misses Use.
+% %covers exp_eval +E *I *I -O.
+
+
 
 box_eval : box -> input -> input -> output -> output -> type.
 %mode box_eval +B +W' +N' -E' -S'.
