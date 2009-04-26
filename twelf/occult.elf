@@ -1,0 +1,33 @@
+% Conrete syntax for O'Cult
+
+var : type.
+
+%% Natural numbers
+nat : type.
+z : nat.
+s : nat -> nat.
+
+%% Terms
+tm : type.
+const : nat -> tm.
+app : tm -> tm -> tm.
+paren : tm -> tm.
+var : var -> tm. % Not HOAS yet
+
+rule : type.
+rule_trans : tm -> tm -> rule.
+
+%% TODO: Lists of rules
+rule_list : type.
+
+%% Rules can be well-formed
+wellformed : rule -> type.
+
+ctx : type.
+
+%% Matchings
+match : rule -> ctx.
+
+%% Advise, which is really evaluation
+advise : rule_list -> tm -> tm -> type.
+

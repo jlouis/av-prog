@@ -1,0 +1,29 @@
+% Conrecte syntax
+
+name : type. %name name N.
+
+inface : type.
+N : inface.
+W : inface.
+
+outface : type.
+S : outface.
+E : outface.
+
+exp : type.
+unit : exp.
+app : exp -> exp -> exp.
+inl : exp -> exp.
+inr : exp -> exp.
+if : inface -> exp.
+
+cmd : type.
+send_0 : cmd.
+send_1 : exp -> outface -> cmd.
+send_2 : exp -> outface -> exp -> outface -> cmd.
+case : exp -> outface -> outface -> cmd.
+split : exp -> cmd.
+use : name -> cmd.
+
+
+
