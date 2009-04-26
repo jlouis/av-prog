@@ -13,7 +13,7 @@ multiple purposes in the machine.
 To implement the UM, one needs four pieces in the puzzle:
 \begin{itemize}
 \item Read in the UM program from disk as a byte stream. Convert it to
-  opcodes (unsiged 32-bit words)
+  opcodes (unsigned 32-bit words)
 \item Provide an implementation of the store of the machine.
 \item Provide an implementation of the register set of the machine.
 \item Prove the interpreter proper. The interpreter loads the next
@@ -39,7 +39,7 @@ IO monad to give us access to file I/O etc.
 \paragraph{Store}
 \label{sec:store}
 
-The machine store undervent several iterations before settling. We
+The machine store underwent several iterations before settling. We
 knew from the start the store was important, so we created a type
 class, \texttt{State}, for stores. The type class supports a simple
 set of values suitable for implementation of the register-to-memory
@@ -57,7 +57,7 @@ expect $\OO{lg n}$ lookup performance. We use data-structural
 bootstrapping \cite{okasaki+pfds} to provide two-dimensional arrays
 where the size of one dimension may differ in length. Each array is a
 \texttt{Seq Word32} which is then wrapped up inside a \texttt{Seq}. A
-seperate counter keeps track of the next allocation index. Sequences
+separate counter keeps track of the next allocation index. Sequences
 in Haskell are always indexed by signed integers, so we change them to
 unsigned integers with the \texttt{fromIntegral} converter.
 
@@ -105,7 +105,7 @@ right kind of \texttt{ST} monad to track the store. These monads are
 then stacked by use of Monad Transformers \cite{monad+transformer}.
 
 The rest of the interpreter step-loop is straightforward, since all
-the advanved operations are accounted for in either the store or the
+the advanced operations are accounted for in either the store or the
 register set.
 
 \paragraph{Registers}
