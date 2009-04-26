@@ -33,14 +33,35 @@ case : exp -> outface -> outface -> cmd.
 split : exp -> cmd.
 use : name -> cmd.
 
+%% Wires are numbers for now
 wire : type.
+w_z : wire.
+w_s : wire -> wire.
+
+%% The store keeps track of what wires carries which values
+store : type.
+store_nil : store.
+store_cons : wire -> exp -> store -> store.
+
+store_lookup : store -> wire -> input -> type.
+- : store_lookup store_nil _ inp_nil.
+- : store_lookup (store_cons W E _) W (inp_exp E).
+- : store_lookup (store_cons _ _ R) W E
+     <- store_lookup R W E.
+
+store_update : store -> wire -> output -> store -> type.
+- : store_update S W out_nil S.
+- : store_update store_nil W (out_exp E) (store_cons W E store_nil).
+- : store_update (store_cons W _ R) W (out_exp E) (store_cons W E R).
+- : store_update (store_cons K _ R) W OE S'
+     <- store_update R W OE S'.
 
 box : type.
 box_cmd : cmd -> box.
 
 box_list : type.
 box_list_nil : box_list.
-box_list_cons : box -> box_list -> box_list.
+box_list_cons : box -> wire -> wire -> wire -> wire -> box_list -> box_list.
 
 module : type.
 module_nil : module.
@@ -108,9 +129,15 @@ cmd_eval : cmd -> output -> output -> type.
 %% No coverage yet. Misses Use.
 % %covers exp_eval +E *I *I -O.
 
-
-
 box_eval : box -> input -> input -> output -> output -> type.
 %mode box_eval +B +W' +N' -E' -S'.
 - : box_eval (box_cmd C) West North East South
      <- (i_map we West -> i_map no North -> cmd_eval C East South).
+
+box_execute : store -> box -> wire -> wire -> wire -> wire -> store -> type.
+- : box_execute ST B W N E S ST'
+     <- store_lookup ST W IW
+     <- store_lookup ST N IN
+     <- box_eval B IW IN OE OS
+     <- store_update ST E OE ST''
+     <- store_update ST S OS ST'.
