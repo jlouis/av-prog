@@ -3,20 +3,27 @@
 name : type. %name name N.
 
 inface : type.
-N : inface.
-W : inface.
+no : inface.
+we : inface.
 
 outface : type.
-S : outface.
-E : outface.
+so : outface.
+ea : outface.
 
 exp : type.
 unit : exp.
 pair : exp -> exp -> exp.
-app : exp -> exp -> exp.
 inl : exp -> exp.
 inr : exp -> exp.
 if : inface -> exp.
+
+output : type.
+out_nil : output.
+out_exp : exp -> output.
+
+input : type.
+inp_nil : input.
+inp_exp : exp -> input.
 
 cmd : type.
 send_0 : cmd.
@@ -26,4 +33,50 @@ case : exp -> outface -> outface -> cmd.
 split : exp -> cmd.
 use : name -> cmd.
 
+wire : type.
 
+box : type.
+box_cmd : cmd -> box.
+
+box_list : type.
+box_list_nil : box_list.
+box_list_cons : box -> box_list -> box_list.
+
+module : type.
+module_nil : module.
+module_cons : name -> box_list -> module -> module.
+
+exp_eval : exp -> input -> input -> exp -> type.
+%mode exp_eval +Exp +I1 +I2 -Exp'.
+
+cmd_eval : cmd -> input -> input -> output -> output -> type.
+%mode cmd_eval +C +W' +N' -E' -S'.
+- : cmd_eval send_0 _ _ out_nil out_nil.
+- : cmd_eval (send_1 V ea) I1 I2 (out_exp V') out_nil
+     <- exp_eval V I1 I2 V'.
+- : cmd_eval (send_1 V so) I1 I2 out_nil (out_exp V')
+     <- exp_eval V I1 I2 V'.
+- : cmd_eval (send_2 V1 ea V2 so) I1 I2 (out_exp V1') (out_exp V2')
+     <- exp_eval V1 I1 I2 V1'
+     <- exp_eval V2 I1 I2 V2'.
+- : cmd_eval (send_2 V1 so V2 ea) I1 I2 (out_exp V2') (out_exp V1')
+     <- exp_eval V1 I1 I2 V1'
+     <- exp_eval V2 I1 I2 V2'.
+- : cmd_eval (split (pair V1 V2)) I1 I2 (out_exp V2') (out_exp V1')
+     <- exp_eval V1 I1 I2 V1'
+     <- exp_eval V2 I1 I2 V2'.
+- : cmd_eval (case V1 ea _) I1 I2 (out_exp P) out_nil
+     <- exp_eval V1 I1 I2 (inl P).
+- : cmd_eval (case V1 so _) I1 I2 out_nil (out_exp P)
+     <- exp_eval V1 I1 I2 (inl P).
+- : cmd_eval (case V1 _ ea) I1 I2 (out_exp P) out_nil
+     <- exp_eval V1 I1 I2 (inr P).
+- : cmd_eval (case V1 _ so) I1 I2 out_nil (out_exp P)
+     <- exp_eval V1 I1 I2 (inr P).
+
+%% Todo: Use!
+
+box_eval : box -> input -> input -> output -> output -> type.
+%mode box_eval +B +W' +N' -E' -S'.
+- : box_eval (box_cmd C) West North East South
+     <- cmd_eval C West North East South.
