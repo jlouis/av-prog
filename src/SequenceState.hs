@@ -50,7 +50,7 @@ instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word3
     load s 0 = return $ s
     load (n, prg, s) arr =
         do source <- return $ index s (fromIntegral (arr-1))
-           target <- A.mapArray (\x -> x) source
+           target <- A.mapArray id source
            return (n, target, s)
 
 instance State ([Word32], Seq (Seq Word32)) where
