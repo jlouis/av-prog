@@ -1,0 +1,66 @@
+% Conrete syntax for O'Cult
+
+%% Natural numbers
+nat : type.
+z : nat.
+s : nat -> nat.
+
+%% Terms
+tm : type.
+const : nat -> tm.
+app : tm -> tm -> tm.
+
+%% Patterns
+pat : type.
+pconst : nat -> pat.
+papp : pat -> pat -> pat.
+pvar : nat -> pat.
+
+rule : type.
+rule_trans : pat -> pat -> rule.
+
+%% TODO: Lists of rules
+rule_list : type.
+
+%% Rules can be well-formed
+wellformed : rule -> type.
+
+ctx : type.
+
+%% Matchings
+match : rule -> ctx.
+
+%% Advise, which is really evaluation
+advise : rule_list -> tm -> tm -> type.
+
+%% Translation from Occult to 2d
+transl_nat : nat -> exp -> type.
+%mode transl_nat +K -E.
+transl_nat_z : transl_nat z (inl unit).
+transl_nat_s : transl_nat (s K) (inr K')
+		<- transl_nat K K'.
+
+transl_tm : tm -> exp -> type.
+%mode transl_tm +T -E.
+- : transl_tm (const K) (inr K')
+     <- transl_nat K K'.
+- : transl_tm (app T1 T2) (inl (pair T1' T2'))
+     <- transl_tm T1 T1'
+     <- transl_tm T2 T2'.
+
+transl_pat : pat -> exp -> type.
+%mode transl_pat +P -E.
+- : transl_pat (pconst K) (inr (inl K'))
+     <- transl_nat K K'.
+- : transl_pat (pvar K) (inr (inr K'))
+     <- transl_nat K K'.
+- : transl_pat (papp P1 P2) (inl (pair P1' P2'))
+     <- transl_pat P1 P1'
+     <- transl_pat P2 P2'.
+
+transl_rule : rule -> exp -> type.
+%mode transl_rule +R -E.
+- : transl_rule (rule_trans T1 T2) (pair T1' T2')
+     <- transl_pat T1 T1'
+     <- transl_pat T2 T2'.
+

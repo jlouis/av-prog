@@ -1,0 +1,161 @@
+\chapter*{Task 1 -- The Universal Machine}
+\label{chap:task+1}
+
+In this task, we implement the Universal Machine from the 2006 ICFP
+contest in Haskell. The file \cite{um+spec} contains the specification
+of the machine which are to be implemented. We can readily observe
+that this machine is pretty simple once you have decoded the wording
+of the specification: it is a register machine with a store of
+arrays. The instruction set is minimal at 13 instructions. It is pretty
+clever as many instructions are chosen such that they can be used for
+multiple purposes in the machine.
+
+To implement the UM, one needs four pieces in the puzzle:
+\begin{itemize}
+\item Read in the UM program from disk as a byte stream. Convert it to
+  opcodes (unsigned 32-bit words)
+\item Provide an implementation of the store of the machine.
+\item Provide an implementation of the register set of the machine.
+\item Prove the interpreter proper. The interpreter loads the next
+  instruction and dispatches it for execution before looping again.
+\end{itemize}
+Of these, the latter two has to be reasonably fast. One can expect the
+interpreter loop to get billions of instruction executions. Hence it
+makes sense to make this loop as tight and small as possible. Also, we
+hypothesized that the store needed to be fast.
+
+\paragraph{Startup}
+\label{sec:startup}
+
+Starting the machine is rather straightforward in Haskell. We load the
+UM opcodes from a file and chop four bytes up into a \texttt{Word32}
+which is the unsigned integer type most of our system works with. The
+store is then initialized with this program and the main interpreter
+is entered. When the program halts, we exit the interpreter.
+
+Since this is Haskell, most of the top-level program lives inside the
+IO monad to give us access to file I/O etc.
+
+\paragraph{Store}
+\label{sec:store}
+
+The machine store underwent several iterations before settling. We
+knew from the start the store was important, so we created a type
+class, \texttt{State}, for stores. The type class supports a simple
+set of values suitable for implementation of the register-to-memory
+operations in the UM.
+
+Our first implementation was list-based in a peculiar way. We stored
+triples $(arr, idx, v)$ noting that the array $arr$ at location $idx$
+had the value $v$. Lookup was done by linear search through this
+list. \fixme{Johan: Check this} Of course, this was too slow for the
+full UM and blew the stack quickly.
+
+The second iteration changed to using \texttt{Data.Sequence} from the
+Haskell Standard Library. Sequences are finger-tree based so we could
+expect $\OO{lg n}$ lookup performance. We use data-structural
+bootstrapping \cite{okasaki+pfds} to provide two-dimensional arrays
+where the size of one dimension may differ in length. Each array is a
+\texttt{Seq Word32} which is then wrapped up inside a \texttt{Seq}. A
+separate counter keeps track of the next allocation index. Sequences
+in Haskell are always indexed by signed integers, so we change them to
+unsigned integers with the \texttt{fromIntegral} converter.
+
+The next iteration provided correct freeing of storage. The counter
+was converted to a list keeping track of the free array segments. If
+no element is on the free-list, we create a new one. This cut memory
+usage down.
+
+The performance of the UM was still too lousy however. We ran
+another iteration. The store was living inside the \texttt{Maybe}
+monad at this point to keep track of errors. This was first changed to the
+\texttt{IO} monad and errors was made fatal as in thread with the um
+specification \cite{um+spec}. Then the inner arrays were changed to
+unboxed arrays of unsigned integers: \texttt{IOUArray Word32 Word32}
+which in theory would improve the run-time from $\OO{lg n} + \OO{lg
+  m}$ to $\OO{lg n}$, shaving off the last lookup. Finally, the
+$0$-array, containing the program was moved to its own tuple-slot such
+that the often occurring opcode lookup could run in constant
+time. This yielded the final type of the store as:
+\begin{verbatim}
+type Arr = IOUArray Word32 Word32
+type Store = ([Word32], Arr, Seq (Arr))
+\end{verbatim}
+
+\paragraph{Interpreter}
+\label{sec:interpreter}
+
+The interpreter consist of an instruction decoder and the
+step-loop. The instruction decoder takes an unsigned integer and
+decodes the instruction to an internal algebraic datatype. This
+internal representation is then dispatched. Great care was taken to
+decode the registers into meaningful names so the interpreter would
+become easier to maintain and lower the margin for errors. Rather than
+passing around a tuple \texttt{(Word32, Word32, Word32)}, we use a
+named record to tag each register.
+
+The step-loop tail-calls itself with an updated state. It tracks the
+store, the register set and the program counter. Since we needed the
+ability to do I/O, we decided to put the step-loop inside the
+\texttt{IO} monad. It is possible to avoid the \texttt{IO}
+monad, though it was deemed too complicated. The input can be
+converted to a character stream of infinite length. The output can be
+controlled with a \texttt{Writer} monad. Finally, one can use the
+right kind of \texttt{ST} monad to track the store. These monads are
+then stacked by use of Monad Transformers \cite{monad+transformer}.
+
+The rest of the interpreter step-loop is straightforward, since all
+the advanced operations are accounted for in either the store or the
+register set.
+
+\paragraph{Registers}
+\label{sec:registers}
+
+Originally, we just used a store as the register-set with a single
+array containing 8 slots. In the course of the development and with
+the advent of the \texttt{IO} monad in the interpreter loop it was
+changed to an implementation based on an unboxed array of size 8.
+
+\subsection*{Code layout}
+
+The code is written in Haskell and comprises a number of files:
+\begin{description}
+\item[Decode.hs] The instruction decoder for the interpreter. Also
+  contains the algebraic datatype for the instruction set
+\item[Interpreter.hs] The interpreter step-loop and its helpers
+\item[Main.hs] Main function and execution
+\item[Register.hs] Implementation of the register set
+\item[SequenceState.hs] Instances of the \texttt{State} typeclass
+  implementing the Store
+\item[State.hs] The type class of \texttt{State}, the class of UM stores.
+\item[UmixVM] The converter from byte streams to opcode streams.
+\end{description}
+\subsection*{Program Usage}
+
+To build the program, we use:
+\begin{verbatim}
+ghc -O2 -fglasgow-exts -XFlexibleInstances -auto-all --make *.hs -o uvm
+\end{verbatim}
+
+The optimization parameter \texttt{-O2} is fairly important because we
+need the strictness analyzer to kick in. To run the program on an UM
+file, we use:
+\begin{verbatim}
+./uvm data/sandmark.umz
+trying to Allocate array of size 0..
+trying to Abandon size 0 allocation..
+...
+\end{verbatim}
+which will halt when the UM-program halts.
+
+\paragraph{Performance notes}
+
+We get to the decryption key prompt in $2.26$ seconds run-time a
+$2.4$Ghz Core 2 Duo machine. The sandmark benchmark completes in
+$12:58.25$ on the same machine, which is acceptable performance for
+playing with the UM.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End: 

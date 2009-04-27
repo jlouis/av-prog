@@ -27,7 +27,7 @@ prof-sandmark: build
 	./uvm +RTS -p --RTS ${SANDMARK}
 
 sandmark: build
-	./uvm ${SANDMARK}
+	time ./uvm ${SANDMARK}
 
 clean:
 	rm *.o *.hi uvm

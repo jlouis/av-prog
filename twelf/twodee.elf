@@ -1,0 +1,185 @@
+% Conrecte syntax
+
+name : type. %name name N.
+
+inface : type.
+no : inface.
+we : inface.
+
+outface : type.
+so : outface.
+ea : outface.
+
+exp : type.
+unit : exp.
+pair : exp -> exp -> exp.
+inl : exp -> exp.
+inr : exp -> exp.
+if : inface -> exp.
+
+output : type.
+out_nil : output.
+out_exp : exp -> output.
+
+input : type.
+inp_nil : input.
+inp_exp : exp -> input.
+
+cmd : type.
+send_0 : cmd.
+send_1 : exp -> outface -> cmd.
+send_2 : exp -> outface -> exp -> outface -> cmd.
+case : exp -> outface -> outface -> cmd.
+split : exp -> cmd.
+use : name -> cmd.
+
+%% Wires are numbers for now
+wire : type.
+w_z : wire.
+w_s : wire -> wire.
+
+%% The store keeps track of what wires carries which values
+store : type.
+store_nil : store.
+store_cons : wire -> exp -> store -> store.
+
+store_lookup : store -> wire -> input -> type.
+%mode store_lookup +S +W -I.
+- : store_lookup store_nil _ inp_nil.
+- : store_lookup (store_cons W E _) W (inp_exp E).
+- : store_lookup (store_cons _ _ R) W E
+     <- store_lookup R W E.
+%worlds () (store_lookup S _ _).
+%terminates S (store_lookup S _ _).
+%covers store_lookup +S +W *I.
+
+store_update : store -> wire -> output -> store -> type.
+%mode store_update +S +W +O -ST.
+- : store_update S W out_nil S.
+- : store_update store_nil W (out_exp E) (store_cons W E store_nil).
+- : store_update (store_cons W _ R) W (out_exp E) (store_cons W E R).
+- : store_update (store_cons K _ R) W OE S'
+     <- store_update R W OE S'.
+%worlds () (store_update S _ _ _).
+%terminates S (store_update S _ _ _).
+%covers store_update +S +W +O *I.
+
+box : type.
+box_cmd : cmd -> box.
+
+% These are really modules
+box_list : type.
+box_list_nil : box_list.
+box_list_cons : box -> wire -> wire -> wire -> wire -> box_list -> box_list.
+
+% These are really programs
+module : type.
+module_nil : module.
+module_cons : name -> box_list -> module -> module.
+
+%% %% SEMANTICS BEGIN
+
+%% A Map for inputs, used in the context
+i_map : inface -> input -> type.
+%mode i_map +F -I.
+
+
+
+exp_eval : exp -> exp -> type.
+%mode exp_eval +Exp -Exp'.
+- : exp_eval (if we) I1
+     <- i_map we (inp_exp I1).
+- : exp_eval (if no) I1
+     <- i_map no (inp_exp I1).
+- : exp_eval unit unit.
+- : exp_eval (pair P1 P2) (pair P1' P2')
+     <- exp_eval P1 P1'
+     <- exp_eval P2 P2'.
+- : exp_eval (inl P) (inl P')
+     <- exp_eval P P'.
+- : exp_eval (inr P) (inr P')
+     <- exp_eval P P'.
+
+cmd_eval : cmd -> output -> output -> type.
+%mode cmd_eval +C -E' -S'.
+- : cmd_eval send_0 out_nil out_nil.
+- : cmd_eval (send_1 V ea) (out_exp V') out_nil
+     <- exp_eval V V'.
+- : cmd_eval (send_1 V so) out_nil (out_exp V')
+     <- exp_eval V V'.
+- : cmd_eval (send_2 V1 ea V2 so) (out_exp V1') (out_exp V2')
+     <- exp_eval V1 V1'
+     <- exp_eval V2 V2'.
+- : cmd_eval (send_2 V1 so V2 ea) (out_exp V2') (out_exp V1')
+     <- exp_eval V1 V1'
+     <- exp_eval V2 V2'.
+- : cmd_eval (split (pair V1 V2)) (out_exp V2') (out_exp V1')
+     <- exp_eval V1 V1'
+     <- exp_eval V2 V2'.
+- : cmd_eval (case V1 ea _) (out_exp P) out_nil
+     <- exp_eval V1 (inl P).
+- : cmd_eval (case V1 so _) out_nil (out_exp P)
+     <- exp_eval V1 (inl P).
+- : cmd_eval (case V1 _ ea) (out_exp P) out_nil
+     <- exp_eval V1 (inr P).
+- : cmd_eval (case V1 _ so) out_nil (out_exp P)
+     <- exp_eval V1 (inr P).
+%% Todo: Use!
+
+%block i_map_blk : some {W : input} {N : input}
+		     block {im1 : i_map we W} {im2 : i_map no N}.
+
+%worlds (i_map_blk) (i_map I _).
+%terminates E (i_map E _).
+%worlds (i_map_blk) (exp_eval Exp _).
+%terminates E (exp_eval E _).
+%covers exp_eval +E -O.
+%worlds (i_map_blk) (cmd_eval Exp _ _).
+%terminates E (cmd_eval E _ _).
+
+box_eval : box -> input -> input -> output -> output -> type.
+%mode box_eval +B +W' +N' -E' -S'.
+- : box_eval (box_cmd C) West North East South
+     <- (i_map we West -> i_map no North -> cmd_eval C East South).
+%worlds (i_map_blk) (box_eval B _ _ _ _).
+%terminates B (box_eval B _ _ _ _).
+
+store_option : type.
+store_none : store_option.
+store_some : store -> store_option.
+
+box_execute : store -> box -> wire -> wire -> wire -> wire
+						   -> store_option -> type.
+%mode box_execute +ST +B +W +N +E +S -ST'.
+- : box_execute ST B W N E S (store_some ST')
+     <- store_lookup ST W (inp_exp IW)
+     <- store_lookup ST N (inp_exp IN)
+     <- box_eval B (inp_exp IW) (inp_exp IN) OE OS
+     <- store_update ST E OE ST''
+     <- store_update ST S OS ST'.
+- : box_execute ST B w_z N E S (store_some ST')
+     <- store_lookup ST N (inp_exp IN)
+     <- box_eval B inp_nil (inp_exp IN) OE OS
+     <- store_update ST E OE ST''
+     <- store_update ST S OS ST'.
+- : box_execute ST B W w_z E S (store_some ST')
+     <- store_lookup ST W (inp_exp IW)
+     <- box_eval B (inp_exp IW) inp_nil OE OS
+     <- store_update ST E OE ST''
+     <- store_update ST S OS ST'.
+- : box_execute ST B W N _ _ store_none
+     <- store_lookup ST W inp_nil
+     <- store_lookup ST N inp_nil.
+%worlds () (box_execute ST _ _ _ _ _ _).
+%terminates B (box_execute _ B _ _ _ _ _).
+
+box_list_execute : store -> box_list -> store_option -> type.
+%mode box_list_execute +ST +BL -STO.
+- : box_list_execute _ box_list_nil store_none.
+- : box_list_execute ST (box_list_cons B W N E S R) (store_some ST')
+     <- box_execute ST B W N E S (store_some ST').
+- : box_list_execute ST (box_list_cons B W N E S R) ST'
+     <- box_execute ST B W N E S store_none
+     <- box_list_execute ST R ST'.
+%worlds () (box_list_execute S _ _).
+%terminates BL (box_list_execute _ BL _).
