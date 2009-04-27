@@ -3,6 +3,7 @@ UMZFILE=data/codex.umz
 SANDMARK=data/sandmark.umz
 DECRYPTOR=data/decrypt.command
 HAX0R=data/hack-attempt.input
+PUBCHECK=data/pubcheck.input
 
 GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all
 
@@ -26,6 +27,9 @@ decrypt: build
 
 hack: build
 	./uvm ${UMFILE} < ${HAX0R}
+
+pubcheck: build
+	./uvm ${UMFILE} < ${PUBCHECK}
 
 prof-sandmark: build
 	./uvm +RTS -p --RTS ${SANDMARK}
