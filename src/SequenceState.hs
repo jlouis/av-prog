@@ -8,16 +8,8 @@ import qualified Data.Array.IO as A
 
 c_MAX_SIZE = (2 ** 32) - 1
 
-
-_find f n EmptyL = Nothing
-_find f n (x :< xs) =
-    if f x then Just (n, x)
-    else _find f (n+1) (viewl xs)
-
-find seq f = _find f 0 (viewl seq)
-
 instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word32)) where
-    empty init = do l <- return $ Prelude.length init
+    empty init = do l <- return $! Prelude.length init
                     program <- A.newListArray (0 :: Word32, fromIntegral (l-1)) init
                     return ([], program, Data.Sequence.empty)
 
@@ -27,31 +19,34 @@ instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word3
         A.readArray arr off
 
     updateE (n, prg, s) 0 off v = do A.writeArray prg off v
-                                     return (n, prg, s)
+                                     return $! (n, prg, s)
     updateE (n, prg, s) a off v =
         do arr <- return $ index s (fromIntegral (a-1))
            A.writeArray arr off v
-           return (n, prg, s)
+           return $! (n, prg, s)
 
     allocate (n, prg, s) cap =
         do new_arr <- A.newArray (0, cap) (0 :: Word32)
            case n of
              [] ->
-                 do s' <- return $ s |> new_arr
+                 do s' <- return $! s |> new_arr
                     return (([], prg, s'), fromIntegral (Data.Sequence.length s'))
              i : n' ->
                  let s' = update (fromIntegral (i-1)) new_arr s in
-                   return ((n', prg, s'), i)
+                   return $! ((n', prg, s'), i)
 
     free (n, prg, s) 0 = error "Can't free the program"
     free (n, prg, s) x =
-        return (x:n, prg, s)
-
-    load s 0 = return $ s
+        do new_arr <-  A.newArray (0, 0) (0 :: Word32)
+           let s' = update (fromIntegral x) new_arr s in
+             return (x:n, prg, s)
+        
+ 
+    load s 0 = return $! s
     load (n, prg, s) arr =
-        do source <- return $ index s (fromIntegral (arr-1))
-           target <- A.mapArray (\x -> x) source
-           return (n, target, s)
+        do source <- return $! index s (fromIntegral (arr-1))
+           target <- A.mapArray id source
+           return $! (n, target, s)
 
 instance State ([Word32], Seq (Seq Word32)) where
 
