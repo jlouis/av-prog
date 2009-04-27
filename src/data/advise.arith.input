@@ -1,0 +1,51 @@
+hmonk
+COMEFROM
+/bin/umodem arith2.adv STOP
+
+{ comments are enclosed by curly-braces;
+  no nested comments are allowed  }
+
+{ addition 
+
+  these rules work when the arguments are numerals
+  but not for all arbitrary expressions
+
+}
+Add Z y => y;
+Add (S x) y => S (Add x y);
+
+{ define multiplication (Mult) here }
+Mult Z y => Z;
+Mult (S Z) y => y;
+Mult (S x) y => Add y (Mult x y);
+
+{ when all other computation is done } 
+Compute (Add x y) => (Add x y);
+{ Compute x => x; }
+
+. { end of rules }
+
+STOP
+
+/bin/umodem arith2.tests STOP
+
+{ tests for arithmetic }
+
+{ test addition on numerals }
+Compute (Add (S (S Z)) (S (S Z))) -> (S (S (S (S Z))));
+
+{ test multiplication on numerals }
+Compute (Mult (S (S Z)) (S (S Z))) -> (S (S (S (S Z))));
+Compute (Mult (S (S Z)) (S (S (S Z)))) -> (S (S (S (S (S (S Z))))));
+
+{ test nested expressions }
+Compute (Add (S Z) (Mult (S (S Z)) (S (S (S Z))))) -> (S (S (S (S (S (S (S Z)))))));
+Compute (Add (Add (S (S Z)) (S Z)) (Add (S (S (S Z))) (S (S Z)))) -> (S (S (S (S (S (S (S (S Z))))))));
+
+. { end of tests }
+
+STOP
+
+./advise run arith2.adv arith2.tests
+
+

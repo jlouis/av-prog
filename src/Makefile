@@ -4,6 +4,7 @@ SANDMARK=data/sandmark.umz
 DECRYPTOR=data/decrypt.command
 HAX0R=data/hack-attempt.input
 PUBCHECK=data/pubcheck.input
+ADVISE_ARITH=data/advise.arith.input
 
 GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all
 
@@ -30,6 +31,9 @@ hack: build
 
 pubcheck: build
 	./uvm ${UMFILE} < ${PUBCHECK}
+
+advise-arith:
+	./uvm ${UMFILE} < ${ADVISE_ARITH}
 
 prof-sandmark: build
 	./uvm +RTS -p --RTS ${SANDMARK}

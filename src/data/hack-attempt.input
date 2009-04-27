@@ -24,34 +24,33 @@ C        username = ARG(II)
 CV       REM  common words used in passwords
 CX       DIM pwdcount AS INTEGER
 CXV      pwdcount = LIII
-CXX      DIM words(pwdcount) AS STRING
-CXXV     words(I) = "airplane"
-CXXX     words(II) = "alphabet"
-CXXXV    words(III) = "aviator"
-CXL      words(IV) = "bidirectional"
-CXLV     words(V) = "changeme"
-CL       words(VI) = "creosote"
-CLV      words(VII) = "cyclone"
-CLX      words(VIII) = "december"
-CLXV     words(IX) = "dolphin"
-CLXX     words(X) = "elephant"
-CLXXV    words(XI) = "ersatz"
-CLXXX    words(XII) = "falderal"
-CLXXXV   words(XIII) = "functional"
-CXC      words(XIV) = "future"
-CXCV     words(XV) = "guitar"
-CC       words(XVI) = "gymnast"
-CCV      words(XVII) = "hello"
-CCX      words(XVIII) = "imbroglio"
-CCXV     words(XIX) = "january"
-CCXX     words(XX) = "joshua"
-CCXXV    words(XXI) = "kernel"
-CCXXX    words(XXII) = "kingfish"
-CCXXXV   words(XXIII) = "(\b.bb)(\v.vv)"
-CCXL     words(XXIV) = "millennium"
-CCXLV    words(XXV) = "monday"
-CCL      words(XXVI) = "nemesis"
-CCLV     words(XXVII) = "oatmeal"
+CXX      REM DIM words(pwdcount) AS STRING
+CXXX     REM words(II) = "alphabet"
+CXXXV    REM words(III) = "aviator"
+CXL      REM words(IV) = "bidirectional"
+CXLV     REM words(V) = "changeme"
+CL       REM words(VI) = "creosote"
+CLV      REM words(VII) = "cyclone"
+CLX      REM words(VIII) = "december"
+CLXV     REM words(IX) = "dolphin"
+CLXX     REM words(X) = "elephant"
+CLXXV    REM words(XI) = "ersatz"
+CLXXX    REM words(XII) = "falderal"
+CLXXXV   REM words(XIII) = "functional"
+CXC      REM words(XIV) = "future"
+CXCV     REM words(XV) = "guitar"
+CC       REM words(XVI) = "gymnast"
+CCV      REM words(XVII) = "hello"
+CCX      REM words(XVIII) = "imbroglio"
+CCXV     REM words(XIX) = "january"
+CCXX     REM words(XX) = "joshua"
+CCXXV    REM words(XXI) = "kernel"
+CCXXX    REM words(XXII) = "kingfish"
+CCXXXV   REM words(XXIII) = "(\b.bb)(\v.vv)"
+CCXL     REM words(XXIV) = "millennium"
+CCXLV    REM words(XXV) = "monday"
+CCL      REM words(XXVI) = "nemesis"
+CCLV     REM words(XXVII) = "oatmeal"
 CXX      DIM words(pwdcount) AS STRING
 CXXV     words(I) = "airplane"
 CXXX     words(II) = "alphabet"
@@ -118,14 +117,6 @@ CDXXX    PRINT "found match!! for user " + username + CHR(X)
 CDXXXV   PRINT "password: " + words(i) + CHR(X)
 CDXL     END
 CDXLV    PRINT "no simple matches for user " + username + CHR(X)
-CDL      REM
-CDLV     REM  the above code will probably crack passwords for many
-CDLX     REM  users so I always try it first. when it fails, I try the
-CDLXV    REM  more expensive method below.
-CDLXX    REM
-CDLXXV   REM  passwords often take the form
-CDLXXX   REM    dictwordDD
-CDLXXXV  REM  where DD is a two-digit decimal number. try these next:
 CDXC     i = I
 CDXCV    DIM j AS INTEGER
 CDXCVI   DIM k AS INTEGER
