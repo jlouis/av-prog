@@ -10,52 +10,80 @@ tm : type.
 const : nat -> tm.
 app : tm -> tm -> tm.
 
+tm_eq : tm -> tm -> type.
+%mode tm_eq +T -U.
+tm_eq_refl : tm_eq T T.
+%worlds () (tm_eq _ _).
+%total T (tm_eq T _).
+
 %% Patterns
 pat : type.
 pconst : nat -> pat.
 papp : pat -> pat -> pat.
 pvar : nat -> pat. %% Consider HOAS'ing this
 
-rule : type.
-rule_trans : pat -> pat -> rule.
-
 %% Programs are rule lists.
 program : type.
 rule_list_nil : program.
-rule_list_cons : rule -> program -> program.
+rule_list_cons : pat -> pat -> program -> program.
 
 %% Rules can be well-formed
-wellformed : rule -> type.
+wellformed : pat -> pat -> type.
 
 ctx : type.
 ctx_empty : ctx.
 ctx_bind : nat -> tm -> ctx -> ctx.
 
-%% Run union 
-ctx_union : ctx -> ctx -> ctx -> type.
+ctx_option : type.
+ctx_opt_none : ctx_option.
+ctx_opt_some : tm -> ctx_option.
+
+%% Term substitution
+tm_subst : ctx -> tm -> tm -> type.
+pa_subst : ctx -> pat -> tm -> type.
+%% Context lookup TODO TODO
+ctx_lookup : nat -> ctx -> ctx_option -> type.
 
 %% Unification of bindings
 unify : ctx -> ctx -> type.
+- : unify ctx_empty _.
+- : unify (ctx_bind K TM _) CTX2
+     <- ctx_lookup K CTX2 ctx_opt_none.
+- : unify (ctx_bind K TM _) CTX2
+     <- ctx_lookup K CTX2 (ctx_opt_some TM')
+     <- tm_eq TM TM'.
+
+ctx_match_option : type.
+ctx_match_none : ctx_match_option.
+ctx_match_some : ctx -> ctx_match_option.
+
+unify_option : ctx_match_option -> ctx_match_option -> type.
+
+%% Run union TODO TODO
+ctx_union : ctx_match_option -> ctx -> ctx -> type.
 
 %% Matchings
-match : ctx -> pat -> tm -> ctx -> type.
-- : match CTX (pconst K) (const K) CTX.
-- : match CTX (pvar K) TM (ctx_bind K TM CTX).
-- : match CTX (papp A B) (app TA TB) CTXU
-     <- match CTX A TA BindA
+match : ctx -> pat -> tm -> ctx_match_option -> type.
+- : match CTX (pconst K) (const K) (ctx_match_some CTX).
+- : match CTX (pconst K) (const M) ctx_match_none.
+- : match CTX (pvar K) TM (ctx_match_some (ctx_bind K TM CTX)).
+- : match CTX (papp A B) (app TA TB) (ctx_match_some CTXU)
+     <- match CTX A TA (BindA : ctx_match_option)
      <- match CTX B TB BindB
-     <- unify BindA BindB
+     <- unify_option BindA BindB
      <- ctx_union BindA CTX CTX'
      <- ctx_union BindB CTX' CTXU.
 
-%query 1 1 (match ctx_empty (pconst K) (const K) ctx_empty).
+%query 1 1 (match ctx_empty (pconst K) (const K) (ctx_match_some ctx_empty)).
 test_term1 = (app (const Z) (const Y)).
-%query 1 1 (match CTX (pvar K) test_term1 (ctx_bind K test_term1 CTX)).
-
-
+%query 1 1 (match CTX (pvar K) test_term1 (ctx_match_some (ctx_bind K test_term1 CTX))).
 
 %% Advise, which is really evaluation
-advise : program -> tm -> tm -> type.
+advise_1 :  program -> tm -> tm -> type.
+- : advise_1 rule_list_nil T T.
+- : advise_1 (rule_list_cons P1 P2 L) T T'
+     <- match ctx_empty P1 T (ctx_match_some CTX')
+     <- pa_subst CTX P2 T'.
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
@@ -85,9 +113,9 @@ transl_pat : pat -> exp -> type.
      <- transl_pat P1 P1'
      <- transl_pat P2 P2'.
 
-transl_rule : rule -> exp -> type.
-%mode transl_rule +R -E.
-- : transl_rule (rule_trans T1 T2) (pair T1' T2')
+transl_rule : pat -> pat -> exp -> type.
+%mode transl_rule +P1 +P2 -E.
+- : transl_rule T1 T2 (pair T1' T2')
      <- transl_pat T1 T1'
      <- transl_pat T2 T2'.
 
