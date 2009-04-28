@@ -22,6 +22,6 @@ data Command = SendEmpty
              | Use {name :: String}
 
 
-type Wire = Integer
+type Wire = Maybe Integer
 
-newtype Box = MKBox {cmd :: Command, n :: Wire, w :: Wire, e :: Wire, s :: Wire}
+data Box = MKBox {cmd :: Command, n :: Wire, w :: Wire, e :: Wire, s :: Wire}
