@@ -7,11 +7,11 @@ data Inface = N
 data Outface = S
              | E
 
-data Exp   = Empty
-           | Tuple {exp1_e :: Exp,  exp2_e :: Exp} 
-           | Inl {exp_e :: Exp}
-           | Inr {exp_e :: Exp}
-           | Inface
+data Exp = Empty
+         | Tuple {exp1_e :: Exp,  exp2_e :: Exp} 
+         | Inl {exp_e :: Exp}
+         | Inr {exp_e :: Exp}
+         | Inface
 
 data Command = SendEmpty
              | Send1 {exp_c :: Exp,  out :: Outface}
