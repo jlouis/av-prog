@@ -61,7 +61,7 @@ _matches_ a term yielding a set of bindings:
 
 (2) A variable matches any term, yielding a binding to that term.  For
     example,
-    
+
     x matches (S Z) yielding [x = (S Z)]
 
 (3) A juxtaposition-pattern matches a juxtaposition-term if 
