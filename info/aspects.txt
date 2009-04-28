@@ -1,0 +1,160 @@
+From: hmonk@cbv.net
+Newsgroups: cult.cbv.discuss
+Date: 26 Aug 19108 17:21:07
+X-Organization: Cult of the Bound Variable
+Subject: O'Cult Version 1.0 Available
+
+Friends,
+
+On my recent journey across the rivers, I was struck with a simply
+remarkable idea for a new way to program our Computing Device.  As you
+all know well, it is currently difficult for a programmer to correct a
+mistake of one of his fellows---but no longer!  Why, when programming in
+O'Cult, one programmer needs to have written barely more than a blank
+screen before others can begin debugging his code.
+
+I start from a very simple programming language whose terms are
+specified as follows:
+
+e ::= c | e e | (e)
+
+where c ranges over constants and we adopt the convention that
+juxtaposition associates to the left.  For example,
+
+     Z
+     (S Z)
+     Add Z (S Z)
+
+are all well-formed terms, and the last parses as (Add Z) (S Z).
+
+Ordinarily, one would enrich this language with more powerful means of
+computation.  Instead, I take a different tack: a term can be _advised_
+by a set of external computation _rules_.
+
+A rule is a pair of _patterns_, where a pattern extends the language of
+terms with variables.  The term (Add Z (S Z)) is quite inert, but if the
+term is advised by the following rule,
+
+     Add Z y => y; 
+
+then the program computes (S Z), as expected.
+
+******************
+Rules and Matching
+******************
+
+More formally, a rule is a pair of patterns separated by '=>' and
+terminated with ';'.  A pattern can contain both constants, which are
+sequences of letters and numbers beginning with an *uppercase* letter,
+and variables, which are sequences of letters and numbers beginning with
+a *lowercase* letter.  A well-formed rule is one where the variables in
+the right-hand side are a subset of the variables in the left-hand side.
+
+To define how a rule acts on a term, we first define when a pattern
+_matches_ a term yielding a set of bindings:
+
+(1) A constant matches only that same constant, yielding the empty set
+    of bindings. For example,
+
+    Z matches Z yielding []
+    S does not match Z
+
+(2) A variable matches any term, yielding a binding to that term.  For
+    example,
+    
+    x matches (S Z) yielding [x = (S Z)]
+
+(3) A juxtaposition-pattern matches a juxtaposition-term if 
+       (a) the pattern's first position matches the term's first position
+       (b) the pattern's second position matches the term's second position
+       (c) the bindings from the two positions _unify_: for any variable
+	   bound in both positions, the term associated with that variable
+	   is the same on both positions.  That is, a variable is allowed to
+
+	   appear in a pattern more than once, but it must match the
+	   same term in all locations.
+    The bindings of the juxtaposition are the union of the bindings from
+    each position.
+
+    For example, 
+
+    x y matches S Z yielding [x = S, y = Z]
+    x x matches S S yielding [x = S]
+    x x does not match S Z
+
+If a rule matches a term, then _applying_ that rule to the term yields
+the right-hand component of the rule with the bindings from the match
+substituted for the variables.
+
+*******************
+Sentences of Advice
+*******************
+  
+This language would be quite boring if a programmer could only specify
+one rule.  So, a term may be modified by a _sentence_ of advice, which
+is a sequence of rules terminated with the '.' character.
+
+A program consists of a current term and a sentence of advice.  Because
+a program is advised by multiple rules, circumstances can arise when
+more than one rule in the sentence matches the term.  A good programming
+language is based on common sense above all else, and my sand-father was
+very fond of the following aphorism:
+
+    "Advice when most needed is least heeded."
+                                     - Unknown
+
+Therefore, there is clearly only one correct semantics for applying
+advice to a term:
+
+The rules in the sentence are considered left-to-right.
+
+(1) If the current rule matches the current term, the result is the
+    application of that rule to the term.
+
+(2) If the current rule does not match the term directly, it may match
+    subterms (provided that the term is a juxtaposition).  In this case, 
+    whether or not the current rule is applied is determined by:
+
+   (a) Counting the number of matches in each position of the juxtaposition.
+       Note that counting does not proceed into subterms that themselves
+       match the current rule.
+
+   (b) If the rule does not match in either position, it is not applied.  
+
+       If the rule matches only in one position, it is recursively
+       considered for application to that position.
+
+       If the rule matches both positions,
+         * if one position has strictly more matches, the rule is
+	   recursively considered for application to *other* position.
+	   (The rule is least heeded in the position where it is most
+	   needed.)
+
+	 * if the rule matches the same number of subterms in both
+	   positions, the rule is not applied.
+
+When a rule is not applied, consideration proceeds to the next rule.
+When a rule is applied, the process repeats on the new term.  This
+process terminates when no rules in the advice apply.
+
+**********
+Conclusion
+**********
+
+I am sure you can see how easy it is to program in O'Cult.  Now I need
+your assistance.  I have included a regression suite as part of the
+advise distribution (see the man pages for details), but I need to
+collect programs that pass the suite.
+
+I think we might be able to get some good publications out of this work,
+but only if we can prove that it is easy to write short programs.  Try
+passing the regression suite with as pithy advice as possible.  (The size
+of a sentence is the sum of the sizes of the rules in it, where all
+variables are constants are considered to have unit size.)
+
+I implore you to hold this idea in confidence; its clean modularization
+of crosscutting concerns may prove key in our strife with the Cult of
+the LValue.
+
+Please let me know if you have any questions or suggestions,
+-Harmonious
