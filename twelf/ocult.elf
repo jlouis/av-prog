@@ -102,14 +102,32 @@ advise :  program -> program -> tm -> tm -> type.
 - : advise PRG (rule_list_cons P1 P2 L) T T'
      <- match ctx_empty P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) T T'
-     <- subterm_match_count PRG P1 T z
-     <- subterm_match_count PRG P2 T z
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
+     <- subterm_match_count PRG P1 T1 z
+     <- subterm_match_count PRG P2 T2 z
+     <- advise PRG L (app T1 T2) T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
+     <- subterm_match_count PRG P1 T1 K
+     <- subterm_match_count PRG P2 T2 K
      <- advise PRG L T T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) T T'
-     <- subterm_match_count PRG P1 T K
-     <- subterm_match_count PRG P2 T K
-     <- advise PRG L T T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
+     <- subterm_match_count PRG P1 T1 z
+     <- subterm_match_count PRG P2 T2 (s K)
+     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T1 T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
+     <- subterm_match_count PRG P1 T1 (s K)
+     <- subterm_match_count PRG P2 T2 z
+     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T2 T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
+     <- subterm_match_count PRG P1 T1 Z1
+     <- subterm_match_count PRG P2 T2 Z2
+     <- nat_lt Z1 Z2 true
+     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T2 T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
+     <- subterm_match_count PRG P1 T1 Z1
+     <- subterm_match_count PRG P2 T2 Z2
+     <- nat_lt Z2 Z1 true
+     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T1 T'.
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
