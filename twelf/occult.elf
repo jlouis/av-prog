@@ -32,7 +32,7 @@ ctx_empty : ctx.
 ctx_bind : nat -> tm -> ctx -> ctx.
 
 %% Run union 
-ctx_union : ctx -> ctx -> ctx.
+ctx_union : ctx -> ctx -> ctx -> type.
 
 %% Unification of bindings
 unify : ctx -> ctx -> type.
@@ -42,8 +42,8 @@ match : ctx -> pat -> tm -> ctx -> type.
 - : match CTX (pconst K) (const K) CTX.
 - : match CTX (pvar K) TM (ctx_bind K TM CTX).
 - : match CTX (papp A B) (app TA TB) CTXU
-     <- match A TA BindA
-     <- match B TB BindB
+     <- match CTX A TA BindA
+     <- match CTX B TB BindB
      <- unify BindA BindB
      <- ctx_union BindA CTX CTX'
      <- ctx_union BindB CTX' CTXU.
