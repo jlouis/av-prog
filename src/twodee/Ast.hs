@@ -1,7 +1,7 @@
 -- Abstract Syntax tree
-module AST (Inface, Outface, Exp, Command) where
+module Ast (Inface (..), Outface (..), Exp (..), Command (..), Wire, Box (..)) where
 
-data Inface = N
+data Inface = N 
             | W
 
 data Outface = S
@@ -11,7 +11,7 @@ data Exp = Empty
          | Tuple {exp1_e :: Exp,  exp2_e :: Exp} 
          | Inl {exp_e :: Exp}
          | Inr {exp_e :: Exp}
-         | Inface
+         | Iface Inface
 
 data Command = SendEmpty
              | Send1 {exp_c :: Exp,  out :: Outface}
@@ -20,3 +20,8 @@ data Command = SendEmpty
              | Case {exp_c :: Exp,  out1 :: Outface, out2 :: Outface}
              | Split {exp_c :: Exp}
              | Use {name :: String}
+
+
+type Wire = Maybe Integer
+
+data Box = MKBox {cmd :: Command, n :: Wire, w :: Wire, e :: Wire, s :: Wire}
