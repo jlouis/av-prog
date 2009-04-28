@@ -1,11 +1,11 @@
 % Conrete syntax for O'Cult
 
-%% Natural numbers
+%% Natural numbers, consts are indexed by these
 nat : type.
 z : nat.
 s : nat -> nat.
 
-%% Terms
+%% Terms, do we need them?
 tm : type.
 const : nat -> tm.
 app : tm -> tm -> tm.
@@ -14,26 +14,53 @@ app : tm -> tm -> tm.
 pat : type.
 pconst : nat -> pat.
 papp : pat -> pat -> pat.
-pvar : nat -> pat.
+pvar : nat -> pat. %% Consider HOAS'ing this
 
 rule : type.
 rule_trans : pat -> pat -> rule.
 
-%% TODO: Lists of rules
-rule_list : type.
+%% Programs are rule lists.
+program : type.
+rule_list_nil : program.
+rule_list_cons : rule -> program -> program.
 
 %% Rules can be well-formed
 wellformed : rule -> type.
 
 ctx : type.
+ctx_empty : ctx.
+ctx_bind : nat -> tm -> ctx -> ctx.
+
+%% Run union 
+ctx_union : ctx -> ctx -> ctx.
+
+%% Unification of bindings
+unify : ctx -> ctx -> type.
 
 %% Matchings
-match : rule -> ctx.
+match : ctx -> pat -> tm -> ctx -> type.
+- : match CTX (pconst K) (const K) CTX.
+- : match CTX (pvar K) TM (ctx_bind K TM CTX).
+- : match CTX (papp A B) (app TA TB) CTXU
+     <- match A TA BindA
+     <- match B TB BindB
+     <- unify BindA BindB
+     <- ctx_union BindA CTX CTX'
+     <- ctx_union BindB CTX' CTXU.
+
+%query 1 1 (match ctx_empty (pconst K) (const K) ctx_empty).
+test_term1 = (app (const Z) (const Y)).
+%query 1 1 (match CTX (pvar K) test_term1 (ctx_bind K test_term1 CTX)).
+
+
 
 %% Advise, which is really evaluation
-advise : rule_list -> tm -> tm -> type.
+advise : program -> tm -> tm -> type.
 
-%% Translation from Occult to 2d
+%% #########################################
+%% ##### Translation from Occult to 2d #####
+%% #########################################
+
 transl_nat : nat -> exp -> type.
 %mode transl_nat +K -E.
 transl_nat_z : transl_nat z (inl unit).
