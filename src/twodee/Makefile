@@ -10,4 +10,4 @@ build-prof:
 	ghc ${GHCFLAGS} -prof --make *.hs -o uvm
 
 clean:
-	rm *.o *.hi uvm
+	rm -f twodee *.o *.hi
