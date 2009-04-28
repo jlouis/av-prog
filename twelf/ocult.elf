@@ -75,15 +75,44 @@ match : ctx -> pat -> tm -> ctx_match_option -> type.
      <- ctx_union BindB CTX' CTXU.
 
 %query 1 1 (match ctx_empty (pconst K) (const K) (ctx_match_some ctx_empty)).
+%query 1 1 (match ctx_empty (pconst z) (const (s z)) ctx_match_none).
 test_term1 = (app (const Z) (const Y)).
 %query 1 1 (match CTX (pvar K) test_term1 (ctx_match_some (ctx_bind K test_term1 CTX))).
 
+subterm_match_count : pat -> tm -> nat -> type.
+
 %% Advise, which is really evaluation
-advise_1 :  program -> tm -> tm -> type.
-- : advise_1 rule_list_nil T T.
-- : advise_1 (rule_list_cons P1 P2 L) T T'
+advise :  program -> tm -> tm -> type.
+- : advise rule_list_nil T T.
+- : advise (rule_list_cons P1 P2 L) T T'
      <- match ctx_empty P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
+- : advise (rule_list_cons (papp P1 P2) PT _) T T'
+     <- subterm_match_count P1 T z
+     <- subterm_match_count P2 T z
+     <- advise L T T'.
+%% - : advise (rule_list_cons (papp P1 P2)) PT T T'
+%%     <- subterm_match_count P1 (s K).
+%%     <- subterm_match_count P2 z.
+%% TODO: Recurse
+%% - : advise (rule_list_cons (papp P1 P2)) PT T T'
+%%     <- subterm_match_count P1 z
+%%     <- subterm_match_count P2 (s K).
+%% TODO: Recurse
+%% - : advise (rule_list_cons (papp P1 P2)) PT T T'
+%%      <- subterm_match_count P1 Z1
+%%     <- subterm_match_count P2 Z2
+%%     <- nat_lt Z1 Z2
+%% TODO: Recurse
+%% - : advise (rule_list_cons (papp P1 P2)) PT T T'
+%%     <- subterm_match_count P1 Z1
+%%     <- subterm_match_count P2 Z2
+%%     <- nat_lt Z2 Z1
+%% TODO: Recurse
+%% - : advise (rule_list_cons P1 P2 L) T T'
+%%     <- match ctx_empty P1 T ctx_match_none
+%%     <- advise L T T'.
+
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
