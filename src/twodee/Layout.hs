@@ -1,6 +1,7 @@
 module Layout (graphFromProgram, testProg) where
 
-import Data.Sequence (Seq, fromList)
+import qualified Data.Sequence as S
+
 import Data.List
 import Data.Graph
 import Ast
@@ -25,7 +26,7 @@ testProg = [
  ]
 
 
-type Layout = Seq (Seq Char)
+type Layout = S.Seq (S.Seq Char)
 
 
 
@@ -67,16 +68,24 @@ graphFromProgram prg =
 
 layoutProgram prg = 
     let (graph, lookupN, lookupV) = graphFromProgram prg in 
-    let seq = fromList $ take (length prg) (repeat 0) :: Seq Int in
+    let seq = S.fromList $ take (length prg) (repeat 0) :: S.Seq Int in
     layoutVertices (map (\x -> (prg !! x)) (reverse (topSort graph)))
 
 
 layoutVertices lst = 
-    let lo = (fromList $ take (length lst) 
-                           (repeat (fromList []))) in
+    let lo = (S.fromList $ take (length lst) 
+                           (repeat (S.fromList []))) in
     layoutVertices' lo lst lst 
 
 
 layoutVertices' :: Layout -> [Box] -> [Box] -> Layout
-layoutVertices' lo boxs [] = lo
+layoutVertices' lo boxs []           = lo
 layoutVertices' lo boxs (box : tail) = lo
+
+
+
+connect :: Layout -> (Int, Outface) -> (Int, Inface) -> Int -> Layout
+connect lo (idxO, facO) (idxI, facI) height = 
+    let lo' = map (\x -> x S.>< (S.fromList 
+                               (take (height - (S.length x)) (repeat ' ')))) in 
+    lo
