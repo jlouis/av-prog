@@ -1,0 +1,23 @@
+%% Natural numbers and helpers.
+
+nat : type.
+z : nat.
+s : nat -> nat.
+
+nat_lt : nat -> nat -> bool -> type.
+%mode nat_lt +N1 +N2 -B.
+- : nat_lt z (s _) true.
+- : nat_lt z z false.
+- : nat_lt (s K) (s M) B
+     <- nat_lt K M B.
+- : nat_lt (s _) z false.
+%worlds () (nat_lt _ _ _).
+%total N (nat_lt N _ _).
+
+nat_plus : nat -> nat -> nat -> type.
+%mode nat_plus +N1 +N2 -N3.
+- : nat_plus z K K.
+- : nat_plus (s K) L (s K')
+     <- nat_plus K L K'.
+%worlds () (nat_plus _ _ _).
+%total N (nat_plus N _ _).

@@ -1,33 +1,5 @@
 % Conrete syntax for O'Cult
 
-%% Natural numbers, consts are indexed by these
-nat : type.
-z : nat.
-s : nat -> nat.
-
-bool : type.
-true : bool.
-false : bool.
-
-nat_lt : nat -> nat -> bool -> type.
-%mode nat_lt +N1 +N2 -B.
-- : nat_lt z (s _) true.
-- : nat_lt z z false.
-- : nat_lt (s K) (s M) B
-     <- nat_lt K M B.
-- : nat_lt (s _) z false.
-%worlds () (nat_lt _ _ _).
-%total N (nat_lt N _ _).
-
-nat_plus : nat -> nat -> nat -> type.
-%mode nat_plus +N1 +N2 -N3.
-- : nat_plus z K K.
-- : nat_plus (s K) L (s K')
-     <- nat_plus K L K'.
-%worlds () (nat_plus _ _ _).
-%total N (nat_plus N _ _).
-
-
 %% Terms, do we need them?
 tm : type.
 const : nat -> tm.
@@ -139,37 +111,14 @@ subterm_match_count : pat -> tm -> nat -> type.
      <- nat_plus Z1 Z2 K.
 
 %% Advise, which is really evaluation
-advise :  program -> program -> tm -> tm -> type.
-- : advise PRG rule_list_nil T T.
-- : advise PRG (rule_list_cons P1 P2 L) T T'
+advise : program -> tm -> tm -> type.
+- : advise rule_list_nil T T.
+- : advise (rule_list_cons P1 P2 L) T T'
      <- match ctx_nil P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count P1 T1 z
-     <- subterm_match_count P2 T2 z
-     <- advise PRG L (app T1 T2) T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count P1 T1 K
-     <- subterm_match_count P2 T2 K
-     <- advise PRG L T T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count P1 T1 z
-     <- subterm_match_count P2 T2 (s K)
-     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T1 T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count P1 T1 (s K)
-     <- subterm_match_count P2 T2 z
-     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T2 T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count P1 T1 Z1
-     <- subterm_match_count P2 T2 Z2
-     <- nat_lt Z1 Z2 true
-     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T2 T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count P1 T1 Z1
-     <- subterm_match_count P2 T2 Z2
-     <- nat_lt Z2 Z1 true
-     <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T1 T'.
+- : advise (rule_list_cons P1 P2 L) T T'
+     <- match ctx_nil P1 T ctx_match_none
+     <- advise L T T'.
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####

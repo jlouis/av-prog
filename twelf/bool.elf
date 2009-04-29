@@ -1,0 +1,7 @@
+%% Booleans
+
+bool : type.
+true : bool.
+false : bool.
+
+
