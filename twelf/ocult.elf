@@ -19,6 +19,15 @@ nat_lt : nat -> nat -> bool -> type.
 %worlds () (nat_lt _ _ _).
 %total N (nat_lt N _ _).
 
+nat_plus : nat -> nat -> nat -> type.
+%mode nat_plus +N1 +N2 -N3.
+- : nat_plus z K K.
+- : nat_plus (s K) L (s K')
+     <- nat_plus K L K'.
+%worlds () (nat_plus _ _ _).
+%total N (nat_plus N _ _).
+
+
 %% Terms, do we need them?
 tm : type.
 const : nat -> tm.
@@ -45,22 +54,34 @@ rule_list_cons : pat -> pat -> program -> program.
 wellformed : pat -> pat -> type.
 
 ctx : type.
-ctx_empty : ctx.
+ctx_nil : ctx.
 ctx_bind : nat -> tm -> ctx -> ctx.
 
 ctx_option : type.
 ctx_opt_none : ctx_option.
 ctx_opt_some : tm -> ctx_option.
 
-%% Term substitution
-tm_subst : ctx -> tm -> tm -> type.
-pa_subst : ctx -> pat -> tm -> type.
-%% Context lookup TODO TODO
 ctx_lookup : nat -> ctx -> ctx_option -> type.
+- : ctx_lookup _ ctx_nil ctx_opt_none.
+- : ctx_lookup Z (ctx_bind Z T _) (ctx_opt_some T).
+- : ctx_lookup Z (ctx_bind _ _ R) R'
+     <- ctx_lookup Z R R'.
+
+pa_subst : ctx -> pat -> tm -> type.
+- : pa_subst CTX (pconst K) (const K).
+- : pa_subst CTX (pvar N) T
+     <- ctx_lookup N CTX (ctx_opt_some T).
+- : pa_subst CTX (papp P1 P2) (app P1' P2')
+     <- pa_subst CTX P1 P1'
+     <- pa_subst CTX P2 P2'.
+
+ctx_option : type.
+ctx_option_none : ctx_option.
+ctx_option_some : ctx -> ctx_option.
 
 %% Unification of bindings
 unify : ctx -> ctx -> type.
-- : unify ctx_empty _.
+- : unify ctx_nil _.
 - : unify (ctx_bind K TM _) CTX2
      <- ctx_lookup K CTX2 ctx_opt_none.
 - : unify (ctx_bind K TM _) CTX2
@@ -72,9 +93,18 @@ ctx_match_none : ctx_match_option.
 ctx_match_some : ctx -> ctx_match_option.
 
 unify_option : ctx_match_option -> ctx_match_option -> type.
+- : unify_option (ctx_match_some CTX1) (ctx_match_some CTX2)
+     <- unify CTX1 CTX2.
 
 %% Run union TODO TODO
-ctx_union : ctx_match_option -> ctx -> ctx -> type.
+ctx_union : ctx -> ctx -> ctx -> type.
+- : ctx_union ctx_nil C C.
+- : ctx_union (ctx_bind K T R) C C'
+     <- ctx_lookup K C ctx_opt_none
+     <- ctx_union R C C'.
+- : ctx_union (ctx_bind K T R) C (ctx_bind K T C')
+     <- ctx_lookup K C (ctx_opt_some _)
+     <- ctx_union R C C'.
 
 %% Matchings
 match : ctx -> pat -> tm -> ctx_match_option -> type.
@@ -82,50 +112,62 @@ match : ctx -> pat -> tm -> ctx_match_option -> type.
 - : match CTX (pconst K) (const M) ctx_match_none.
 - : match CTX (pvar K) TM (ctx_match_some (ctx_bind K TM CTX)).
 - : match CTX (papp A B) (app TA TB) (ctx_match_some CTXU)
-     <- match CTX A TA (BindA : ctx_match_option)
-     <- match CTX B TB BindB
-     <- unify_option BindA BindB
-     <- ctx_union BindA CTX CTX'
-     <- ctx_union BindB CTX' CTXU.
+     <- match CTX A TA (ctx_match_some CTXA)
+     <- match CTX B TB (ctx_match_some CTXB)
+     <- unify CTXA CTXB
+     <- ctx_union CTXA CTX CTX'
+     <- ctx_union CTXB CTX' CTXU.
+- : match CTX (papp A B) (app TA TB) ctx_match_none
+     <- match CTX A TA ctx_match_none.
+- : match CTX (papp A B) (app TA TB) ctx_match_none
+     <- match CTX B TB ctx_match_none.
 
-%query 1 1 (match ctx_empty (pconst K) (const K) (ctx_match_some ctx_empty)).
-%query 1 1 (match ctx_empty (pconst z) (const (s z)) ctx_match_none).
+%query 1 1 (match ctx_nil (pconst K) (const K) (ctx_match_some ctx_nil)).
+%query 1 1 (match ctx_nil (pconst z) (const (s z)) ctx_match_none).
 test_term1 = (app (const Z) (const Y)).
 %query 1 1 (match CTX (pvar K) test_term1 (ctx_match_some (ctx_bind K test_term1 CTX))).
 
 %% This one is evil. It must not match the CURRENT RULE but may match all the others
-subterm_match_count : program -> pat -> tm -> nat -> type.
+subterm_match_count : pat -> tm -> nat -> type.
+- : subterm_match_count P T (s z)
+     <- match ctx_nil P T (ctx_match_some _).
+- : subterm_match_count P (const K) z
+     <- match ctx_nil P (const K) ctx_match_none.
+- : subterm_match_count P (app T1 T2) K
+     <- subterm_match_count P T1 Z1
+     <- subterm_match_count P T2 Z2
+     <- nat_plus Z1 Z2 K.
 
 %% Advise, which is really evaluation
 advise :  program -> program -> tm -> tm -> type.
 - : advise PRG rule_list_nil T T.
 - : advise PRG (rule_list_cons P1 P2 L) T T'
-     <- match ctx_empty P1 T (ctx_match_some CTX')
+     <- match ctx_nil P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
 - : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count PRG P1 T1 z
-     <- subterm_match_count PRG P2 T2 z
+     <- subterm_match_count P1 T1 z
+     <- subterm_match_count P2 T2 z
      <- advise PRG L (app T1 T2) T'.
 - : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count PRG P1 T1 K
-     <- subterm_match_count PRG P2 T2 K
+     <- subterm_match_count P1 T1 K
+     <- subterm_match_count P2 T2 K
      <- advise PRG L T T'.
 - : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count PRG P1 T1 z
-     <- subterm_match_count PRG P2 T2 (s K)
+     <- subterm_match_count P1 T1 z
+     <- subterm_match_count P2 T2 (s K)
      <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T1 T'.
 - : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count PRG P1 T1 (s K)
-     <- subterm_match_count PRG P2 T2 z
+     <- subterm_match_count P1 T1 (s K)
+     <- subterm_match_count P2 T2 z
      <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T2 T'.
 - : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count PRG P1 T1 Z1
-     <- subterm_match_count PRG P2 T2 Z2
+     <- subterm_match_count P1 T1 Z1
+     <- subterm_match_count P2 T2 Z2
      <- nat_lt Z1 Z2 true
      <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T2 T'.
 - : advise PRG (rule_list_cons (papp P1 P2) PT _) (app T1 T2) T'
-     <- subterm_match_count PRG P1 T1 Z1
-     <- subterm_match_count PRG P2 T2 Z2
+     <- subterm_match_count P1 T1 Z1
+     <- subterm_match_count P2 T2 Z2
      <- nat_lt Z2 Z1 true
      <- advise PRG (rule_list_cons (papp P1 P2) PT rule_list_nil) T1 T'.
 
