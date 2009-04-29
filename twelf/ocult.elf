@@ -1,0 +1,147 @@
+% Conrete syntax for O'Cult
+
+%% Natural numbers, consts are indexed by these
+nat : type.
+z : nat.
+s : nat -> nat.
+
+bool : type.
+true : bool.
+false : bool.
+
+nat_lt : nat -> nat -> bool -> type.
+%mode nat_lt +N1 +N2 -B.
+- : nat_lt z (s _) true.
+- : nat_lt z z false.
+- : nat_lt (s K) (s M) B
+     <- nat_lt K M B.
+- : nat_lt (s _) z false.
+%worlds () (nat_lt _ _ _).
+%total N (nat_lt N _ _).
+
+%% Terms, do we need them?
+tm : type.
+const : nat -> tm.
+app : tm -> tm -> tm.
+
+tm_eq : tm -> tm -> type.
+%mode tm_eq +T -U.
+tm_eq_refl : tm_eq T T.
+%worlds () (tm_eq _ _).
+%total T (tm_eq T _).
+
+%% Patterns
+pat : type.
+pconst : nat -> pat.
+papp : pat -> pat -> pat.
+pvar : nat -> pat. %% Consider HOAS'ing this
+
+%% Programs are rule lists.
+program : type.
+rule_list_nil : program.
+rule_list_cons : pat -> pat -> program -> program.
+
+%% Rules can be well-formed
+wellformed : pat -> pat -> type.
+
+ctx : type.
+ctx_empty : ctx.
+ctx_bind : nat -> tm -> ctx -> ctx.
+
+ctx_option : type.
+ctx_opt_none : ctx_option.
+ctx_opt_some : tm -> ctx_option.
+
+%% Term substitution
+tm_subst : ctx -> tm -> tm -> type.
+pa_subst : ctx -> pat -> tm -> type.
+%% Context lookup TODO TODO
+ctx_lookup : nat -> ctx -> ctx_option -> type.
+
+%% Unification of bindings
+unify : ctx -> ctx -> type.
+- : unify ctx_empty _.
+- : unify (ctx_bind K TM _) CTX2
+     <- ctx_lookup K CTX2 ctx_opt_none.
+- : unify (ctx_bind K TM _) CTX2
+     <- ctx_lookup K CTX2 (ctx_opt_some TM')
+     <- tm_eq TM TM'.
+
+ctx_match_option : type.
+ctx_match_none : ctx_match_option.
+ctx_match_some : ctx -> ctx_match_option.
+
+unify_option : ctx_match_option -> ctx_match_option -> type.
+
+%% Run union TODO TODO
+ctx_union : ctx_match_option -> ctx -> ctx -> type.
+
+%% Matchings
+match : ctx -> pat -> tm -> ctx_match_option -> type.
+- : match CTX (pconst K) (const K) (ctx_match_some CTX).
+- : match CTX (pconst K) (const M) ctx_match_none.
+- : match CTX (pvar K) TM (ctx_match_some (ctx_bind K TM CTX)).
+- : match CTX (papp A B) (app TA TB) (ctx_match_some CTXU)
+     <- match CTX A TA (BindA : ctx_match_option)
+     <- match CTX B TB BindB
+     <- unify_option BindA BindB
+     <- ctx_union BindA CTX CTX'
+     <- ctx_union BindB CTX' CTXU.
+
+%query 1 1 (match ctx_empty (pconst K) (const K) (ctx_match_some ctx_empty)).
+%query 1 1 (match ctx_empty (pconst z) (const (s z)) ctx_match_none).
+test_term1 = (app (const Z) (const Y)).
+%query 1 1 (match CTX (pvar K) test_term1 (ctx_match_some (ctx_bind K test_term1 CTX))).
+
+%% This one is evil. It must not match the CURRENT RULE but may match all the others
+subterm_match_count : program -> pat -> tm -> nat -> type.
+
+%% Advise, which is really evaluation
+advise :  program -> program -> tm -> tm -> type.
+- : advise PRG rule_list_nil T T.
+- : advise PRG (rule_list_cons P1 P2 L) T T'
+     <- match ctx_empty P1 T (ctx_match_some CTX')
+     <- pa_subst CTX P2 T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) T T'
+     <- subterm_match_count PRG P1 T z
+     <- subterm_match_count PRG P2 T z
+     <- advise PRG L T T'.
+- : advise PRG (rule_list_cons (papp P1 P2) PT _) T T'
+     <- subterm_match_count PRG P1 T K
+     <- subterm_match_count PRG P2 T K
+     <- advise PRG L T T'.
+
+%% #########################################
+%% ##### Translation from Occult to 2d #####
+%% #########################################
+
+transl_nat : nat -> exp -> type.
+%mode transl_nat +K -E.
+transl_nat_z : transl_nat z (inl unit).
+transl_nat_s : transl_nat (s K) (inr K')
+		<- transl_nat K K'.
+
+transl_tm : tm -> exp -> type.
+%mode transl_tm +T -E.
+- : transl_tm (const K) (inr K')
+     <- transl_nat K K'.
+- : transl_tm (app T1 T2) (inl (pair T1' T2'))
+     <- transl_tm T1 T1'
+     <- transl_tm T2 T2'.
+
+transl_pat : pat -> exp -> type.
+%mode transl_pat +P -E.
+- : transl_pat (pconst K) (inr (inl K'))
+     <- transl_nat K K'.
+- : transl_pat (pvar K) (inr (inr K'))
+     <- transl_nat K K'.
+- : transl_pat (papp P1 P2) (inl (pair P1' P2'))
+     <- transl_pat P1 P1'
+     <- transl_pat P2 P2'.
+
+transl_rule : pat -> pat -> exp -> type.
+%mode transl_rule +P1 +P2 -E.
+- : transl_rule T1 T2 (pair T1' T2')
+     <- transl_pat T1 T1'
+     <- transl_pat T2 T2'.
+
