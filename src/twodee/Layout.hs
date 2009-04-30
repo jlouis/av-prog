@@ -41,18 +41,17 @@ endBox boxs wire =
 -}
 
 get_edges :: [Box] -> [(Int, Int, [Int])]
-get_edges boxes = get_edges' (zip boxes [0..]) [] -- Attach a counter to each box
+get_edges boxes = map get_edges (zip boxes [0..]) -- Attach a counter to each box
   where
     -- Find the endpoint of a wire
     find_endpoint wire = findIndex (\box -> ((north box) == wire) || ((west box) == wire)) boxes
-    -- Worker; walk the boxes, collecting the edges
-    get_edges' []             es = es
-    get_edges' ((box, idx) : tail) es =
+    -- Worker; collect the outbound edges of a box
+    get_edges (box, idx) =
         let e = (east  box)
             s = (south box)
             edges = catMaybes [(find_endpoint e), (find_endpoint s)]
         in
-          get_edges' tail ((idx, idx, edges) : es)
+          (idx, idx, edges)
 
 graphFromProgram prg =
     graphFromEdges (get_edges prg)
