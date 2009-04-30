@@ -1,13 +1,16 @@
 -- Abstract Syntax tree
-module Ast (Inface (..), Outface (..), Exp (..), Command (..), Wire, Box (..)) where
+module Ast (Inface (..),
+            Outface (..),
+            Exp (..),
+            Command (..),
+            Wire,
+            Box (..)) where
 
 
-data Inface = N 
-            | W
+data Inface = N | W
   deriving Show
 
-data Outface = S
-             | E
+data Outface = S | E
   deriving Show
 
 
