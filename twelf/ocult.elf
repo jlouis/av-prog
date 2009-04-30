@@ -110,15 +110,42 @@ subterm_match_count : pat -> tm -> nat -> type.
      <- subterm_match_count P T2 Z2
      <- nat_plus Z1 Z2 K.
 
-%% Advise, which is really evaluation
-advise : program -> tm -> tm -> type.
-- : advise rule_list_nil T T.
-- : advise (rule_list_cons P1 P2 L) T T'
+%% Advise, for the reduced succ(O)'Cult language
+advise_succ : program -> tm -> tm -> type.
+- : advise_succ rule_list_nil T T.
+- : advise_succ (rule_list_cons P1 P2 L) T T'
      <- match ctx_nil P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
-- : advise (rule_list_cons P1 P2 L) T T'
+- : advise_succ (rule_list_cons P1 P2 L) T T'
      <- match ctx_nil P1 T ctx_match_none
-     <- advise L T T'.
+     <- advise_succ L T T'.
+
+advise_p_opt : type.
+advise_p_none : advise_p_opt.
+advise_p_some : tm -> advise_p_opt.
+
+%% Advise, for the full O'cult language.
+advise_p : pat -> pat -> tm -> advise_p_opt -> type.
+- : advise_p PAT REPL TM (advise_p_some T')
+     <- match ctx_nil PAT TM (ctx_match_some CTX)
+     <- pa_subst CTX REPL T'.
+- : advise_p PAT REPL (const K) advise_p_none
+     <- match ctx_nil PAT (const K) ctx_match_none.
+- : advise_p PAT REPL (app T1 T2) advise_p_none
+     <- subterm_match_count PAT T1 z
+     <- subterm_match_count PAT T2 z.
+- : advise_p PAT REPL (app T1 T2) advise_p_none
+     <- subterm_match_count PAT T1 K
+     <- subterm_match_count PAT T2 K.
+- : advise_p PAT REPL (app T1 T2) advise_p_none %% Wrong!
+     <- subterm_match_count PAT T1 z
+     <- subterm_match_count PAT T2 (s _).
+     %% ....
+- : advise_p PAT REPL (app T1 T2) advise_p_none %% Wrong!
+     <- subterm_match_count PAT T1 (s _)
+     <- subterm_match_count PAT T2 z.
+     %% ....
+
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
