@@ -125,6 +125,7 @@ advise_p_none : advise_p_opt.
 advise_p_some : tm -> advise_p_opt.
 
 %% Advise, for the full O'cult language.
+%% REMEMBER: The advise is least heeded where it is most needed!
 advise_p : pat -> pat -> tm -> advise_p_opt -> type.
 - : advise_p PAT REPL TM (advise_p_some T')
      <- match ctx_nil PAT TM (ctx_match_some CTX)
@@ -137,15 +138,24 @@ advise_p : pat -> pat -> tm -> advise_p_opt -> type.
 - : advise_p PAT REPL (app T1 T2) advise_p_none
      <- subterm_match_count PAT T1 K
      <- subterm_match_count PAT T2 K.
-- : advise_p PAT REPL (app T1 T2) advise_p_none %% Wrong!
-     <- subterm_match_count PAT T1 z
-     <- subterm_match_count PAT T2 (s _).
-     %% ....
-- : advise_p PAT REPL (app T1 T2) advise_p_none %% Wrong!
+- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1' T2))
      <- subterm_match_count PAT T1 (s _)
-     <- subterm_match_count PAT T2 z.
-     %% ....
-
+     <- subterm_match_count PAT T2 z
+     <- advise_p PAT REPL T1 (advise_p_some T1').
+- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1 T2'))
+     <- subterm_match_count PAT T1 z
+     <- subterm_match_count PAT T2 (s _)
+     <- advise_p PAT REPL T2 (advise_p_some T2').
+- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1' T2))
+     <- subterm_match_count PAT T1 K1
+     <- subterm_match_count PAT T2 K2
+     <- nat_lt K1 K2 true
+     <- advise_p PAT REPL T1 (advise_p_some T1').
+- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1 T2'))
+     <- subterm_match_count PAT T1 K1
+     <- subterm_match_count PAT T2 K2
+     <- nat_lt K2 K1 true
+     <- advise_p PAT REPL T2 (advise_p_some T2').
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
