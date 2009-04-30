@@ -11,6 +11,10 @@ tm_eq_refl : tm_eq T T.
 %worlds () (tm_eq _ _).
 %total T (tm_eq T _).
 
+tm_opt : type.
+tm_opt_none : tm_opt.
+tm_opt_some : tm -> tm_opt.
+
 %% Patterns
 pat : type.
 pconst : nat -> pat.
@@ -111,51 +115,69 @@ subterm_match_count : pat -> tm -> nat -> type.
      <- nat_plus Z1 Z2 K.
 
 %% Advise, for the reduced succ(O)'Cult language
-advise_succ : program -> tm -> tm -> type.
-- : advise_succ rule_list_nil T T.
-- : advise_succ (rule_list_cons P1 P2 L) T T'
+advise_succ : program -> tm -> tm_opt -> type.
+- : advise_succ rule_list_nil T tm_opt_none.
+- : advise_succ (rule_list_cons P1 P2 L) T (tm_opt_some T')
      <- match ctx_nil P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
 - : advise_succ (rule_list_cons P1 P2 L) T T'
      <- match ctx_nil P1 T ctx_match_none
      <- advise_succ L T T'.
 
-advise_p_opt : type.
-advise_p_none : advise_p_opt.
-advise_p_some : tm -> advise_p_opt.
+run_succ : program -> tm -> tm -> type.
+- : run_succ P T T
+     <- advise_succ P T tm_opt_none.
+- : run_succ P T T'
+     <- advise_succ P T (tm_opt_some T'')
+     <- run_succ P T'' T'.
 
 %% Advise, for the full O'cult language.
 %% REMEMBER: The advise is least heeded where it is most needed!
-advise_p : pat -> pat -> tm -> advise_p_opt -> type.
-- : advise_p PAT REPL TM (advise_p_some T')
+advise_p_step : pat -> pat -> tm -> tm_opt -> type.
+- : advise_p_step PAT REPL TM (tm_opt_some T')
      <- match ctx_nil PAT TM (ctx_match_some CTX)
      <- pa_subst CTX REPL T'.
-- : advise_p PAT REPL (const K) advise_p_none
+- : advise_p_step PAT REPL (const K) tm_opt_none
      <- match ctx_nil PAT (const K) ctx_match_none.
-- : advise_p PAT REPL (app T1 T2) advise_p_none
+- : advise_p_step PAT REPL (app T1 T2) tm_opt_none
      <- subterm_match_count PAT T1 z
      <- subterm_match_count PAT T2 z.
-- : advise_p PAT REPL (app T1 T2) advise_p_none
+- : advise_p_step PAT REPL (app T1 T2) tm_opt_none
      <- subterm_match_count PAT T1 K
      <- subterm_match_count PAT T2 K.
-- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1' T2))
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1' T2))
      <- subterm_match_count PAT T1 (s _)
      <- subterm_match_count PAT T2 z
-     <- advise_p PAT REPL T1 (advise_p_some T1').
-- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1 T2'))
+     <- advise_p_step PAT REPL T1 (tm_opt_some T1').
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1 T2'))
      <- subterm_match_count PAT T1 z
      <- subterm_match_count PAT T2 (s _)
-     <- advise_p PAT REPL T2 (advise_p_some T2').
-- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1' T2))
+     <- advise_p_step PAT REPL T2 (tm_opt_some T2').
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1' T2))
      <- subterm_match_count PAT T1 K1
      <- subterm_match_count PAT T2 K2
      <- nat_lt K1 K2 true
-     <- advise_p PAT REPL T1 (advise_p_some T1').
-- : advise_p PAT REPL (app T1 T2) (advise_p_some (app T1 T2'))
+     <- advise_p_step PAT REPL T1 (tm_opt_some T1').
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1 T2'))
      <- subterm_match_count PAT T1 K1
      <- subterm_match_count PAT T2 K2
      <- nat_lt K2 K1 true
-     <- advise_p PAT REPL T2 (advise_p_some T2').
+     <- advise_p_step PAT REPL T2 (tm_opt_some T2').
+
+advise_p : program -> tm -> tm_opt -> type.
+- : advise_p rule_list_nil T tm_opt_none.
+- : advise_p (rule_list_cons PAT REPL R) T (tm_opt_some T')
+     <- advise_p_step PAT REPL T (tm_opt_some T').
+- : advise_p (rule_list_cons PAT REPL R) T T'
+     <- advise_p_step PAT REPL T tm_opt_none
+     <- advise_p R T T'.
+
+run : program -> tm -> tm -> type.
+- : run P T T
+     <- advise_p P T tm_opt_none.
+- : run P T T'
+     <- advise_p P T (tm_opt_some T'')
+     <- run P T'' T'.
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
