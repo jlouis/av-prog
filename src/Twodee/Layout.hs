@@ -1,5 +1,5 @@
-module Layout (graphFromProgram,
-               testProg)
+module Twodee.Layout (graphFromProgram,
+                      testProg)
 where
 
 import qualified Data.Sequence as S
@@ -8,7 +8,7 @@ import Data.Graph
 import Data.List
 import Data.Maybe (catMaybes)
 
-import Ast
+import Twodee.Ast
 
 testProg = [
  MKBox {cmd = Send2 {c_exp0 = (Iface W), out1 = S,

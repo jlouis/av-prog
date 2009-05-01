@@ -1,7 +1,7 @@
-module Main (main)
+module Twodee.Main (main)
 where
 
-import Layout
+import Twodee.Layout
 
 main :: IO ()
 main = do

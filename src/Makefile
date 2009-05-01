@@ -9,10 +9,13 @@ ADVISE_ARITH=data/advise.arith.input
 GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all
 
 .phony: all build run clean two
-all: build two
+all: build build-two
 
 build:
-	ghc ${GHCFLAGS} --make *.hs -o uvm
+	ghc ${GHCFLAGS} --make *.hs UM/Main.hs -main-is UM.Main.main -o uvm
+
+build-two:
+	ghc ${GHCFLAGS} --make *.hs Twodee/Main.hs -main-is Twodee.Main.main -o twodee
 
 build-prof:
 	ghc ${GHCFLAGS} -prof --make *.hs -o uvm
@@ -42,8 +45,5 @@ sandmark: build
 	time ./uvm ${SANDMARK}
 
 clean:
-	rm -f *.o *.hi uvm
-	cd twodee && $(MAKE) clean
+	rm -f *.o *.hi UM/*.o Twodee/*.o Ocult/*.o uvm twodee
 
-two: 
-	cd twodee && $(MAKE) 

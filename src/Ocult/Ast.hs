@@ -1,4 +1,4 @@
-module OcultAst(
+module Ocult.Ast(
                 Term(..),
                 Pattern(..)
 ) where
@@ -23,10 +23,9 @@ type Context a = [(a, Term a)]
 -- Look up the term in a context
 findContext :: Eq a => Context a -> a -> Maybe (Term a)
 findContext context var =
-    find (\(v, tm) -> v == var) context >>=
-         (\(v, tm) -> return tm)
+    find (\(v, tm) -> v == var) context >>= (return . snd)
 
--- Substitute a patterns variable with what is in a context.
+-- Substitute a patterns variables with what is in a context.
 patternSubst :: Context Int -> Pattern Int Int -> Term Int
 patternSubst context pattern = pSubst pattern
   where
@@ -35,7 +34,6 @@ patternSubst context pattern = pSubst pattern
                           Nothing -> error "Impossible"
                           Just tm -> tm
     pSubst (PApp p1 p2) = TApp (pSubst p1) (pSubst p2)
-
 
 
 

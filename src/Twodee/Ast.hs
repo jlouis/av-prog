@@ -1,10 +1,10 @@
 -- Abstract Syntax tree
-module Ast (Inface (..),
-            Outface (..),
-            Exp (..),
-            Command (..),
-            Wire,
-            Box (..)) where
+module Twodee.Ast (Inface (..),
+                   Outface (..),
+                   Exp (..),
+                   Command (..),
+                   Wire,
+                   Box (..)) where
 
 
 data Inface = N | W
@@ -14,7 +14,7 @@ data Outface = S | E
   deriving Show
 
 
-data Exp = Empty
+data Exp = Unit
          | Tuple { e_exp0 :: Exp,  e_exp1 :: Exp }
          | Inl   { e_exp  :: Exp }
          | Inr   { e_exp  :: Exp }
