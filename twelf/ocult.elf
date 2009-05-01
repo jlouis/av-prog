@@ -213,3 +213,9 @@ transl_rule : pat -> pat -> exp -> type.
      <- transl_pat T1 T1'
      <- transl_pat T2 T2'.
 
+transl_advise : program -> exp -> type.
+- : transl_advise rule_list_nil (inl unit).
+- : transl_advise (rule_list_cons PAT REPL L) (inr (pair H T))
+     <- transl_rule PAT REPL H
+     <- transl_advise L T.
+
