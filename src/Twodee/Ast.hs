@@ -4,7 +4,8 @@ module Twodee.Ast (Inface (..),
                    Exp (..),
                    Command (..),
                    Wire,
-                   Box (..)) where
+                   Box (..),
+                   Mod (..)) where
 
 
 data Inface = N | W
@@ -38,3 +39,4 @@ type Wire = Maybe Integer
 data Box = MKBox { cmd :: Command, north :: Wire, west :: Wire, east :: Wire, south :: Wire }
   deriving Show
 
+newtype Mod = MkModule { boxes :: [Box] }

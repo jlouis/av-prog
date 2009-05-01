@@ -1,6 +1,7 @@
 module Ocult.Ast(
                 Term(..),
-                Pattern(..)
+                Pattern(..),
+                Rule(..)
 ) where
 
 import Data.List
