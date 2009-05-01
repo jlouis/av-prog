@@ -48,5 +48,5 @@ sandmark: build
 	time ./uvm ${SANDMARK}
 
 clean:
-	rm -f *.o *.hi UM/*.o Twodee/*.o Ocult/*.o uvm twodee
+	rm -f *.o *.hi UM/*.o Twodee/*.o Ocult/*.o uvm twodee ocultcc
 
