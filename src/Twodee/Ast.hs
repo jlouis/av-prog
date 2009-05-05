@@ -1,17 +1,21 @@
 -- Abstract Syntax tree
-module Ast (Inface (..), Outface (..), Exp (..), Command (..), Wire, Box (..)) where
+module Twodee.Ast (Inface (..),
+                   Outface (..),
+                   Exp (..),
+                   Command (..),
+                   Wire,
+                   Box (..),
+                   Mod (..)) where
 
 
-data Inface = N 
-            | W
+data Inface = N | W
   deriving Show
 
-data Outface = S
-             | E
+data Outface = S | E
   deriving Show
 
 
-data Exp = Empty
+data Exp = Unit
          | Tuple { e_exp0 :: Exp,  e_exp1 :: Exp }
          | Inl   { e_exp  :: Exp }
          | Inr   { e_exp  :: Exp }
@@ -35,3 +39,4 @@ type Wire = Maybe Integer
 data Box = MKBox { cmd :: Command, north :: Wire, west :: Wire, east :: Wire, south :: Wire }
   deriving Show
 
+newtype Mod = MkModule { boxes :: [Box] }

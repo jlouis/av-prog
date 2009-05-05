@@ -1,24 +1,5 @@
 % Conrete syntax for O'Cult
 
-%% Natural numbers, consts are indexed by these
-nat : type.
-z : nat.
-s : nat -> nat.
-
-bool : type.
-true : bool.
-false : bool.
-
-nat_lt : nat -> nat -> bool -> type.
-%mode nat_lt +N1 +N2 -B.
-- : nat_lt z (s _) true.
-- : nat_lt z z false.
-- : nat_lt (s K) (s M) B
-     <- nat_lt K M B.
-- : nat_lt (s _) z false.
-%worlds () (nat_lt _ _ _).
-%total N (nat_lt N _ _).
-
 %% Terms, do we need them?
 tm : type.
 const : nat -> tm.
@@ -29,6 +10,10 @@ tm_eq : tm -> tm -> type.
 tm_eq_refl : tm_eq T T.
 %worlds () (tm_eq _ _).
 %total T (tm_eq T _).
+
+tm_opt : type.
+tm_opt_none : tm_opt.
+tm_opt_some : tm -> tm_opt.
 
 %% Patterns
 pat : type.
@@ -45,22 +30,34 @@ rule_list_cons : pat -> pat -> program -> program.
 wellformed : pat -> pat -> type.
 
 ctx : type.
-ctx_empty : ctx.
+ctx_nil : ctx.
 ctx_bind : nat -> tm -> ctx -> ctx.
 
 ctx_option : type.
 ctx_opt_none : ctx_option.
 ctx_opt_some : tm -> ctx_option.
 
-%% Term substitution
-tm_subst : ctx -> tm -> tm -> type.
-pa_subst : ctx -> pat -> tm -> type.
-%% Context lookup TODO TODO
 ctx_lookup : nat -> ctx -> ctx_option -> type.
+- : ctx_lookup _ ctx_nil ctx_opt_none.
+- : ctx_lookup Z (ctx_bind Z T _) (ctx_opt_some T).
+- : ctx_lookup Z (ctx_bind _ _ R) R'
+     <- ctx_lookup Z R R'.
+
+pa_subst : ctx -> pat -> tm -> type.
+- : pa_subst CTX (pconst K) (const K).
+- : pa_subst CTX (pvar N) T
+     <- ctx_lookup N CTX (ctx_opt_some T).
+- : pa_subst CTX (papp P1 P2) (app P1' P2')
+     <- pa_subst CTX P1 P1'
+     <- pa_subst CTX P2 P2'.
+
+ctx_option : type.
+ctx_option_none : ctx_option.
+ctx_option_some : ctx -> ctx_option.
 
 %% Unification of bindings
 unify : ctx -> ctx -> type.
-- : unify ctx_empty _.
+- : unify ctx_nil _.
 - : unify (ctx_bind K TM _) CTX2
      <- ctx_lookup K CTX2 ctx_opt_none.
 - : unify (ctx_bind K TM _) CTX2
@@ -72,9 +69,18 @@ ctx_match_none : ctx_match_option.
 ctx_match_some : ctx -> ctx_match_option.
 
 unify_option : ctx_match_option -> ctx_match_option -> type.
+- : unify_option (ctx_match_some CTX1) (ctx_match_some CTX2)
+     <- unify CTX1 CTX2.
 
 %% Run union TODO TODO
-ctx_union : ctx_match_option -> ctx -> ctx -> type.
+ctx_union : ctx -> ctx -> ctx -> type.
+- : ctx_union ctx_nil C C.
+- : ctx_union (ctx_bind K T R) C C'
+     <- ctx_lookup K C ctx_opt_none
+     <- ctx_union R C C'.
+- : ctx_union (ctx_bind K T R) C (ctx_bind K T C')
+     <- ctx_lookup K C (ctx_opt_some _)
+     <- ctx_union R C C'.
 
 %% Matchings
 match : ctx -> pat -> tm -> ctx_match_option -> type.
@@ -82,34 +88,96 @@ match : ctx -> pat -> tm -> ctx_match_option -> type.
 - : match CTX (pconst K) (const M) ctx_match_none.
 - : match CTX (pvar K) TM (ctx_match_some (ctx_bind K TM CTX)).
 - : match CTX (papp A B) (app TA TB) (ctx_match_some CTXU)
-     <- match CTX A TA (BindA : ctx_match_option)
-     <- match CTX B TB BindB
-     <- unify_option BindA BindB
-     <- ctx_union BindA CTX CTX'
-     <- ctx_union BindB CTX' CTXU.
+     <- match CTX A TA (ctx_match_some CTXA)
+     <- match CTX B TB (ctx_match_some CTXB)
+     <- unify CTXA CTXB
+     <- ctx_union CTXA CTX CTX'
+     <- ctx_union CTXB CTX' CTXU.
+- : match CTX (papp A B) (app TA TB) ctx_match_none
+     <- match CTX A TA ctx_match_none.
+- : match CTX (papp A B) (app TA TB) ctx_match_none
+     <- match CTX B TB ctx_match_none.
 
-%query 1 1 (match ctx_empty (pconst K) (const K) (ctx_match_some ctx_empty)).
-%query 1 1 (match ctx_empty (pconst z) (const (s z)) ctx_match_none).
+%query 1 1 (match ctx_nil (pconst K) (const K) (ctx_match_some ctx_nil)).
+%query 1 1 (match ctx_nil (pconst z) (const (s z)) ctx_match_none).
 test_term1 = (app (const Z) (const Y)).
 %query 1 1 (match CTX (pvar K) test_term1 (ctx_match_some (ctx_bind K test_term1 CTX))).
 
 %% This one is evil. It must not match the CURRENT RULE but may match all the others
-subterm_match_count : program -> pat -> tm -> nat -> type.
+subterm_match_count : pat -> tm -> nat -> type.
+- : subterm_match_count P T (s z)
+     <- match ctx_nil P T (ctx_match_some _).
+- : subterm_match_count P (const K) z
+     <- match ctx_nil P (const K) ctx_match_none.
+- : subterm_match_count P (app T1 T2) K
+     <- subterm_match_count P T1 Z1
+     <- subterm_match_count P T2 Z2
+     <- nat_plus Z1 Z2 K.
 
-%% Advise, which is really evaluation
-advise :  program -> program -> tm -> tm -> type.
-- : advise PRG rule_list_nil T T.
-- : advise PRG (rule_list_cons P1 P2 L) T T'
-     <- match ctx_empty P1 T (ctx_match_some CTX')
+%% Advise, for the reduced succ(O)'Cult language
+advise_succ : program -> tm -> tm_opt -> type.
+- : advise_succ rule_list_nil T tm_opt_none.
+- : advise_succ (rule_list_cons P1 P2 L) T (tm_opt_some T')
+     <- match ctx_nil P1 T (ctx_match_some CTX')
      <- pa_subst CTX P2 T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) T T'
-     <- subterm_match_count PRG P1 T z
-     <- subterm_match_count PRG P2 T z
-     <- advise PRG L T T'.
-- : advise PRG (rule_list_cons (papp P1 P2) PT _) T T'
-     <- subterm_match_count PRG P1 T K
-     <- subterm_match_count PRG P2 T K
-     <- advise PRG L T T'.
+- : advise_succ (rule_list_cons P1 P2 L) T T'
+     <- match ctx_nil P1 T ctx_match_none
+     <- advise_succ L T T'.
+
+run_succ : program -> tm -> tm -> type.
+- : run_succ P T T
+     <- advise_succ P T tm_opt_none.
+- : run_succ P T T'
+     <- advise_succ P T (tm_opt_some T'')
+     <- run_succ P T'' T'.
+
+%% Advise, for the full O'cult language.
+%% REMEMBER: The advise is least heeded where it is most needed!
+advise_p_step : pat -> pat -> tm -> tm_opt -> type.
+- : advise_p_step PAT REPL TM (tm_opt_some T')
+     <- match ctx_nil PAT TM (ctx_match_some CTX)
+     <- pa_subst CTX REPL T'.
+- : advise_p_step PAT REPL (const K) tm_opt_none
+     <- match ctx_nil PAT (const K) ctx_match_none.
+- : advise_p_step PAT REPL (app T1 T2) tm_opt_none
+     <- subterm_match_count PAT T1 z
+     <- subterm_match_count PAT T2 z.
+- : advise_p_step PAT REPL (app T1 T2) tm_opt_none
+     <- subterm_match_count PAT T1 K
+     <- subterm_match_count PAT T2 K.
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1' T2))
+     <- subterm_match_count PAT T1 (s _)
+     <- subterm_match_count PAT T2 z
+     <- advise_p_step PAT REPL T1 (tm_opt_some T1').
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1 T2'))
+     <- subterm_match_count PAT T1 z
+     <- subterm_match_count PAT T2 (s _)
+     <- advise_p_step PAT REPL T2 (tm_opt_some T2').
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1' T2))
+     <- subterm_match_count PAT T1 K1
+     <- subterm_match_count PAT T2 K2
+     <- nat_lt K1 K2 true
+     <- advise_p_step PAT REPL T1 (tm_opt_some T1').
+- : advise_p_step PAT REPL (app T1 T2) (tm_opt_some (app T1 T2'))
+     <- subterm_match_count PAT T1 K1
+     <- subterm_match_count PAT T2 K2
+     <- nat_lt K2 K1 true
+     <- advise_p_step PAT REPL T2 (tm_opt_some T2').
+
+advise_p : program -> tm -> tm_opt -> type.
+- : advise_p rule_list_nil T tm_opt_none.
+- : advise_p (rule_list_cons PAT REPL R) T (tm_opt_some T')
+     <- advise_p_step PAT REPL T (tm_opt_some T').
+- : advise_p (rule_list_cons PAT REPL R) T T'
+     <- advise_p_step PAT REPL T tm_opt_none
+     <- advise_p R T T'.
+
+run : program -> tm -> tm -> type.
+- : run P T T
+     <- advise_p P T tm_opt_none.
+- : run P T T'
+     <- advise_p P T (tm_opt_some T'')
+     <- run P T'' T'.
 
 %% #########################################
 %% ##### Translation from Occult to 2d #####
@@ -144,4 +212,10 @@ transl_rule : pat -> pat -> exp -> type.
 - : transl_rule T1 T2 (pair T1' T2')
      <- transl_pat T1 T1'
      <- transl_pat T2 T2'.
+
+transl_advise : program -> exp -> type.
+- : transl_advise rule_list_nil (inl unit).
+- : transl_advise (rule_list_cons PAT REPL L) (inr (pair H T))
+     <- transl_rule PAT REPL H
+     <- transl_advise L T.
 

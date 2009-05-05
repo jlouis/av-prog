@@ -7,3 +7,6 @@
 *.blg
 /report/auto
 src/uvm
+src/twodee
+src/ocultcc
+

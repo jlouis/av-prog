@@ -1,4 +1,4 @@
-module Main (main)
+module UM.Main (main)
 where
 
 import qualified UmixVM as UVM

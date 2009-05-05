@@ -1,9 +1,12 @@
-## Course project on advanced programming
+# Course project on advanced programming
 
 This is the course project on advanced programming.
 
-### Some simple ideas
+## Status
 
-*    Representation of store/heap
-*    Interpreter speedups by calculating less
-*    Interpreter speedups by pre-processing if needed
+Task 1: Mostly done, we don't need much here.
+
+Task 2a: Mikkel has looked at Parsec.
+
+Task 2b: We are considering staging this. Use some time on building a simpler variant of O'cult (with sane advise-semantics) and get that compiler working. Then stage it up to include the insane semantics.
+
