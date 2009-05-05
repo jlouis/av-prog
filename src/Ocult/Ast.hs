@@ -20,7 +20,7 @@ data Rule a b = Rl (Pattern a b) (Pattern a b)
 type Program a b = [Rule a b]
 
 -- Contexts define what the current variable bindings are
-type Context a = [(a, Term a)]
+type Context a b = [(b, Term a)]
 
 -- Pretty-printing of Ocult
 docTerm :: Show a => Term a -> Doc
@@ -66,12 +66,12 @@ instance (Show a, Show b) => Show (Program a b) where
     show = render . docProgram
 
 -- Look up the term in a context
-findContext :: Eq a => Context a -> a -> Maybe (Term a)
+findContext :: Eq b => Context a b -> b -> Maybe (Term a)
 findContext context var =
     find (\(v, tm) -> v == var) context >>= (return . snd)
 
 -- Substitute a patterns variables with what is in a context.
-patternSubst :: Context Int -> Pattern Int Int -> Term Int
+patternSubst :: Eq b => Context a b -> Pattern a b -> Term a
 patternSubst context pattern = pSubst pattern
   where
     pSubst (PConst k) = (TConst k)
