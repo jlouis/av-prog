@@ -26,8 +26,8 @@ type Context a = [(a, Term a)]
 docTerm :: Show a => Term a -> Doc
 docTerm tm =
     case tm of
-      TConst c -> text "Const" <> (text $ show c)
-      TApp t1 t2 -> parens (t1' <> space <> t2')
+      TConst c -> text "Const " <> (text $ show c)
+      TApp t1 t2 -> parens $ t1' <> space <> t2'
            where
              t1' = docTerm t1
              t2' = docTerm t2
@@ -38,9 +38,9 @@ instance Show a => Show (Term a) where
 docPattern :: (Show a, Show b) => Pattern a b -> Doc
 docPattern pat =
     case pat of
-      PConst c -> text "Const" <> (text $ show c)
-      PVar v   -> text "Var" <> (text $ show v)
-      PApp p1 p2 -> parens (p1' <> space <> p2')
+      PConst c -> text "Const " <> (text $ show c)
+      PVar v   -> text "Var " <> (text $ show v)
+      PApp p1 p2 -> parens $ p1' <> space <> p2'
           where
             p1' = docPattern p1
             p2' = docPattern p2
@@ -60,7 +60,7 @@ instance (Show a, Show b) => Show (Rule a b) where
 
 docProgram :: (Show a, Show b) => Program a b -> Doc
 docProgram prg =
-    hcat (map docRule prg)
+    hcat $ map docRule prg
 
 instance (Show a, Show b) => Show (Program a b) where
     show = render . docProgram
