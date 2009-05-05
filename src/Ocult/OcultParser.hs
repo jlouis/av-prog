@@ -13,43 +13,37 @@ run p input
                           }
             Right x -> print x
 
-ocultParser :: Parser String
-ocultParser = do {
-              pattern ocultParser 
-           --  pattern 'chainl1' ocultParser
-              return "1"
-              }
-              <|> 
-              do {
-               char '.'
-              ;return ""
-              }
-  
-rule :: Parser Rule
+ocultParser :: Parser [Rule String String]
+ocultParser = do { 
+                value <- chainl1 pattern ';' [R1 "err" "or"]
+                ; char '.'
+                ; return value               
+                }
+
+rule :: Parser (Rule String String)
 rule = do {left <- pattern               
                  ;skipMany1 space
                  ;string "=>"
                  ;skipMany1 space
            ;right <- pattern
-           ;return Rl left right
+           ;return $ Rl left right
               }
 
-pattern :: Parser Pattern
-pattern =  do {
-             toDo <- many1 string
+pattern :: Parser (Pattern String String)
+pattern =  do {name <- pattern
             ;skipMany1 space
             ;value1 <- pattern 
             ;skipMany1 space
             ;value2 <- pattern
-            ;return PApp value1 value2
+            ;return $ PApp value1 value2
             }
             <|>     
          do {
              const <- many1 upper 
-            ;return PConst const
+            ;return $ PConst const
             }
             <|>
          do {
             var <- many1 lower
-            ;return PVar var
+            ;return $ PVar var
             }
