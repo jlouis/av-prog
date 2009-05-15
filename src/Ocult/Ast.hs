@@ -1,7 +1,8 @@
 module Ocult.Ast(
                 Term(..),
                 Pattern(..),
-                Rule(..)
+                Rule(..),
+                docPattern
 ) where
 
 import Data.List
@@ -11,7 +12,7 @@ import Text.PrettyPrint
 data Term a = TConst a | TApp (Term a) (Term a)
 
 -- Patterns are things we *MATCH* terms against and substitute by. A program defines these
-data Pattern a b = PConst a | PVar b | PApp (Pattern a b) (Pattern a b)
+data Pattern a b = PConst a | PVar b | PApp (Pattern a b) (Pattern a b) | PSingleton String
 
 -- A Rule defines a pattern to *MATCH* and a *REPLACEMENT* pattern.
 data Rule a b = Rl (Pattern a b) (Pattern a b)
