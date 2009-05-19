@@ -91,12 +91,24 @@
 }
 
 \begin{frame}[fragile]
-  \begin{code}
-    module Foo(foo) where
+  The Functor definition\\
 
-    ...
+  \begin{code}
+    class Functor f where
+      fmap :: (a -> b) -> f a -> f b
+  \end{code}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  The (standard) instance\\
+  \begin{code}
+    class Functor [] where
+      fmap f [] = []
+      fmap f (x : xs) = f x : (fmap f xs)
   \end{code}
 \end{frame}
+
 
 % \frame{
 %   \begin{center}
