@@ -109,6 +109,50 @@
   \end{code}
 \end{frame}
 
+\begin{frame}[fragile]
+What we have without Applicative Functors:\\
+
+\begin{code}
+data Exp v = Var v
+           | Val Int
+           | Add (Exp v) (Exp v)
+
+eval :: Exp v \rightarrow Env v \rightarrow Int
+eval (Var x) \gamma = fetch x \gamma
+eval (Val i) \gamma = i
+eval (Add p q) \gamma = eval p \gamma + eval q \gamma
+\end{code}
+Not very pretty - nor general
+\begin{code}
+eval :: Exp v \rightarrow Env v \rightarrow Int
+eval (Var x) = fetch x 
+eval (Val i) = \mathbb{K} i
+eval (Add p q) = \mathbb{K} (+) '\mathbb{S}' eval p '\mathbb{S}'eval q
+\end{code}
+where
+\begin{code}
+\mathbb{K} :: a \righarrow env \rightarrow a
+\mathbb{K} x \gamma = x
+\end{code}
+and
+\begin{code}
+\mathbb{S} :: (env \rightarrow a \rightarrow b) \rightarrow (env \rightarrow a) \rightarrow (env \rightarrow b)
+\mathbb{S} ef es \gamma = (ef \gamma) (es \gamma)
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]
+Better - not good, not general.
+\end{frame}
+
+\begin{frame}[fragile]
+
+Rules:\\
+identity: pure id \oplus u = u\\
+composition pure (\dot) \oplus u \oplus v \oplus w =  u \oplus (v \oplus w)
+homomorphism pure f \oplus pure x = pure (f x)
+interchange u \oplus  
+\end{frame}
 
 % \frame{
 %   \begin{center}
