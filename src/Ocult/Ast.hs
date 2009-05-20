@@ -2,7 +2,8 @@ module Ocult.Ast(
                 Term(..),
                 Pattern(..),
                 Rule(..),
-                docPattern
+                docPattern,
+                docProgram
 ) where
 
 import Data.List

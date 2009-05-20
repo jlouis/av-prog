@@ -6,31 +6,29 @@ import Text.ParserCombinators.Parsec.Char
 import Ocult.Ast
 import List
 
-run :: Show a => Parser a -> String -> IO ()
-run p input
-        = case (parse p "" input) of
-            Left err -> do{ putStr "parse error at "
-                          ; print err
-                          }
-            Right x -> print x
+runIO :: Show a => Parser a -> String -> IO ()
+runIO p input =
+    either (\err -> (putStr "parse error at " >>= (\_ -> print err)))
+           (\parse -> print parse)
+           (parse p "" input)
 
-program :: String -> [(Rule (Pattern String String) (Pattern String String))]
+program :: String -> [(Rule String String)]
 program wholeProgram =
     let
       rules = split ";" wholeProgram
-      realRules = [tempRule line  | line <- rules]
     in
-      realRules
+      fmap buildRule rules
 
-tempRule :: String -> (Rule (Pattern String String) (Pattern String String))
-tempRule rule  =
+buildRule :: String -> (Rule String String)
+buildRule rule  =
     let
-      rul = split "=>" rule
-      formattet = [run pattern r | r <- rul]
-      left = head formattet
-      right = head (tail formattet)
+      [pat, replaca] = split "=>" rule
+      f :: String -> Pattern String String
+      f i = case parse pattern "" i of
+                  Left err -> error $ "Parser Error " ++ show err
+                  Right p  -> p
     in
-      return (Rl left right)
+      Rl (f pat) (f replaca)
 
 split :: String -> String -> [String]
 split tok splitme = unfoldr (sp1 tok) splitme
