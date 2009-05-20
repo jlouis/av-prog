@@ -1,4 +1,4 @@
-module Ocult.OcultParser where 
+module Ocult.OcultParser where
 
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
@@ -15,22 +15,22 @@ run p input
             Right x -> print x
 
 program :: String -> [(Rule (Pattern String String) (Pattern String String))]
-program wholeProgram = 
-    let 
+program wholeProgram =
+    let
       rules = split ";" wholeProgram
       realRules = [tempRule line  | line <- rules]
     in
       realRules
 
 tempRule :: String -> (Rule (Pattern String String) (Pattern String String))
-tempRule rule  = 
+tempRule rule  =
     let
       rul = split "=>" rule
       formattet = [run pattern r | r <- rul]
       left = head formattet
       right = head (tail formattet)
     in
-      return (Rl left right)     
+      return (Rl left right)
 
 split :: String -> String -> [String]
 split tok splitme = unfoldr (sp1 tok) splitme
@@ -42,30 +42,30 @@ split tok splitme = unfoldr (sp1 tok) splitme
 
 --rule :: Parser ([(Pattern String String)])
 --rule = do {       --    ;char ';'
-        --   ;return [""] --value 
-       --   ;right <- auxRule          
+        --   ;return [""] --value
+       --   ;right <- auxRule
          -- ;left <- head value
          -- ;return left
---          ;right <- head (tail value) 
+--          ;right <- head (tail value)
 --          ;return (Rl left (PConst "a"))
 --          }
 
 follows :: Parser String
 follows = string "=>"
 
-table = [[tableOp (skipMany space) PApp AssocLeft]] where 
-           tableOp s f assoc = Infix (do {s; return f}) assoc 
+table = [[tableOp (skipMany space) PApp AssocLeft]] where
+           tableOp s f assoc = Infix (do {s; return f}) assoc
 
 pattern :: Parser (Pattern String String)
-pattern = buildExpressionParser table patternInst 
+pattern = buildExpressionParser table patternInst
 
 patternInst :: Parser (Pattern String String)
 patternInst =
-         do {var <- try $ many1 lower            
+         do {var <- try $ many1 lower
             ;return $ PVar var
             }
          <|>
-         do {const <- try $ many1 letter 
+         do {const <- try $ many1 letter
             ;return $ PConst const
             }
          <|>
