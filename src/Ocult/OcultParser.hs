@@ -5,7 +5,7 @@ import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Char
 import Ocult.Ast
 
-import Control.Applicative hiding ((<|>))
+import Control.Applicative hiding ((<|>), many)
 import List
 
 runIO :: Show a => Parser a -> String -> IO ()
@@ -50,8 +50,26 @@ split tok splitme = unfoldr (sp1 tok) splitme
 --          ;return (Rl left (PConst "a"))
 --          }
 
-follows :: Parser String
-follows = string "=>"
+parsePrg :: String -> Program String String
+parsePrg input =
+    case parse prg "" input of
+      Left err -> error $ "Parser Error " ++ show err
+      Right p -> p
+
+prg :: Parser (Program String String)
+prg = many ruleline
+  where
+    ruleline =
+        do rl <- rule
+           string ";"
+           return rl
+
+rule :: Parser (Rule String String)
+rule = do
+  pat <- pattern
+  string "=>"
+  replaca <- pattern
+  return $ Rl pat replaca
 
 table = [[tableOp (skipMany space) PApp AssocLeft]] where
            tableOp s f assoc = Infix (do {s; return f}) assoc
@@ -60,13 +78,19 @@ pattern :: Parser (Pattern String String)
 pattern = buildExpressionParser table patternInst
 
 patternInst :: Parser (Pattern String String)
-patternInst =
-         (PVar <$> (try $ many1 lower))
-         <|>
-         (PConst <$> (try $ many1 letter))
-         <|>
-         do try $ char '('
-            pat <- try pattern
-            char ')'
-            return pat
+patternInst = patternVar <|> patternConst <|> patternParen
+
+patternParen :: Parser (Pattern String String)
+patternParen =
+    do
+      try $ char '('
+      pat <- try pattern
+      char ')'
+      return pat
+
+patternConst :: Parser (Pattern String String)
+patternConst = PConst <$> (try $ many1 letter)
+
+patternVar :: Parser (Pattern String String)
+patternVar = PVar <$> (try $ many1 lower)
 

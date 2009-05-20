@@ -2,6 +2,7 @@ module Ocult.Ast(
                 Term(..),
                 Pattern(..),
                 Rule(..),
+                Program,
                 docPattern,
                 docProgram
 ) where
