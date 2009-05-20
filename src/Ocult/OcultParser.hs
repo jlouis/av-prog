@@ -6,6 +6,7 @@ import Text.ParserCombinators.Parsec.Char
 import Ocult.Ast
 
 import Control.Applicative hiding ((<|>), many)
+import Data.Char (isSpace)
 import List
 
 runIO :: Show a => Parser a -> String -> IO ()
@@ -14,20 +15,24 @@ runIO p input =
            (\parse -> print parse)
            (parse p "" input)
 
-program :: String -> [(Rule String String)]
+program :: String -> Program String String
 program wholeProgram =
     let
       rules = split ";" wholeProgram
     in
       fmap buildRule rules
 
+trim      :: String -> String
+trim      = f . f
+   where f = reverse . dropWhile isSpace
+
 buildRule :: String -> (Rule String String)
 buildRule rule  =
     let
       [pat, replaca] = split "=>" rule
       f :: String -> Pattern String String
-      f i = case parse pattern "" i of
-                  Left err -> error $ "Parser Error " ++ show err
+      f i = case parse pattern "" (trim i) of
+                  Left err -> error $ "Parser Error " ++ show err ++ (show (trim i))
                   Right p  -> p
     in
       Rl (f pat) (f replaca)
@@ -78,10 +83,9 @@ pattern :: Parser (Pattern String String)
 pattern = buildExpressionParser table patternInst
 
 patternInst :: Parser (Pattern String String)
-patternInst = patternVar <|> patternConst <|> patternParen
+patternInst = patternVar <|> patternConst <|> parens patternInst
 
-patternParen :: Parser (Pattern String String)
-patternParen =
+parens pattern =
     do
       try $ char '('
       pat <- try pattern
