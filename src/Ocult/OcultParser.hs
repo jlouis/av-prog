@@ -4,6 +4,8 @@ import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Char
 import Ocult.Ast
+
+import Control.Applicative hiding ((<|>))
 import List
 
 runIO :: Show a => Parser a -> String -> IO ()
@@ -59,16 +61,12 @@ pattern = buildExpressionParser table patternInst
 
 patternInst :: Parser (Pattern String String)
 patternInst =
-         do {var <- try $ many1 lower
-            ;return $ PVar var
-            }
+         (PVar <$> (try $ many1 lower))
          <|>
-         do {const <- try $ many1 letter
-            ;return $ PConst const
-            }
+         (PConst <$> (try $ many1 letter))
          <|>
-         do {try(char '(')
-            ;pat <- try(pattern)
-            ;char ')'
-            ;return pat
-           }
+         do try $ char '('
+            pat <- try pattern
+            char ')'
+            return pat
+
