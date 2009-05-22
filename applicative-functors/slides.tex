@@ -218,7 +218,7 @@ Canonical form:\\
 pure $f \circledast u_1 \circledast \ldots \circledast u_n \equiv |[f u_1 \ldots u_n|]$\\
 so in practice\\
 \begin{code}
-pure f 'star' u1 'star' ... 'star' un
+pure f <*> u1 <*> ... <*> un
 \end{code}
 \end{frame}
 
@@ -227,7 +227,7 @@ Let's return to our start example - but first!\\
 \begin{code}
 instance Applicative ((->) env) where
 pure x = \g -> x --K
-ef 'star' ex = \g -> (ef g)(ex g) -- S
+ef <*> ex = \g -> (ef g)(ex g) -- S
 \end{code}
 
 So now:
@@ -235,7 +235,7 @@ So now:
 eval :: Exp v -> Env v -> Int
 eval (Var x) = fetch x
 eval (Val i) = pure i
-eval (Add p q) = pure (+) 'star'  (eval p) 'star' (eval q)
+eval (Add p q) = pure (+) <*>  (eval p) <*> (eval q)
 \end{code}
 Much better.
 
