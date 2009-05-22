@@ -74,7 +74,7 @@
 }
 
 \lstnewenvironment{code}
-{\textbf{Haskell Code} \hspace{1cm} \hrulefill \lstset{language=HaskellUlisses}}{}
+{\hrulefill \lstset{language=HaskellUlisses}}{\hrulefill\\}
 
 \usepackage{textcomp}
 \usepackage{graphicx}
@@ -168,10 +168,10 @@ Not very pretty - nor general
 \end{frame}
 
 \begin{frame}[fragile]
-We can do better:
+We can do better:\\
 \begin{code}
 eval :: Exp v -> Env v -> Int
-eval (Var x) = fetch x 
+eval (Var x) = fetch x
 eval (Val i) = K i
 eval (Add p q) = K (+) 'S' eval p 'S'eval q
 \end{code}
@@ -182,7 +182,8 @@ K x \gamma = x
 \end{code}
 and\\
 \begin{code}
-S :: (env -> a -> b) -> (env -> a) -> (env -> b)
+S :: (env -> a -> b)
+         -> (env -> a) -> (env -> b)
 S ef es g = (ef g) (es g)
 \end{code}
 \end{frame}
@@ -193,15 +194,14 @@ Better - not good, not general.
 
 \begin{frame}[fragile]
 
-Rules:
-
+Rules:\\
 \begin{description}
 \item[Identity:] pure id $\circledast$ u = u
 \item[Composition:] pure $( \bullet ) \circledast u \circledast v \circledast$ w =  u $\circledast (v \circledast$ w)
 \item[Homomorphism:] pure f $\circledast$ pure x = pure (f x)
 \item[Interchange:] u $\circledast$ x = pure ($\lambda f \rightarrow f x) \circledast u$
 \end{description}
-%Dollor sign
+%Dollar sign
 \end{frame}
 
 \begin{frame}[fragile]
