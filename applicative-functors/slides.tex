@@ -2,7 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[protrusion=true,expansion=true]{microtype}
 %usepackage[minionint,mathlf]{MinionPro}
-\usepackage[sc,osf]{mathpazo}
+%\usepackage[sc,osf]{mathpazo}
 \usepackage{listings}
 \usepackage{diagrams}
 %\renewcommand{\sfdefault}{Myriad-LF}
@@ -28,7 +28,7 @@
 	showtabs=false,
 	emph=
 	{[1]
-		FilePath,IOError,abs,acos,acosh,all,and,any,appendFile,approxRational,asTypeOf,asin,
+		FilePath,IOError,abs,acos,acosh,all,and,any,appendFile,approxRational,asTypeOn,
 		asinh,atan,atan2,atanh,basicIORun,break,catch,ceiling,chr,compare,concat,concatMap,
 		const,cos,cosh,curry,cycle,decodeFloat,denominator,digitToInt,div,divMod,drop,
 		dropWhile,either,elem,encodeFloat,enumFrom,enumFromThen,enumFromThenTo,enumFromTo,
@@ -149,6 +149,91 @@
       fmap f [] = []
       fmap f (x : xs) = f x : (fmap f xs)
   \end{code}
+\end{frame}
+
+\begin{frame}[fragile]
+What we have without Applicative Functors:\\
+
+\begin{code}
+data Exp v = Var v
+           | Val Int
+           | Add (Exp v) (Exp v)
+
+eval :: Exp v -> Env v -> Int
+eval (Var x) g = fetch x g
+eval (Val i) g = i
+eval (Add p q) g = eval p g + eval q g
+\end{code}
+Not very pretty - nor general
+\end{frame}
+
+\begin{frame}[fragile]
+We can do better:
+\begin{code}
+eval :: Exp v -> Env v -> Int
+eval (Var x) = fetch x 
+eval (Val i) = K i
+eval (Add p q) = K (+) 'S' eval p 'S'eval q
+\end{code}
+where\\
+\begin{code}
+K :: a -> env -> a
+K x \gamma = x
+\end{code}
+and\\
+\begin{code}
+S :: (env -> a -> b) -> (env -> a) -> (env -> b)
+S ef es g = (ef g) (es g)
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]
+Better - not good, not general.
+\end{frame}
+
+\begin{frame}[fragile]
+
+Rules:
+
+\begin{description}
+\item[Identity:] pure id $\circledast$ u = u
+\item[Composition:] pure $( \bullet ) \circledast u \circledast v \circledast$ w =  u $\circledast (v \circledast$ w)
+\item[Homomorphism:] pure f $\circledast$ pure x = pure (f x)
+\item[Interchange:] u $\circledast$ x = pure ($\lambda f \rightarrow f x) \circledast u$
+\end{description}
+%Dollor sign
+\end{frame}
+
+\begin{frame}[fragile]
+Canonical form:\\
+pure $f \circledast u_1 \circledast \ldots \circledast u_n \equiv |[f u_1 \ldots u_n|]$\\
+so in practice\\
+\begin{code}
+pure f 'star' u1 'star' ... 'star' un
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]
+Let's return to our start example - but first!\\
+\begin{code}
+instance Applicative ((->) env) where
+pure x = \g -> x --K
+ef 'star' ex = \g -> (ef g)(ex g) -- S
+\end{code}
+
+So now:
+\begin{code}
+eval :: Exp v -> Env v -> Int
+eval (Var x) = fetch x
+eval (Val i) = pure i
+eval (Add p q) = pure (+) 'star'  (eval p) 'star' (eval q)
+\end{code}
+Much better.
+
+\end{frame}
+
+\begin{frame}
+
 \end{frame}
 
 
