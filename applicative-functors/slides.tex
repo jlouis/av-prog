@@ -74,7 +74,7 @@
 }
 
 \lstnewenvironment{code}
-{\hrulefill \lstset{language=HaskellUlisses}}{\hrulefill\\}
+{\hrulefill \lstset{language=HaskellUlisses}}{}
 
 \usepackage{textcomp}
 \usepackage{graphicx}
@@ -136,13 +136,13 @@
   \item $F$ maps an object $A$ to $F A$
   \item $F$ maps a morphism $f \colon A \to B$ to $F f \colon F A \to
     F B$
-  \item For any object $A$, $F Id_A = Id_{F A}$
-  \item For all morphisms $f, g$, $F (g \circ f) = F g \circ F f$
+  \item For any object $A$, $F \; Id_A = Id_{F A}$
+  \item For all morphisms $f, g$: \quad $F (g \circ f) = F g \circ F f$
   \end{itemize}
   $F$ is then called a \emph{functor}.
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{Example}
   The (standard) instance of a functor\\
   \begin{code}
     class Functor [] where
@@ -151,7 +151,7 @@
   \end{code}
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{Leading example}
 What we have without Applicative Functors:\\
 
 \begin{code}
@@ -167,7 +167,7 @@ eval (Add p q) g = eval p g + eval q g
 Not very pretty - nor general
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{S, K combinators}
 We can do better:\\
 \begin{code}
 eval :: Exp v -> Env v -> Int
@@ -178,10 +178,8 @@ eval (Add p q) = K (+) 'S' eval p 'S'eval q
 where\\
 \begin{code}
 K :: a -> env -> a
-K x \gamma = x
-\end{code}
-and\\
-\begin{code}
+K x g = x
+
 S :: (env -> a -> b)
          -> (env -> a) -> (env -> b)
 S ef es g = (ef g) (es g)
@@ -192,15 +190,26 @@ S ef es g = (ef g) (es g)
 Better - not good, not general.
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{Applicative Functor}
 
-Rules:\\
-\begin{description}
-\item[Identity:] pure id $\circledast$ u = u
-\item[Composition:] pure $( \bullet ) \circledast u \circledast v \circledast$ w =  u $\circledast (v \circledast$ w)
-\item[Homomorphism:] pure f $\circledast$ pure x = pure (f x)
-\item[Interchange:] u $\circledast$ x = pure ($\lambda f \rightarrow f x) \circledast u$
-\end{description}
+\begin{align*}
+  \mathbf{infixl} & \; 4 \; \circledast\\
+  \mathbf{class} & \; \mathrm{Applicative} \; f \; \mathbf{where}\\
+  \quad & \mathrm{pure} \; :: \; a \rightarrow f a\\
+  \quad & (\circledast) \; :: \; f (a \rightarrow b) \rightarrow f a
+\rightarrow f b
+\end{align*}
+Rules:
+\begin{align*}
+  \mathbf{Identity:} \quad & \mathrm{pure} \; \mathrm{id} \;
+  \circledast u = u\\
+  \mathbf{Composition:} \quad & \mathrm{pure} \; (\cdot) \circledast u
+  \circledast v \circledast w = u \circledast (v \circledast w)\\
+  \mathbf{Homomorphism:} \quad & \mathrm{pure} \; f \circledast x =
+  \mathrm{pure} \; (\lambda f \rightarrow f x) \circledast f\\
+  \mathbf{Interchange:} \quad & u \circledast x = \mathrm{pure} \;
+  (\lambda f \rightarrow f x) \circledast f\\
+\end{align*}
 %Dollar sign
 \end{frame}
 
@@ -209,7 +218,7 @@ Canonical form:\\
 pure $f \circledast u_1 \circledast \ldots \circledast u_n \equiv |[f u_1 \ldots u_n|]$\\
 so in practice\\
 \begin{code}
-pure f 'star' u1 'star' ... 'star' un
+pure f <*> u1 <*> ... <*> un
 \end{code}
 \end{frame}
 
@@ -218,7 +227,7 @@ Let's return to our start example - but first!\\
 \begin{code}
 instance Applicative ((->) env) where
 pure x = \g -> x --K
-ef 'star' ex = \g -> (ef g)(ex g) -- S
+ef <*> ex = \g -> (ef g)(ex g) -- S
 \end{code}
 
 So now:
@@ -226,7 +235,7 @@ So now:
 eval :: Exp v -> Env v -> Int
 eval (Var x) = fetch x
 eval (Val i) = pure i
-eval (Add p q) = pure (+) 'star'  (eval p) 'star' (eval q)
+eval (Add p q) = pure (+) <*>  (eval p) <*> (eval q)
 \end{code}
 Much better.
 
