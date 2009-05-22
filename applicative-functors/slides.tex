@@ -213,6 +213,14 @@ Rules:
 %Dollar sign
 \end{frame}
 
+\begin{frame}[fragile] \frametitle{Recapturing the Functor}
+  \begin{code}
+    (<$>) :: Applicative f =>
+          (a -> b) -> f a -> f b
+    f <$> u = pure f <*> u
+  \end{code}
+  Note this is the functor type.
+\end{frame}
 \begin{frame}[fragile]
 Canonical form:\\
 pure $f \circledast u_1 \circledast \ldots \circledast u_n \equiv |[f u_1 \ldots u_n|]$\\
