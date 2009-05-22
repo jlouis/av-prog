@@ -136,8 +136,8 @@
   \item $F$ maps an object $A$ to $F A$
   \item $F$ maps a morphism $f \colon A \to B$ to $F f \colon F A \to
     F B$
-  \item For any object $A$, $F Id_A = Id_{F A}$
-  \item For all morphisms $f, g$, $F (g \circ f) = F g \circ F f$
+  \item For any object $A$, $F \; Id_A = Id_{F A}$
+  \item For all morphisms $f, g$: \quad $F (g \circ f) = F g \circ F f$
   \end{itemize}
   $F$ is then called a \emph{functor}.
 \end{frame}
@@ -194,13 +194,24 @@ Better - not good, not general.
 
 \begin{frame}[fragile]
 
-Rules:\\
-\begin{description}
-\item[Identity:] pure id $\circledast$ u = u
-\item[Composition:] pure $( \bullet ) \circledast u \circledast v \circledast$ w =  u $\circledast (v \circledast$ w)
-\item[Homomorphism:] pure f $\circledast$ pure x = pure (f x)
-\item[Interchange:] u $\circledast$ x = pure ($\lambda f \rightarrow f x) \circledast u$
-\end{description}
+\begin{align*}
+  \mathbf{infixl} & \; 4 \; \circledast\\
+  \mathbf{class} & \; \mathrm{Applicative} \; f \; \mathbf{where}\\
+  \quad & \mathrm{pure} \; :: \; a \rightarrow f a\\
+  \quad & (\circledast) \; :: \; f (a \rightarrow b) \rightarrow f a
+\rightarrow f b
+\end{align*}
+Rules:
+\begin{align*}
+  \mathbf{Identity:} \quad & \mathrm{pure} \; \mathrm{id} \;
+  \circledast u = u\\
+  \mathbf{Composition:} \quad & \mathrm{pure} \; (\cdot) \circledast u
+  \circledast v \circledast w = u \circledast (v \circledast w)\\
+  \mathbf{Homomorphism:} \quad & \mathrm{pure} \; f \circledast x =
+  \mathrm{pure} \; (\lambda f \rightarrow f x) \circledast f\\
+  \mathbf{Interchange:} \quad & u \circledast x = \mathrm{pure} \;
+  (\lambda f \rightarrow f x) \circledast f\\
+\end{align*}
 %Dollar sign
 \end{frame}
 
