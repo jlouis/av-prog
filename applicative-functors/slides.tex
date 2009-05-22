@@ -7,6 +7,7 @@
 \usepackage{diagrams}
 %\renewcommand{\sfdefault}{Myriad-LF}
 
+\newcommand{\fto}{\;\Rightarrow\;}
 \definecolor{gray_ulisses}{gray}{0.55}
 \definecolor{castanho_ulisses}{rgb}{0.71,0.33,0.14}
 \definecolor{preto_ulisses}{rgb}{0.41,0.20,0.04}
@@ -73,7 +74,7 @@
 }
 
 \lstnewenvironment{code}
-{\textbf{Haskell Code} \hspace{1cm} \hrulefill \lstset{language=HaskellUlisses}}{}
+{\hrulefill \lstset{language=HaskellUlisses}}{\hrulefill\\}
 
 \usepackage{textcomp}
 \usepackage{graphicx}
@@ -101,8 +102,48 @@
 
 \end{frame}
 
+\begin{frame}[fragile] \frametitle{Category}
+  A Category is:\\
+  \begin{gather*}
+    \text{A collection of objects:} \quad A, B, C, \dotsc\\
+    \text{A collection of morphisms:} \quad f, g, h, \dotsc\\
+  \end{gather*}
+  Morphisms lies between objects: $f \colon A \to B$,\\
+  For any object $A$, a morphism $Id_A \colon A \to A$,\\
+  For any two morphisms, $f \colon A \to B, \; g \colon B \to C$ a
+  composition $g \circ f \colon A \to C$\\
+  \begin{diagram}
+    A & \rTo^{f} & B & \rTo^{g} & C
+  \end{diagram}
+\end{frame}
+
+\begin{frame}[fragile] \frametitle{Example}
+  A Directed graph is a category:\\
+  Objects are the vertices $x, y, z \in V$\\
+  If there is a edge $e \in E$ with $s(e) = x$ and $t(e) = y$ then $e
+  \colon x \to y$ is a morphism.\\
+  The identity morphism is vacously true.\\
+  Paths play the role of compositions.\\--\\
+
+  \emph{Other Examples:} vector spaces, monoids, groups, topological
+  spaces, etc.
+\end{frame}
+
+\begin{frame}[fragile] \frametitle{Functor}
+  If $\mathcal{C}$ and $\mathcal{D}$ are categories, then $F \colon
+  \mathcal{C} \fto \mathcal{D}$ iff:
+  \begin{itemize}
+  \item $F$ maps an object $A$ to $F A$
+  \item $F$ maps a morphism $f \colon A \to B$ to $F f \colon F A \to
+    F B$
+  \item For any object $A$, $F Id_A = Id_{F A}$
+  \item For all morphisms $f, g$, $F (g \circ f) = F g \circ F f$
+  \end{itemize}
+  $F$ is then called a \emph{functor}.
+\end{frame}
+
 \begin{frame}[fragile]
-  The (standard) instance\\
+  The (standard) instance of a functor\\
   \begin{code}
     class Functor [] where
       fmap f [] = []
@@ -127,10 +168,10 @@ Not very pretty - nor general
 \end{frame}
 
 \begin{frame}[fragile]
-We can do better:
+We can do better:\\
 \begin{code}
 eval :: Exp v -> Env v -> Int
-eval (Var x) = fetch x 
+eval (Var x) = fetch x
 eval (Val i) = K i
 eval (Add p q) = K (+) 'S' eval p 'S'eval q
 \end{code}
@@ -141,7 +182,8 @@ K x \gamma = x
 \end{code}
 and\\
 \begin{code}
-S :: (env -> a -> b) -> (env -> a) -> (env -> b)
+S :: (env -> a -> b)
+         -> (env -> a) -> (env -> b)
 S ef es g = (ef g) (es g)
 \end{code}
 \end{frame}
@@ -152,15 +194,14 @@ Better - not good, not general.
 
 \begin{frame}[fragile]
 
-Rules:
-
+Rules:\\
 \begin{description}
 \item[Identity:] pure id $\circledast$ u = u
 \item[Composition:] pure $( \bullet ) \circledast u \circledast v \circledast$ w =  u $\circledast (v \circledast$ w)
 \item[Homomorphism:] pure f $\circledast$ pure x = pure (f x)
 \item[Interchange:] u $\circledast$ x = pure ($\lambda f \rightarrow f x) \circledast u$
 \end{description}
-%Dollor sign
+%Dollar sign
 \end{frame}
 
 \begin{frame}[fragile]
@@ -196,16 +237,6 @@ Much better.
 \end{frame}
 
 
-% \frame{
-%   \begin{center}
-%     \large{Goals:}\\
-%     \begin{itemize}
-%     \item Simplicity
-%     \item It is in the details!
-%     \item Understanding the domain.
-%     \end{itemize}
-%   \end{center}
-% }
 
 \end{document}
 
