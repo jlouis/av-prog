@@ -290,16 +290,30 @@ Through this and the type system we can now create traversable functions
 \end{align*}  \\
 These induce an applicative functor:\\
 
-$\mathbf{newtype} \; Accy \; o\; a = Acc \{acc \; :: \;o \}$
+$\mathbf{newtype} \; \mathrm{Accy} \; o\; a = \mathrm{Acc} \{\mathrm{acc} \; :: \;o \}$
 
 \begin{align}
-&\mathbf{instance} Monoid o &=>& Applicative (Accy o) where
-&pure \_ &=& Acc \emptyset
-&Acc o_1 \circledast Acc o_2 &=& Acc(o_1 \oplus o_2)
+&\mathbf{instance} \; \mathrm{Monoid} \; o &=>& \mathrm{Applicative} (\mathrm{Accy}\; o) \; \mathbf{where}\\
+&\mathrm{pure} \_ &=& \mathrm{Acc} \; \emptyset\\
+&\mathrm{Acc} \; o_1 \circledast \mathrm{Acc} o_2 &=& \mathrm{Acc}(o_1 \oplus o_2)
 \end{align}
-
 \end{frame}
 
+\begin{frame}[fragile] \frametitle{}
+
+accumulate :: (Traversable t, Monoid o) $=>$ (a $->$ o) $->$ t a $->$ o
+accumulate f = acc $\cdot$ traverse (Acc $\cdot$ f)
+
+newtype Mighty = Might\{might :: Bool \}
+\begin{align*}
+\mathbf{instance} \; &\mathrm{Monoid \;  Mighty} \; \mathbf{where}\\
+&\emptyset &= \mathrm{Might} \; \mathrm{False}\\
+&\mathrm{Might}\; x \oplus \mathrm{Might}\; y &= \mathrm{Might} (x \lor y)
+\end{align*}
+
+any :: Traversable t $=>$ (a $->$ Bool) $->$ t a $->$ Bool\\
+any p = might $\cdot$ accumulate (Might $\cdot$ p)
+\end{frame}
 \end{document}
 
 %%% Local Variables:
