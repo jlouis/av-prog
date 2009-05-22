@@ -243,7 +243,8 @@ So now:
 eval :: Exp v -> Env v -> Int
 eval (Var x) = fetch x
 eval (Val i) = pure i
-eval (Add p q) = pure (+) <*>  (eval p) <*> (eval q)
+eval (Add p q) =
+  pure (+) <*>  (eval p) <*> (eval q)
 \end{code}
 Much better.
 
