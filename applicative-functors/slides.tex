@@ -74,7 +74,7 @@
 }
 
 \lstnewenvironment{code}
-{\hrulefill \lstset{language=HaskellUlisses}}{\hrulefill\\}
+{\hrulefill \lstset{language=HaskellUlisses}}{}
 
 \usepackage{textcomp}
 \usepackage{graphicx}
@@ -142,7 +142,7 @@
   $F$ is then called a \emph{functor}.
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{Example}
   The (standard) instance of a functor\\
   \begin{code}
     class Functor [] where
@@ -151,7 +151,7 @@
   \end{code}
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{Leading example}
 What we have without Applicative Functors:\\
 
 \begin{code}
@@ -167,7 +167,7 @@ eval (Add p q) g = eval p g + eval q g
 Not very pretty - nor general
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{S, K combinators}
 We can do better:\\
 \begin{code}
 eval :: Exp v -> Env v -> Int
@@ -178,10 +178,8 @@ eval (Add p q) = K (+) 'S' eval p 'S'eval q
 where\\
 \begin{code}
 K :: a -> env -> a
-K x \gamma = x
-\end{code}
-and\\
-\begin{code}
+K x g = x
+
 S :: (env -> a -> b)
          -> (env -> a) -> (env -> b)
 S ef es g = (ef g) (es g)
@@ -192,7 +190,7 @@ S ef es g = (ef g) (es g)
 Better - not good, not general.
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}[fragile] \frametitle{Applicative Functor}
 
 \begin{align*}
   \mathbf{infixl} & \; 4 \; \circledast\\
