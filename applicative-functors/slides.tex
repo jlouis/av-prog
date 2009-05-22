@@ -277,7 +277,7 @@ Better choice:
 class Traversable t where
 traverse :: APplicative f => (a -> f b) -> t a -> f (t b)
 dist  :: Applicative f => t (f a) -> r (t a)
-dist = traverse id           
+dist = traverse id
 \end{code}
 Through this and the type system we can now create traversable functions
 \end{frame}
@@ -302,7 +302,7 @@ $\mathbf{newtype} \; Accy \; o\; a = Acc \{acc \; :: \;o \}$
 
 \end{document}
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: t
-%%% End: 
+%%% End:
