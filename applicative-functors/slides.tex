@@ -249,11 +249,56 @@ Much better.
 
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
+Can now make a aplicative distributor for lists:\\
+\begin{align*}
+&dist :: Applicative f &=>& [f a] -> f [a]\\
+&dist [] &=& |[ [] |]\\
+&dist (v : vs) &=&  |[ (:) v (dist vs) |]
+\end{align*}
 
+Example:\\
+\begin{code}
+flakeyMap :: (a -> Maybe b) -> [a] -> Maybe [b]
+flakeyMap f ss = dist (fmap f ss)
+\end{code}
 \end{frame}
 
+\begin{frame}[fragile]
+Better choice:
 
+\begin{align*}
+&traverse :: Applicative f &=> (a -> f b) -> [a] -> f [b]
+&traverse f [] &= |[ [] |]
+&traverse f (x :xs) &= |[(:)(f x)(traverse f xs)|]
+\end{align*}
+
+\begin{code}
+class Traversable t where
+traverse :: APplicative f => (a -> f b) -> t a -> f (t b)
+dist  :: Applicative f => t (f a) -> r (t a)
+dist = traverse id           
+\end{code}
+Through this and the type system we can now create traversable functions
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Monoids and traversability}
+\begin{align*}
+\mathbf{class} \; \mathrm{Monoid} \; o \; \mathbf{where}\\
+\emptyset &::& o\\
+(\oplus) &::& o -> o -> o
+\end{align*}  \\
+These induce an applicative functor:\\
+
+$\mathbf{newtype} \; Accy \; o\; a = Acc \{acc \; :: \;o \}$
+
+\begin{align}
+&\mathbf{instance} Monoid o &=>& Applicative (Accy o) where
+&pure \_ &=& Acc \emptyset
+&Acc o_1 \circledast Acc o_2 &=& Acc(o_1 \oplus o_2)
+\end{align}
+
+\end{frame}
 
 \end{document}
 
