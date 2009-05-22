@@ -131,7 +131,7 @@
 
 \begin{frame}[fragile] \frametitle{Functor}
   If $\mathcal{C}$ and $\mathcal{D}$ are categories, then $F \colon
-  \mathcal{C} \fto \mathcal{D}$ iff:
+  \mathcal{C} => \mathcal{D}$ iff:
   \begin{itemize}
   \item $F$ maps an object $A$ to $F A$
   \item $F$ maps a morphism $f \colon A \to B$ to $F f \colon F A \to
@@ -195,9 +195,8 @@ Better - not good, not general.
 \begin{align*}
   \mathbf{infixl} & \; 4 \; \circledast\\
   \mathbf{class} & \; \mathrm{Applicative} \; f \; \mathbf{where}\\
-  \quad & \mathrm{pure} \; :: \; a \rightarrow f a\\
-  \quad & (\circledast) \; :: \; f (a \rightarrow b) \rightarrow f a
-\rightarrow f b
+  \quad & \mathrm{pure} \; :: \; a -> f a\\
+  \quad & (\circledast) \; :: \; f (a -> b) -> f a -> f b
 \end{align*}
 Rules:
 \begin{align*}
