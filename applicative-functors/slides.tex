@@ -234,10 +234,9 @@ pure f <*> u1 <*> ... <*> un
 Let's return to our start example - but first!\\
 \begin{code}
 instance Applicative ((->) env) where
-pure x = \g -> x --K
-ef <*> ex = \g -> (ef g)(ex g) -- S
+  pure x = \g -> x --K
+  ef <*> ex = \g -> (ef g)(ex g) -- S
 \end{code}
-
 So now:
 \begin{code}
 eval :: Exp v -> Env v -> Int
