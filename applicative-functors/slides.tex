@@ -237,7 +237,7 @@ instance Applicative ((->) env) where
   pure x = \g -> x --K
   ef <*> ex = \g -> (ef g)(ex g) -- S
 \end{code}
-So now:
+So now:\\
 \begin{code}
 eval :: Exp v -> Env v -> Int
 eval (Var x) = fetch x
