@@ -204,10 +204,10 @@ Rules:
   \circledast u = u\\
   \mathbf{Composition:} \quad & \mathrm{pure} \; (\cdot) \circledast u
   \circledast v \circledast w = u \circledast (v \circledast w)\\
-  \mathbf{Homomorphism:} \quad & \mathrm{pure} \; f \circledast x =
-  \mathrm{pure} \; (\lambda f \rightarrow f x) \circledast f\\
-  \mathbf{Interchange:} \quad & u \circledast x = \mathrm{pure} \;
-  (\lambda f \rightarrow f x) \circledast f\\
+  \mathbf{Homomorphism:} \quad & \mathrm{pure} \; f \circledast
+  \mathrm{pure} \; x = \mathrm{pure} \; (f x)\\
+  \mathbf{Interchange:} \quad & u \circledast \mathrm{pure} \; x = \mathrm{pure} \;
+  (\lambda f -> f x) \circledast u\\
 \end{align*}
 %Dollar sign
 \end{frame}
