@@ -122,7 +122,7 @@
   Objects are the vertices $x, y, z \in V$\\
   If there is a edge $e \in E$ with $s(e) = x$ and $t(e) = y$ then $e
   \colon x \to y$ is a morphism.\\
-  The identity morphism is vacously true.\\
+  The identity morphism is vacuously true.\\
   Paths play the role of compositions.\\--\\
 
   \emph{Other Examples:} vector spaces, monoids, groups, topological
@@ -186,10 +186,6 @@ S ef es g = (ef g) (es g)
 \end{code}
 \end{frame}
 
-\begin{frame}[fragile]
-Better - not good, not general.
-\end{frame}
-
 \begin{frame}[fragile] \frametitle{Applicative Functor}
 
 \begin{align*}
@@ -230,8 +226,7 @@ pure f <*> u1 <*> ... <*> un
 \end{code}
 \end{frame}
 
-\begin{frame}[fragile]
-Let's return to our start example - but first!\\
+\begin{frame}[fragile] \frametitle{Leading example revisited:}
 \begin{code}
 instance Applicative ((->) env) where
   pure x = \g -> x --K
@@ -245,16 +240,13 @@ eval (Val i) = pure i
 eval (Add p q) =
   pure (+) <*>  (eval p) <*> (eval q)
 \end{code}
-Much better.
-
 \end{frame}
 
-\begin{frame}[fragile]
-Can now make a aplicative distributor for lists:\\
+\begin{frame}[fragile] \frametitle{Applicative distributor for lists:}
 \begin{align*}
-&dist :: Applicative f &=>& [f a] -> f [a]\\
-&dist [] &=& |[ [] |]\\
-&dist (v : vs) &=&  |[ (:) v (dist vs) |]
+&\mathrm{dist} :: \mathrm{Applicative} \; f &=>& [f a] -> f [a]\\
+&\mathrm{dist} [] &=& |[ [] |]\\
+  &\mathrm{dist} (v : vs) &=&  |[ (:) v (\mathrm{dist} \; vs) |]
 \end{align*}
 
 Example:\\
@@ -264,25 +256,24 @@ flakeyMap f ss = dist (fmap f ss)
 \end{code}
 \end{frame}
 
-\begin{frame}[fragile]
-Better choice:
+\begin{frame}[fragile] \frametitle{A better choice:}
 
 \begin{align*}
-&traverse :: Applicative f &=> (a -> f b) -> [a] -> f [b]
-&traverse f [] &= |[ [] |]
-&traverse f (x :xs) &= |[(:)(f x)(traverse f xs)|]
+&\mathrm{traverse} \; :: \; \mathrm{Applicative} \; f &=> (a -> f b) -> [a] -> f [b]\\
+&\mathrm{traverse} \; f [] &= |[ [] |]\\
+&\mathrm{traverse} \; f (x :xs) &= |[(:)(f x)(\mathrm{traverse} \; f \; xs)|]
 \end{align*}
 
 \begin{code}
 class Traversable t where
-traverse :: APplicative f => (a -> f b) -> t a -> f (t b)
+traverse :: Applicative f => (a -> f b) -> t a -> f (t b)
 dist  :: Applicative f => t (f a) -> r (t a)
 dist = traverse id           
 \end{code}
 Through this and the type system we can now create traversable functions
 \end{frame}
 
-\begin{frame}[fragile]\frametitle{Monoids and traversability}
+\begin{frame}[fragile]\frametitle{Monoids and applicative functors}
 \begin{align*}
 \mathbf{class} \; \mathrm{Monoid} \; o \; \mathbf{where}\\
 \emptyset &::& o\\
@@ -292,14 +283,14 @@ These induce an applicative functor:\\
 
 $\mathbf{newtype} \; \mathrm{Accy} \; o\; a = \mathrm{Acc} \{\mathrm{acc} \; :: \;o \}$
 
-\begin{align}
+\begin{align*}
 &\mathbf{instance} \; \mathrm{Monoid} \; o &=>& \mathrm{Applicative} (\mathrm{Accy}\; o) \; \mathbf{where}\\
 &\mathrm{pure} \_ &=& \mathrm{Acc} \; \emptyset\\
 &\mathrm{Acc} \; o_1 \circledast \mathrm{Acc} o_2 &=& \mathrm{Acc}(o_1 \oplus o_2)
-\end{align}
+\end{align*}
 \end{frame}
 
-\begin{frame}[fragile] \frametitle{}
+\begin{frame}[fragile] \frametitle{The result}
 
 accumulate :: (Traversable t, Monoid o) $=>$ (a $->$ o) $->$ t a $->$ o
 accumulate f = acc $\cdot$ traverse (Acc $\cdot$ f)
