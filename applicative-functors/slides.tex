@@ -160,9 +160,9 @@ data Exp v = Var v
            | Add (Exp v) (Exp v)
 
 eval :: Exp v -> Env v -> Int
-eval (Var x) g = fetch x g
-eval (Val i) g = i
-eval (Add p q) g = eval p g + eval q g
+eval (Var x) env = fetch x env
+eval (Val i) env = i
+eval (Add p q) env = eval p env + eval q env
 \end{code}
 Not very pretty - nor general
 \end{frame}
@@ -178,11 +178,11 @@ eval (Add p q) = K (+) 'S' eval p 'S'eval q
 where\\
 \begin{code}
 K :: a -> env -> a
-K x g = x
+K x env = x
 
 S :: (env -> a -> b)
          -> (env -> a) -> (env -> b)
-S ef es g = (ef g) (es g)
+S ef es env = (ef env) (es env)
 \end{code}
 \end{frame}
 
@@ -203,8 +203,8 @@ Rules:
   \circledast v \circledast w = u \circledast (v \circledast w)\\
   \mathbf{Homomorphism:} \quad & \mathrm{pure} \; f \circledast x =
   \mathrm{pure} \; (\lambda f \rightarrow f x) \circledast f\\
-  \mathbf{Interchange:} \quad & u \circledast x = \mathrm{pure} \;
-  (\lambda f \rightarrow f x) \circledast f\\
+  \mathbf{Interchange:} \quad & u \circledast \mathrm{pure} \; x = \mathrm{pure} \;
+  (\lambda f \rightarrow f x) \circledast u\\
 \end{align*}
 %Dollar sign
 \end{frame}
@@ -217,20 +217,20 @@ Rules:
   \end{code}
   Note this is the functor type.
 \end{frame}
-\begin{frame}[fragile]
-Canonical form:\\
+\begin{frame}[fragile]\frametitle{Canonical form:}
+\centering{
 pure $f \circledast u_1 \circledast \ldots \circledast u_n \equiv |[f u_1 \ldots u_n|]$\\
-so in practice\\
+and in practice\\
 \begin{code}
 pure f <*> u1 <*> ... <*> un
-\end{code}
+\end{code}}
 \end{frame}
 
 \begin{frame}[fragile] \frametitle{Leading example revisited:}
 \begin{code}
 instance Applicative ((->) env) where
-  pure x = \g -> x --K
-  ef <*> ex = \g -> (ef g)(ex g) -- S
+  pure x = \env -> x --K
+  ef <*> ex = \env -> (ef env)(ex env) -- S
 \end{code}
 So now:\\
 \begin{code}
@@ -256,12 +256,12 @@ flakeyMap f ss = dist (fmap f ss)
 \end{code}
 \end{frame}
 
-\begin{frame}[fragile] \frametitle{A better choice:}
+\begin{frame}[fragile] \frametitle{Traverse and traversable - a better choice:}
 
 \begin{align*}
 &\mathrm{traverse} \; :: \; \mathrm{Applicative} \; f &=> (a -> f b) -> [a] -> f [b]\\
-&\mathrm{traverse} \; f [] &= |[ [] |]\\
-&\mathrm{traverse} \; f (x :xs) &= |[(:)(f x)(\mathrm{traverse} \; f \; xs)|]
+&\mathrm{traverse} \; f \; [] &= |[ [] |]\\
+&\mathrm{traverse} \; f \; (x :xs) &= |[(:)\; (f \; x)(\mathrm{traverse} \; f \; xs)|]
 \end{align*}
 
 \begin{code}
@@ -275,9 +275,9 @@ Through this and the type system we can now create traversable functions
 
 \begin{frame}[fragile]\frametitle{Monoids and applicative functors}
 \begin{align*}
-\mathbf{class} \; \mathrm{Monoid} \; o \; \mathbf{where}\\
-\emptyset &::& o\\
-(\oplus) &::& o -> o -> o
+&\mathbf{class} \; \mathrm{Monoid} \; o \; \mathbf{where}\\
+\emptyset &:: o\\
+(\oplus) &:: o -> o -> o
 \end{align*}  \\
 These induce an applicative functor:\\
 
@@ -286,25 +286,27 @@ $\mathbf{newtype} \; \mathrm{Accy} \; o\; a = \mathrm{Acc} \{\mathrm{acc} \; :: 
 \begin{align*}
 &\mathbf{instance} \; \mathrm{Monoid} \; o &=>& \mathrm{Applicative} (\mathrm{Accy}\; o) \; \mathbf{where}\\
 &\mathrm{pure} \_ &=& \mathrm{Acc} \; \emptyset\\
-&\mathrm{Acc} \; o_1 \circledast \mathrm{Acc} o_2 &=& \mathrm{Acc}(o_1 \oplus o_2)
+&\mathrm{Acc} \; o_1 \circledast \mathrm{Acc} \; o_2 &=& \mathrm{Acc}(o_1 \oplus o_2)
 \end{align*}
 \end{frame}
 
 \begin{frame}[fragile] \frametitle{The result}
-
 accumulate :: (Traversable t, Monoid o) $=>$ (a $->$ o) $->$ t a $->$ o
 accumulate f = acc $\cdot$ traverse (Acc $\cdot$ f)
+\end{frame}
 
+\begin{frame} \frametitle{Mighty}
 newtype Mighty = Might\{might :: Bool \}
 \begin{align*}
 \mathbf{instance} \; &\mathrm{Monoid \;  Mighty} \; \mathbf{where}\\
-&\emptyset &= \mathrm{Might} \; \mathrm{False}\\
-&\mathrm{Might}\; x \oplus \mathrm{Might}\; y &= \mathrm{Might} (x \lor y)
+&\emptyset &=& \mathrm{Might} \; \mathrm{False}\\
+&\mathrm{Might}\; x \oplus \mathrm{Might}\; y &=& \mathrm{Might} (x \lor y)
 \end{align*}
 
 any :: Traversable t $=>$ (a $->$ Bool) $->$ t a $->$ Bool\\
 any p = might $\cdot$ accumulate (Might $\cdot$ p)
 \end{frame}
+
 \end{document}
 
 %%% Local Variables: 
