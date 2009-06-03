@@ -7,7 +7,10 @@ module Ocult.Ast(
                 docProgram
 ) where
 
+import Control.Monad.State
 import Data.List
+import Data.Map as M
+
 import Text.PrettyPrint
 
 -- Terms are the objects the language manipulates
@@ -63,7 +66,7 @@ instance (Show a, Show b) => Show (Rule a b) where
 
 docProgram :: (Show a, Show b) => Program a b -> Doc
 docProgram prg =
-    hcat $ map docRule prg
+    hcat $ fmap docRule prg
 
 instance (Show a, Show b) => Show (Program a b) where
     show = render . docProgram
@@ -84,7 +87,41 @@ patternSubst context pattern = pSubst pattern
     pSubst (PApp p1 p2) = TApp (pSubst p1) (pSubst p2)
 
 
+type Bindings = Map String Int
 
+numberize :: Program String String -> Program Int Int
+numberize prg = fst $ runState (numberPrg prg) (0, M.empty)
+
+numberPrg :: Program String String -> State (Int, Bindings) (Program Int Int)
+numberPrg prg =
+    mapM numberRule prg
+
+numberRule :: Rule String String -> State (Int, Bindings) (Rule Int Int)
+numberRule (Rl pat replaca) =
+    do
+      p1 <- numberPat pat
+      p2 <- numberPat replaca
+      return $ Rl p1 p2
+
+numberPat :: Pattern String String -> State (Int, Bindings) (Pattern Int Int)
+numberPat pattern =
+    do
+      (k, m) <- get
+      case pattern of
+        PConst p ->
+            case M.lookup p m of
+              Nothing -> do put (k+1, M.insert p k m)
+                            return $ PConst k
+              Just z  -> return $ PConst z
+        PVar p ->
+            case M.lookup p m of
+              Nothing -> do put (k+1, M.insert p k m)
+                            return $ PVar k
+              Just z -> return $ PVar z
+        PApp p1 p2 -> do
+                     p1' <- numberPat p1
+                     p2' <- numberPat p2
+                     return $ PApp p1' p2'
 
 
 
