@@ -9,92 +9,81 @@ import Control.Applicative hiding ((<|>), many)
 import Data.Char (isSpace)
 import List
 
-runIO :: Show a => Parser a -> String -> IO ()
-runIO p input =
-    either (\err -> (putStr "parse error at " >>= (\_ -> print err)))
-           (\parse -> print parse)
-           (parse p "" input)
+data ParserAst = A_App [ParserAst]
+               | A_Const String
+               | A_Var String
+type ParserRule = ([ParserAst], [ParserAst])
+type ParserPrg  = [ParserRule]
 
-program :: String -> Program String String
-program wholeProgram =
-    let
-      rules = split ";" wholeProgram
-    in
-      fmap buildRule rules
+convertAst :: ParserAst -> Pattern String String
+convertAst (A_Const s) = PConst s
+convertAst (A_Var s)   = PVar s
+convertAst (A_App [x]) = convertAst x
+convertAst (A_App (x : r)) =
+    PApp (convertAst x) (convertAst (A_App r))
 
-trim      :: String -> String
-trim      = f . f
-   where f = reverse . dropWhile isSpace
+convertRule :: ParserRule -> Rule String String
+convertRule (a1, a2) =
+    Rl (convertAst (A_App a1)) (convertAst (A_App a2))
 
-buildRule :: String -> (Rule String String)
-buildRule rule  =
-    let
-      [pat, replaca] = split "=>" rule
-      f :: String -> Pattern String String
-      f i = case parse pattern "" (trim i) of
-                  Left err -> error $ "Parser Error " ++ show err ++ (show (trim i))
-                  Right p  -> p
-    in
-      Rl (f pat) (f replaca)
-
-split :: String -> String -> [String]
-split tok splitme = unfoldr (sp1 tok) splitme
-    where sp1 _ "" = Nothing
-          sp1 t s = case find (t `isSuffixOf`) (inits s) of
-                      Nothing -> Just (s, "")
-                      Just p -> Just (take ((length p) - (length t)) p,
-                                      drop (length p) s)
-
---rule :: Parser ([(Pattern String String)])
---rule = do {       --    ;char ';'
-        --   ;return [""] --value
-       --   ;right <- auxRule
-         -- ;left <- head value
-         -- ;return left
---          ;right <- head (tail value)
---          ;return (Rl left (PConst "a"))
---          }
+convertPrg :: ParserPrg -> Program String String
+convertPrg rules =
+    fmap convertRule rules
 
 parsePrg :: String -> Program String String
 parsePrg input =
-    case parse prg "" input of
+    case parse program "" input of
       Left err -> error $ "Parser Error " ++ show err
-      Right p -> p
+      Right p -> convertPrg p
 
-prg :: Parser (Program String String)
-prg = many ruleline
-  where
-    ruleline =
-        do rl <- rule
-           string ";"
-           return rl
+whiteSpace =
+    skipMany space
 
-rule :: Parser (Rule String String)
+program :: Parser ParserPrg
+program = many (do
+                 whiteSpace
+                 r <- rule;
+                 string ";"
+                 return r)
+
+rule :: Parser ParserRule
 rule = do
-  pat <- pattern
+  p1 <- pattern
   string "=>"
-  replaca <- pattern
-  return $ Rl pat replaca
+  whiteSpace
+  p2 <- pattern
+  return (p1, p2)
 
-table = [[tableOp (skipMany space) PApp AssocLeft]] where
-           tableOp s f assoc = Infix (do {s; return f}) assoc
+pattern :: Parser [ParserAst]
+pattern = do
+    r <- many1 (do
+                 p <- papp <|> pconst <|> pvar
+                 whiteSpace
+                 return p)
+    whiteSpace
+    return r
 
-pattern :: Parser (Pattern String String)
-pattern = buildExpressionParser table patternInst
-
-patternInst :: Parser (Pattern String String)
-patternInst = patternVar <|> patternConst <|> parens patternInst
-
-parens pattern =
+parens :: Parser a -> Parser a
+parens p =
     do
       try $ char '('
-      pat <- try pattern
+      whiteSpace
+      pat <- try p
       char ')'
+      whiteSpace
       return pat
 
-patternConst :: Parser (Pattern String String)
-patternConst = PConst <$> (try $ many1 letter)
+papp :: Parser ParserAst
+papp = A_App <$> (try $ parens pattern)
 
-patternVar :: Parser (Pattern String String)
-patternVar = PVar <$> (try $ many1 lower)
+pconst :: Parser ParserAst
+pconst = A_Const <$> (try $ do
+                        p <- many1 letter
+                        whiteSpace
+                        return p)
 
+pvar :: Parser ParserAst
+pvar = A_Var <$> (try $ do
+                    p <- many1 lower
+                    whiteSpace
+                    return p)
