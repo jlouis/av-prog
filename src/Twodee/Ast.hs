@@ -16,27 +16,25 @@ data Outface = S | E
 
 
 data Exp = Unit
-         | Tuple { e_exp0 :: Exp,  e_exp1 :: Exp }
-         | Inl   { e_exp  :: Exp }
-         | Inr   { e_exp  :: Exp }
+         | Tuple Exp Exp
+         | Inl   Exp
+         | Inr   Exp
          | Iface Inface
   deriving Show
 
 
 data Command = SendEmpty
-             | Send1 { c_exp  :: Exp, out  :: Outface }
-             | Send2 { c_exp0 :: Exp, out1 :: Outface,
-                       c_exp1 :: Exp, out2 :: Outface }
-             | Case  { c_exp  :: Exp, out1 :: Outface, out2 :: Outface }
-             | Split { c_exp  :: Exp }
-             | Use   { name   :: String }
+             | Send1 Exp Outface
+             | Send2 Exp Outface
+                     Exp Outface
+             | Case  Exp Outface Outface
+             | Split Exp
+             | Use   String
   deriving Show
 
 
 type Wire = Maybe Integer
 
-
-data Box = MkBox { cmd :: Command, north :: Wire, west :: Wire, east :: Wire, south :: Wire }
-  deriving Show
+newtype Box = MkBox { unBox :: Inface -> Inface -> Command }
 
 newtype Mod = MkModule { boxes :: [Box] }
