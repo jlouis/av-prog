@@ -5,8 +5,8 @@ module Twodee.Ast (Inface (..),
                    Command (..),
                    Box (..),
                    Mod (..),
-                   width,
-                   boxify)
+                   Joint (..),
+                   width)
 where
 
 import Data.Monoid
@@ -54,22 +54,38 @@ instance Show Command where
           Split e -> mconcat ["split(", show e, ")"]
           Use s -> mconcat ["use \"", show s, "\""]
 
-width :: Command -> Int
+width :: Box Inface -> Int
 width c =
-    (2+) $ length $ show c
+    (2+) $ length $ show $ unBox c W N
 
 hRule w = mconcat ["+", take (w-2) $ repeat '-', "+"]
 
-boxify :: Command -> String
-boxify c = unlines [rule, sorround "!" $ show c, rule]
-  where
-    rule = hRule $ width c
-    sorround elem str = mconcat [elem, str, elem]
+sorround :: String -> String -> String
+sorround elem str = mconcat [elem, str, elem]
 
 
 newtype Box a = MkBox { unBox :: a -> a -> Command }
 
+instance Show (Box Inface) where
+    show b =
+        show $ (unBox b) W N
+
 data Joint = JBox (Box Inface)
            | JSpacing -- Need more attachments here
+
+hRulers :: [Joint] -> [String]
+hRulers [] = [""]
+hRulers (JSpacing : rest) = (take 2 $ repeat ' ') : hRulers rest
+hRulers (JBox b : rest) = (hRule $ width b) : hRulers rest
+
+contents :: [Joint] -> [String]
+contents [] = []
+contents (JSpacing : rest) = "->" : contents rest
+contents (JBox b : rest)   = (sorround "!" $ show b) : contents rest
+
+instance Show [Joint] where
+    show layout = present layout
+        where
+          present l = unlines [mconcat $ hRulers l, mconcat $ contents l, mconcat $ hRulers l]
 
 newtype Mod a = MkModule { boxes :: [Box a] }
