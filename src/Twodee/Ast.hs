@@ -58,11 +58,12 @@ width :: Box Inface -> Int
 width c =
     (2+) $ length $ show $ unBox c W N
 
-hRule w = mconcat ["+", take (w-2) $ repeat '-', "+"]
+hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
+boxRule = hRule "*" '='
+modRule = hRule "," '.'
 
 sorround :: String -> String -> String
 sorround elem str = mconcat [elem, str, elem]
-
 
 newtype Box a = MkBox { unBox :: a -> a -> Command }
 
@@ -72,12 +73,13 @@ instance Show (Box Inface) where
 
 data Joint = JBox (Box Inface)
            | JSpacing -- Need more attachments here
-newtype Mod = MkModule { boxes :: [Joint] }
+data Mod = MkModule { boxes :: [Joint],
+                      modName :: String }
 
-hRulers :: [Joint] -> [String]
-hRulers [] = [""]
-hRulers (JSpacing : rest) = (take 2 $ repeat ' ') : hRulers rest
-hRulers (JBox b : rest) = (hRule $ width b) : hRulers rest
+boxRulers :: [Joint] -> [String]
+boxRulers [] = [""]
+boxRulers (JSpacing : rest) = (take 2 $ repeat ' ') : boxRulers rest
+boxRulers (JBox b : rest) = (boxRule $ width b) : boxRulers rest
 
 contents :: [Joint] -> [String]
 contents [] = []
@@ -86,9 +88,21 @@ contents (JBox b : rest)   = (sorround "!" $ show b) : contents rest
 
 outputJoints layout = present layout
         where
-          present l = unlines [mconcat $ hRulers l, mconcat $ contents l, mconcat $ hRulers l]
+          present l = unlines [mconcat $ boxRulers l, mconcat $ contents l, mconcat $ boxRulers l]
 
 instance Show Mod where
-    show m = outputJoints $ boxes m
+    show m = modularize contents
+        where
+          contents = outputJoints $ boxes m
+          modularize contents =
+              let
+                  ls = lines contents
+                  size = foldl1 max $ fmap length ls
+              in
+                unlines [modRule $ 2 + size,
+                         " " ++ modName m,
+                         unlines $ fmap (sorround ":") ls,
+                         modRule $ 2 + size]
+ 
 
 
