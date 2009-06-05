@@ -69,4 +69,7 @@ boxify c = unlines [rule, sorround "!" $ show c, rule]
 
 newtype Box = MkBox { unBox :: Inface -> Inface -> Command }
 
+data Joining = JBox Box
+             | JSpacer
+
 newtype Mod = MkModule { boxes :: [Box] }
