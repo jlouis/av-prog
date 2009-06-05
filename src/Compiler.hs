@@ -21,10 +21,10 @@ compileTerm (TApp t1 t2) = Inl (Tuple t1' t2')
       t1' = compileTerm t1
       t2' = compileTerm t2
 
-compilePattern :: Pattern Int Int -> Mod
+compilePattern :: Pattern Int Int -> Mod a
 compilePattern _ = MkModule []
 
-compileRule :: Rule a b -> Mod -- Perhaps wrong
+compileRule :: Rule a b -> Mod a -- Perhaps wrong
 compileRule _ = MkModule []
 
 -- Pattern compiles should make a pattern into a module.

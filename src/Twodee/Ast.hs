@@ -67,9 +67,9 @@ boxify c = unlines [rule, sorround "!" $ show c, rule]
     sorround elem str = mconcat [elem, str, elem]
 
 
-newtype Box = MkBox { unBox :: Inface -> Inface -> Command }
+newtype Box a = MkBox { unBox :: a -> a -> Command }
 
-data Joining = JBox Box
-             | JSpacer
+data Joint = JBox (Box Inface)
+           | JSpacing -- Need more attachments here
 
-newtype Mod = MkModule { boxes :: [Box] }
+newtype Mod a = MkModule { boxes :: [Box a] }

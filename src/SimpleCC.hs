@@ -21,6 +21,6 @@ compile (Plus e1 e2) =
     in
       MkBox (\n w -> Use "plus")
 
-ew_wire :: Box -> Box -> Box
+ew_wire :: Box Inface -> Box Inface -> Box Inface
 ew_wire b1 b2 = MkBox (\e w -> SendEmpty)
 
