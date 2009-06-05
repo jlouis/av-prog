@@ -36,7 +36,7 @@ data Command = SendEmpty
 type Wire = Maybe Integer
 
 
-data Box = MKBox { cmd :: Command, north :: Wire, west :: Wire, east :: Wire, south :: Wire }
+data Box = MkBox { cmd :: Command, north :: Wire, west :: Wire, east :: Wire, south :: Wire }
   deriving Show
 
 newtype Mod = MkModule { boxes :: [Box] }

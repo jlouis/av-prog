@@ -15,20 +15,20 @@ import Twodee.Ast
 
 
 testProg = [
- MKBox {cmd = Send2 {c_exp0 = (Iface W), out1 = S,
+ MkBox {cmd = Send2 {c_exp0 = (Iface W), out1 = S,
                      c_exp1 = (Iface W), out2 = E},
         north = Nothing, west = Nothing, east = Just 3, south = Just 2},
 
- MKBox {cmd = Case {c_exp = (Iface N), out1 = S, out2 = E},
+ MkBox {cmd = Case {c_exp = (Iface N), out1 = S, out2 = E},
         north = Nothing, west = Nothing, east = Just 5, south = Just 4},
 
- MKBox {cmd = Use { name = "plus" },
+ MkBox {cmd = Use { name = "plus" },
         north = Just 4, west = Just 2,  east = Just 6, south = Nothing},
 
- MKBox {cmd = Send1 {c_exp = Inl {e_exp = (Iface W)}, out = E},
+ MkBox {cmd = Send1 {c_exp = Inl {e_exp = (Iface W)}, out = E},
         north = Just 3, west = Just 6, east = Nothing, south = Nothing},
 
- MKBox {cmd = Send1 {c_exp = (Iface N), out = E},
+ MkBox {cmd = Send1 {c_exp = (Iface N), out = E},
         north = Nothing, west = Just 5, east = Nothing, south = Nothing}
 
  ]

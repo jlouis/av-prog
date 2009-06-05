@@ -20,6 +20,9 @@ build-two:
 build-ocultcc:
 	ghc ${GHCFLAGS} --make *.hs Ocult/Main.hs -main-is Ocult.Main.main -o ocultcc
 
+build-simple:
+	ghc ${GHCFLAGS} --make *.hs Simple/Main.hs -main-is Simple.Main.main -o simplecc
+
 build-prof:
 	ghc ${GHCFLAGS} -prof --make *.hs -o uvm
 
