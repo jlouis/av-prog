@@ -72,6 +72,7 @@ instance Show (Box Inface) where
 
 data Joint = JBox (Box Inface)
            | JSpacing -- Need more attachments here
+newtype Mod = MkModule { boxes :: [Joint] }
 
 hRulers :: [Joint] -> [String]
 hRulers [] = [""]
@@ -83,9 +84,11 @@ contents [] = []
 contents (JSpacing : rest) = "->" : contents rest
 contents (JBox b : rest)   = (sorround "!" $ show b) : contents rest
 
-instance Show [Joint] where
-    show layout = present layout
+outputJoints layout = present layout
         where
           present l = unlines [mconcat $ hRulers l, mconcat $ contents l, mconcat $ hRulers l]
 
-newtype Mod a = MkModule { boxes :: [Box a] }
+instance Show Mod where
+    show m = outputJoints $ boxes m
+
+
