@@ -3,9 +3,11 @@ module Twodee.Ast (Inface (..),
                    Outface (..),
                    Exp (..),
                    Command (..),
-                   Wire,
                    Box (..),
-                   Mod (..)) where
+                   Mod (..),
+                   width,
+                   boxify)
+where
 
 import Data.Monoid
 
@@ -52,9 +54,18 @@ instance Show Command where
           Split e -> mconcat ["split(", show e, ")"]
           Use s -> mconcat ["use \"", show s, "\""]
 
-                                
+width :: Command -> Int
+width c =
+    (2+) $ length $ show c
 
-type Wire = Maybe Integer
+hRule w = mconcat ["+", take (w-2) $ repeat '-', "+"]
+
+boxify :: Command -> String
+boxify c = unlines [rule, sorround "!" $ show c, rule]
+  where
+    rule = hRule $ width c
+    sorround elem str = mconcat [elem, str, elem]
+
 
 newtype Box = MkBox { unBox :: Inface -> Inface -> Command }
 
