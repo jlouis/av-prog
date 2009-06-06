@@ -20,6 +20,11 @@ compile (Plus e1 e2) =
     let c1 = compile e1
         c2 = compile e2
     in [JBox $ MkBox (\n w -> Use "plus")]
+compile (Mul e1 e2) = 
+    let c1 = compile e1
+        c2 = compile e2
+    in [JBox $ MkBox (\n w -> Use "mul")]
+
 
 ew_join :: [Joint] -> Box Inface -> [Joint]
 ew_join [] b = [JSpacing, JBox b]
