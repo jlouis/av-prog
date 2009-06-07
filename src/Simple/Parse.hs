@@ -22,19 +22,19 @@ program = op
 whiteSpace :: Parser ()
 whiteSpace = skipMany space
 
-expr2 = zero_expr <|> succ_expr <|> parens op <|> op
+expr = zero_expr <|> succ_expr <|> parens op <|> op
 
-opTest tegn = 
+opTest sign = 
       do {whiteSpace;
-          try(string tegn);
+          try(string sign);
           whiteSpace}
 
 table = [[tableOp (opTest "*") mul_expr AssocLeft],
          [tableOp (opTest "+") (plus_expr) AssocLeft]] where 
            tableOp s f assoc = Infix (do {s; return f}) assoc 
 
-op = buildExpressionParser table expr2 
-
+op = buildExpressionParser table expr
+     
 
 parens :: Parser Ast -> Parser Ast
 parens exp = do
@@ -57,16 +57,6 @@ succ_expr = do
     e <- op
     whiteSpace
     return (Succ e)
-
-{-plus_expr = do
-  e1 <- expr
-  whiteSpace
-  string "+"
-  whiteSpace
-  e2 <- expr
-  whiteSpace
-  return (Plus e1 e2)
--}
 
 plus_expr e1 e2 = (Plus e1 e2)
 

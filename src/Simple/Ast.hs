@@ -23,11 +23,13 @@ eval (Mul e Zero) = Zero
 eval (Mul (Succ Zero) e) = eval e
 eval (Mul e (Succ Zero)) = eval e
 -- Otherwise I let the result be the following
-eval (Mul (Succ e) n) = eval(Mul e (Plus n n))  
-eval (Mul n (Succ e)) = eval(Mul e (Plus n n))
+{- We do not need a second case, since the first value cannot be Zero or (Succ Zero) - 
+otherwise it would have been caught by one of the above statements -}
+eval (Mul (Succ e) n) = eval (Plus n (eval (Mul e n)))
+
 
 astPrint :: String -> Ast -> String
-astPrint str Zero = "zero"
+astPrint str Zero = "z"
 astPrint str (Succ e) = str ++ "s " ++ result where
     result = astPrint str e
 astPrint str (Plus e1 e2) = str ++ r1 ++ " + " ++ r2 where
