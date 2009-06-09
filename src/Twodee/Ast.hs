@@ -93,10 +93,11 @@ findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
 findEdges [] = []
 findEdges ((id, box) : rest) =
     let
-        getEdges bx = Set.fromList [north bx, east bx, south bx, west bx]
-        s = getEdges box
+        getOutEdges bx = Set.fromList [south bx, west bx]
+        getInEdges bx = Set.fromList [north bx, east bx]
+        s = getOutEdges box
         matches boxes = fil boxsets
-            where boxsets = fmap (\(id, b) -> (id, getEdges b)) boxes
+            where boxsets = fmap (\(id, b) -> (id, getInEdges b)) boxes
                   fil :: [(Int, Set.Set Int)] -> [Int]
                   fil [] = []
                   fil ((tid, bs) : r) = if Set.intersection s bs /= Set.empty
