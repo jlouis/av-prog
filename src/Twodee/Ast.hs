@@ -240,9 +240,16 @@ create_north_input1 False cw = mconcat $ take cw (repeat " ")
 create_north_input2 True cw = mconcat [" |v", take (cw-3) (repeat ' ')]
 create_north_input2 False cw = mconcat $ take cw (repeat " ")
 
-create_box_hrule ni cw =
+create_box_hrule_upper ni cw =
     mconcat [" ",
              if ni then "|" ++ "*" else " *",
+             mconcat $ take (cw-4) (repeat " "),
+             "*"]
+
+
+create_box_hrule_lower wi ni cw =
+    mconcat [if wi then "|" else " ",
+             if ni then "|*" else " *",
              mconcat $ take (cw-4) (repeat " "),
              "*"]
 
@@ -252,6 +259,9 @@ create_box_contents wi ni c =
                  then "+#>"
                  else "+->"
              else "  !", show c, "!"]
+
+create_lines c = []
+
 renderbox :: ExplicitOrder -> [String]
 renderbox crate =
     let
@@ -261,12 +271,14 @@ renderbox crate =
         south_output = has_south_output crate
         cw = crate_width west_input (ctnts)
         ctnts = contents crate
+        circuitry = wires crate
     in
       [create_north_input1 north_input cw,
        create_north_input2 north_input cw,
-       create_box_hrule north_input cw,
+       create_box_hrule_upper north_input cw,
        create_box_contents west_input north_input ctnts,
-       create_box_hrule north_input cw]
+       create_box_hrule_lower west_input north_input cw] ++
+       create_lines circuitry
 
 render :: [ExplicitOrder] -> [[String]]
 render boxes = fmap renderbox analyzed_boxes
