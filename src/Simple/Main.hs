@@ -10,7 +10,6 @@ import Twodee.Ast
 main = do
   (ast, env, fkt) <- return $ parsePrg "[hello = (s (s z)) + (s z)] Lookup hello * (s (s z))"
   putStrLn $ astPrint "" (start ast env fkt)
-  bxs <- return $ SimpleCC.compile ast
-  nodule <- return $ Twodee.Ast.MkModule { boxes = bxs, modName = "Main" }
-  putStrLn $ show nodule
-
+--  bxs <- return $ SimpleCC.compile ast
+--  nodule <- return $ Twodee.Ast.MkModule { boxes = bxs, modName = "Main" }
+--  putStrLn $ show nodule
