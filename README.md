@@ -11,12 +11,11 @@ Task 2a: Mikkel has looked at Parsec.
   It still needs some testing.
 
 Task 2b: We need 2 things here:
-  First, we need a way to compile Ocult, or a variant hereof down to the internal 2d representation.
+     New TODO:
 
-  We can convert the internal AST to one with numbers.
-  We should define the simple compilation of data to 2d.
-  We should define the way to compile a list of rules down.
+     * In topological order, we should lay out the blocks with implicit
+       representation.
 
-  Next, we need a way to output 2d representations to provide a 2d program.
-
+     * For each subblock, output the things we need to output.
+     * join together the type errors
 
