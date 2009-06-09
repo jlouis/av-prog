@@ -261,6 +261,8 @@ create_box_contents wi ni eo c =
              else "   !", show c, "!",
              if eo then "+" else " "]
 
+create_box_south_output ni wi eo so cw = ""
+
 create_lines p c = []
 
 renderbox :: ExplicitOrder -> [String]
@@ -279,7 +281,8 @@ renderbox crate =
        create_north_input2 north_input cw,
        create_box_hrule_upper north_input cw,
        create_box_contents west_input north_input east_output ctnts,
-       create_box_hrule_lower west_input north_input east_output cw] ++
+       create_box_hrule_lower west_input north_input east_output cw,
+       create_box_south_output north_input west_input east_output south_output cw] ++
        (create_lines positions circuitry)
 
 render :: [ExplicitOrder] -> [[String]]
