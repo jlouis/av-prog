@@ -87,6 +87,10 @@ contents [] = []
 contents (JSpacing : rest) = "->" : contents rest
 contents (JBox b : rest)   = (sorround "!" $ show b) : contents rest
 
+extraSign :: Int -> String  -> String
+extraSign 0 string = ""
+extraSign number string = string ++ extraSign (number - 1) string
+
 outputJoints layout = present layout
         where
           present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l, mconcat $ contents l, mconcat $ boxRulers l]
@@ -99,9 +103,12 @@ instance Show Mod where
               let
                   ls = lines contents
                   size = foldl1 max $ fmap length ls
+                  name = ": " ++ modName m
+                  modLength = size - length name + 1
+                  finalName = name ++ (extraSign modLength " ") ++ ":"
               in
                 unlines [modRule $ 2 + size,
-                         " " ++ modName m,
+                         finalName, 
                          mconcat $ intersperse "\n" $ fmap (sorround ":") ls,
                          modRule $ 2 + size]
 
