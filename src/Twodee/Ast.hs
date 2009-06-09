@@ -206,7 +206,7 @@ sorround elem str = mconcat [elem, str, elem]
 
 crate_width :: Bool -> Command -> Int
 crate_width west_input command =
-    (if west_input then (2+) else id) $ length $ show command
+    (4+) $ length $ show command
 
 build = intersperse "\n"
 
@@ -236,6 +236,14 @@ create_north_input1 False cw = mconcat $ take cw (repeat " ")
 create_north_input2 True cw = mconcat [" |v", take (cw-3) (repeat ' ')]
 create_north_input2 False cw = mconcat $ take cw (repeat " ")
 
+create_box_hrule ni cw =
+    mconcat [" ",
+             if ni then "|" ++ "*" else " *",
+             mconcat $ take (cw-4) (repeat " "),
+             "*"]
+
+create_box_contents c =
+    mconcat ["  !", show c, "!"]
 renderbox :: ExplicitOrder -> [String]
 renderbox crate =
     let
@@ -243,10 +251,14 @@ renderbox crate =
         west_input  = has_west_input crate
         east_output = has_east_output crate
         south_output = has_south_output crate
-        cw = crate_width west_input (contents crate)
+        cw = crate_width west_input (ctnts)
+        ctnts = contents crate
     in
       [create_north_input1 north_input cw,
-       create_north_input2 north_input cw]
+       create_north_input2 north_input cw,
+       create_box_hrule north_input cw,
+       create_box_contents ctnts,
+       create_box_hrule north_input cw]
 
 render :: [ExplicitOrder] -> [[String]]
 render boxes = fmap renderbox analyzed_boxes
