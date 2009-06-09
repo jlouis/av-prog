@@ -9,6 +9,8 @@ module Twodee.Ast (Inface (..),
                    width)
 where
 
+import qualified Data.Graph as Graph
+import qualified Data.Set as Set
 import Data.List
 import Data.Monoid
 
@@ -85,6 +87,30 @@ extract_boxes jnt =
       b @ (JBox _ _ _ _ _) -> [b]
       JBox_Group boxes _ _ _ _ -> mconcat $ fmap extract_boxes boxes
       JSpacing -> []
+
+findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
+findEdges [] = []
+findEdges ((id, box) : rest) =
+    let
+        getEdges bx = Set.fromList [north bx, east bx, south bx, west bx]
+        s = getEdges box
+        matches boxes = fil boxsets
+            where boxsets = fmap (\(id, b) -> (id, getEdges b)) boxes
+                  fil :: [(Int, Set.Set Int)] -> [Int]
+                  fil [] = []
+                  fil ((tid, bs) : r) = if Set.intersection s bs /= Set.empty
+                                        then tid : (fil r)
+                                        else fil r
+    in
+      ([(id, tid) | tid <- matches rest] : findEdges rest)
+
+topsort jnts =
+    let
+        numbered = zip [1..] jnts
+        bnds = (1, length numbered)
+        edges = findEdges numbered
+    in
+      Graph.topSort $ Graph.buildG bnds $ mconcat edges
 
 
 instance Show Joint where
