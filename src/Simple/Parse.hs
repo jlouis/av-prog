@@ -10,17 +10,17 @@ import Data.Char (isSpace)
 import List
 
 
-parsePrg :: String -> (Ast, EnvValue)
+parsePrg :: String -> (Ast, EnvValue, FuncEnvValue)
 parsePrg input =
     case parse program "" input of
       Left err -> error $ "Parser Error " ++ show err
       Right p -> p
 
-program :: Parser (Ast, EnvValue)
+program :: Parser (Ast, EnvValue, FuncEnvValue)
 program = do {
            env <- constStart; 
            ast <- op;
-           return (ast, env)
+           return (ast, env, FuncEnd)
            }
            
 constStart :: Parser EnvValue
@@ -35,7 +35,7 @@ constStart = do{
              <|>
              do {
              string "]";
-             return End
+             return EnvEnd
              }
              }
 
@@ -49,7 +49,7 @@ consts = do
            return (Env c rest);
            } 
            <|> 
-           return (Env c End)
+           return (Env c EnvEnd)
            
 const :: Parser ConstValue
 const = do 
