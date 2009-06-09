@@ -1,8 +1,14 @@
 module Simple.Main (main) where
 
+import SimpleCC
 import Simple.Parse
 import Simple.Ast
+import Twodee.Ast
 
-main = putStrLn value where   --putStrLn (astPrint "" ast) where
-    value = astPrint "" (eval ast)
-    ast = parsePrg "(s z) * (s (s z))"
+main = do
+  ast <- return $ parsePrg "(s z) * (s (s z))"
+  putStrLn $ astPrint "" (eval ast)
+  bxs <- return $ SimpleCC.compile ast
+  nodule <- return $ Twodee.Ast.MkModule { boxes = bxs, modName = "Main" }
+  putStrLn $ show nodule
+

@@ -9,6 +9,7 @@ module Twodee.Ast (Inface (..),
                    width)
 where
 
+import Data.List
 import Data.Monoid
 
 data Inface = N | W
@@ -52,7 +53,7 @@ instance Show Command where
           Case e1 o1 o2 -> mconcat ["case(", show e1, ", ", show o1,
                                                       ", ", show o2, ")"]
           Split e -> mconcat ["split(", show e, ")"]
-          Use s -> mconcat ["use \"", show s, "\""]
+          Use s -> mconcat ["use ", show s, ""]
 
 width :: Box Inface -> Int
 width c =
@@ -88,7 +89,7 @@ contents (JBox b : rest)   = (sorround "!" $ show b) : contents rest
 
 outputJoints layout = present layout
         where
-          present l = unlines [mconcat $ boxRulers l, mconcat $ contents l, mconcat $ boxRulers l]
+          present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l, mconcat $ contents l, mconcat $ boxRulers l]
 
 instance Show Mod where
     show m = modularize contents
@@ -101,8 +102,8 @@ instance Show Mod where
               in
                 unlines [modRule $ 2 + size,
                          " " ++ modName m,
-                         unlines $ fmap (sorround ":") ls,
+                         mconcat $ intersperse "\n" $ fmap (sorround ":") ls,
                          modRule $ 2 + size]
- 
+
 
 

@@ -1,4 +1,4 @@
-module SimpleCC ()
+module SimpleCC (compile)
 where
 
 import Simple.Ast
