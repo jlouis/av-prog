@@ -6,6 +6,8 @@ module Twodee.Ast (Inface (..),
                    Box (..),
                    Mod (..),
                    Joint (..),
+                   Wire,
+                   mkBox,
                    width)
 where
 
@@ -18,6 +20,8 @@ data Inface = N | W
 data Outface = S | E
   deriving Show
 
+type Wire = Int
+type Wiring = Maybe Wire
 
 data Exp = Unit
          | Tuple Exp Exp
@@ -55,9 +59,9 @@ instance Show Command where
           Split e -> mconcat ["split(", show e, ")"]
           Use s -> mconcat ["use ", show s, ""]
 
-width :: Box Inface -> Int
+width :: Box -> Int
 width c =
-    (2+) $ length $ show $ unBox c W N
+    (2+) $ length $ show $ command c
 
 hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
 boxRule = hRule "*" '='
@@ -66,14 +70,23 @@ modRule = hRule "," '.'
 sorround :: String -> String -> String
 sorround elem str = mconcat [elem, str, elem]
 
-newtype Box a = MkBox { unBox :: a -> a -> Command }
+mkBox c = MkBox { command = c,
+                  north = Nothing, east = Nothing,
+                  west = Nothing, south = Nothing }
 
-instance Show (Box Inface) where
+data Box = MkBox { command :: Command,
+                   north :: Wiring,
+                   east :: Wiring,
+                   south :: Wiring,
+                   west :: Wiring }
+
+instance Show Box where
     show b =
-        show $ (unBox b) W N
+        show $ (command b)
 
-data Joint = JBox (Box Inface)
+data Joint = JBox Box
            | JSpacing -- Need more attachments here
+
 data Mod = MkModule { boxes :: [Joint],
                       modName :: String }
 

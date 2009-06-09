@@ -1,6 +1,8 @@
 module SimpleCC (compile)
 where
 
+import Control.Monad.State hiding (join)
+
 import Simple.Ast
 import Simple.Parse
 
@@ -10,24 +12,32 @@ import Twodee.Ast
 compileV Zero = Inr Unit
 compileV (Succ e) = Inl (compileV e)
 
-compile :: Ast -> [Joint]
-compile Zero = [JBox $ MkBox (\n w -> Send1 (Inr Unit) E)]
+type Layout = [Box]
+type Supply a = State Int a
+
+singleton x = [x]
+
+compile :: Ast -> Supply Layout
+compile Zero = return $ singleton $ (mkBox (Send1 (Inr Unit) E))
 compile (Succ x) =
-    let cx = compile x
-    in
-      ew_join cx (MkBox (\n w -> Send1 (Inl (Iface w)) E))
+    do
+      cx <- compile x
+      join_ew cx (singleton (mkBox (Send1 (Inl (Iface W)) E)))
 compile (Plus e1 e2) =
-    let c1 = compile e1
-        c2 = compile e2
-    in [JBox $ MkBox (\n w -> Use "plus")]
+    do
+      c1 <- compile e1
+      c2 <- compile e2
+      join c1 c2 (singleton (mkBox (Use "plus")))
 compile (Mul e1 e2) =
-    let c1 = compile e1
-        c2 = compile e2
-    in [JBox $ MkBox (\n w -> Use "mul")]
+    do
+      c1 <- compile e1
+      c2 <- compile e2
+      join c1 c2 (singleton (mkBox (Use "mul")))
 
+join_ew :: Layout -> Layout -> Supply Layout
+join_ew b1 b2 = return []
 
-ew_join :: [Joint] -> Box Inface -> [Joint]
-ew_join [] b = [JSpacing, JBox b]
-ew_join (box : boxes) b = box : ew_join boxes b
+join :: Layout -> Layout -> Layout -> Supply Layout
+join wi ni box = return []
 
 
