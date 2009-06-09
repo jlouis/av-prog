@@ -176,6 +176,24 @@ liveness_analyze l (b : rest) = b {live = updated_live } : (liveness_analyze upd
       kill = find_kill $ wires b
       updated_live = update_liveness gen kill l
 
+renderbox c = []
+
+{-
+renderbox :: ExplicitOrder -> String
+renderbox crate =
+    let
+        north_input = has_north_input crate
+        west_input  = has_west_input crate
+        east_output = has_east_ouput crate
+        south_output = has_south_output crate
+        crate_width = calc_width 
+    in
+      ...
+-}
+render :: [ExplicitOrder] -> [[String]]
+render boxes = fmap renderbox analyzed_boxes
+    where analyzed_boxes = liveness_analyze [] boxes
+
 instance Show Joint where
     show b =
         show $ (command b)
