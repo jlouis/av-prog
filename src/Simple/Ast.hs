@@ -1,4 +1,4 @@
-module Simple.Ast (Ast(..),
+module Simple.Ast (Ast(..), EnvValue(..), ConstValue(..),
             eval,
             astPrint)
 where
@@ -8,7 +8,10 @@ import Text.PrettyPrint
 import Data.Map as M
 
 -- Syntax of the small language
-data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast
+data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast | Lookup String EnvValue
+
+data EnvValue = Env ConstValue EnvValue | End
+data ConstValue = Const String Ast
 
 -- Evaluation operation
 eval Zero = Zero
@@ -27,6 +30,11 @@ eval (Mul e (Succ Zero)) = eval e
    otherwise it would have been caught by one of the above statements -}
 eval (Mul (Succ e) n) = eval (Plus n (eval (Mul e n)))
 
+eval (Lookup str End) = Zero
+eval (Lookup str (Env (Const id calc) env)) = if str == id 
+                                                 then eval calc
+                                                 else eval (Lookup str env)
+ 
 
 astPrint :: String -> Ast -> String
 astPrint str Zero = "z"

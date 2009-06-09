@@ -17,7 +17,37 @@ parsePrg input =
       Right p -> p
 
 program :: Parser Ast
-program = op
+program = do
+           constStart 
+           op
+
+constStart :: Parser EnvValue
+constStart = do 
+             string "["
+             c <- consts
+             string "]"
+             return c
+
+consts :: Parser EnvValue
+consts = do 
+         c <- Simple.Parse.const
+         do 
+           {
+           try(string ",");
+           rest <- consts;
+           return (Env c rest);
+           } 
+           <|> 
+           return (Env c End)
+           
+const :: Parser ConstValue
+const = do 
+        str <- many1 letter
+        whiteSpace
+        string "="
+        whiteSpace
+        value <- op
+        return (Simple.Ast.Const str value)
 
 whiteSpace :: Parser ()
 whiteSpace = skipMany space
