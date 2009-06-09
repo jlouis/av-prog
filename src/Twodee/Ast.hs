@@ -12,6 +12,7 @@ where
 import qualified Data.Graph as Graph
 import qualified Data.Set as Set
 import Data.List
+
 import Data.Monoid
 
 data Inface = N | W
@@ -104,14 +105,42 @@ findEdges ((id, box) : rest) =
     in
       ([(id, tid) | tid <- matches rest] : findEdges rest)
 
+order [] numbered = []
+order (v : vs) numbered =
+    case lookup v numbered of
+      Just b -> b : (order vs numbered)
+
 topsort jnts =
     let
         numbered = zip [1..] jnts
         bnds = (1, length numbered)
         edges = findEdges numbered
+        vertices = Graph.topSort $ Graph.buildG bnds $ mconcat edges
     in
-      Graph.topSort $ Graph.buildG bnds $ mconcat edges
+      order vertices numbered
 
+data WireInfo = PassThrough Int
+              | End_W Int
+              | End_N Int
+              | Start_E Int
+              | Start_S Int
+
+data ExplicitOrder = EOB { contents :: Command,
+                           wires :: [WireInfo] }
+
+process_box :: Joint -> ExplicitOrder
+process_box box = EOB { contents = command box,
+                        wires = wi }
+    where
+      wi = [End_W $ west box,
+            End_N $ north box,
+            Start_E $ east box,
+            Start_S $ south box]
+
+explicit_wiring :: [Joint] -> [ExplicitOrder]
+explicit_wiring jnts = fmap process_box ordered
+  where
+    ordered = topsort jnts
 
 instance Show Joint where
     show b =
@@ -125,14 +154,16 @@ boxRulers [] = [""]
 boxRulers (JSpacing : rest) = (take 2 $ repeat ' ') : boxRulers rest
 boxRulers (b : rest) = (boxRule $ width b) : boxRulers rest
 
-contents :: [Joint] -> [String]
-contents [] = []
-contents (JSpacing : rest) = "->" : contents rest
-contents (b : rest) = (sorround "!" $ show b) : contents rest
+content :: [Joint] -> [String]
+content [] = []
+content (JSpacing : rest) = "->" : content rest
+content (b : rest) = (sorround "!" $ show b) : content rest
 
 outputJoints layout = present layout
         where
-          present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l, mconcat $ contents l, mconcat $ boxRulers l]
+          present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l,
+                                                  mconcat $ content l,
+                                                  mconcat $ boxRulers l]
 
 instance Show Mod where
     show m = modularize contents

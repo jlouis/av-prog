@@ -13,16 +13,9 @@ Task 2a: Mikkel has looked at Parsec.
 Task 2b: We need 2 things here:
      New TODO:
 
-     * Wrap the compiler inside a monad for wires.
-     * Change the representation of boxes to contain wires
-       (first order)
-     * Change the joining representation to take care of implicit
-       wiring.
+     * In topological order, we should lay out the blocks with implicit
+       representation.
 
-     * Build some basic code for wiring together blocks
-
-     * Raise the blocks to an applicative functor.
-
-
-
+     * For each subblock, output the things we need to output.
+     * join together the type errors
 
