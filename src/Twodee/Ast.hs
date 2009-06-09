@@ -216,13 +216,17 @@ has_north_input crate = case find (\e -> case e of
                           Nothing -> False
                           Just _ -> True
 
-has_south_output crate = find (\e -> case e of
+has_south_output crate = case find (\e -> case e of
                                        Start_S _ -> True
-                                       _ -> False) $ wires crate
+                                       _ -> False) $ wires crate of
+                           Nothing -> False
+                           Just _ -> True
 
-has_east_output crate = find (\e -> case e of
+has_east_output crate = case find (\e -> case e of
                                       Start_E _ -> True
-                                      _ -> False) $ wires crate
+                                      _ -> False) $ wires crate of
+                          Nothing -> False
+                          Just _ -> True
 
 has_west_input crate = case find (\e -> case e of
                                      End_W _ -> True
@@ -242,8 +246,12 @@ create_box_hrule ni cw =
              mconcat $ take (cw-4) (repeat " "),
              "*"]
 
-create_box_contents c =
-    mconcat ["  !", show c, "!"]
+create_box_contents wi ni c =
+    mconcat [if wi then
+                 if ni
+                 then "+#>"
+                 else "+->"
+             else "  !", show c, "!"]
 renderbox :: ExplicitOrder -> [String]
 renderbox crate =
     let
@@ -257,7 +265,7 @@ renderbox crate =
       [create_north_input1 north_input cw,
        create_north_input2 north_input cw,
        create_box_hrule north_input cw,
-       create_box_contents ctnts,
+       create_box_contents west_input north_input ctnts,
        create_box_hrule north_input cw]
 
 render :: [ExplicitOrder] -> [[String]]
