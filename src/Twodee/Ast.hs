@@ -79,6 +79,14 @@ data Joint = JBox { command :: Command,
                           b_west  :: Wire }
            | JSpacing
 
+extract_boxes :: Joint -> [Joint]
+extract_boxes jnt =
+    case jnt of
+      b @ (JBox _ _ _ _ _) -> [b]
+      JBox_Group boxes _ _ _ _ -> mconcat $ fmap extract_boxes boxes
+      JSpacing -> []
+
+
 instance Show Joint where
     show b =
         show $ (command b)

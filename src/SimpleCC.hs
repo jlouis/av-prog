@@ -21,7 +21,6 @@ new = do
   put (i+1)
   return i
 
-
 mkBox :: Command -> Supply Layout
 mkBox c = do
   wn <- new
