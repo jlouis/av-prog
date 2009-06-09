@@ -206,7 +206,7 @@ sorround elem str = mconcat [elem, str, elem]
 
 crate_width :: Bool -> Command -> Int
 crate_width west_input command =
-    (5+) $ length $ show command
+    (6+) $ length $ show command
 
 build = intersperse "\n"
 
@@ -243,24 +243,25 @@ create_north_input2 False cw = mconcat $ take cw (repeat " ")
 create_box_hrule_upper ni cw =
     mconcat ["  ",
              if ni then "|*" else " *",
-             mconcat $ take (cw-5) (repeat " "),
-             "*"]
+             mconcat $ take (cw-6) (repeat " "),
+             "* "]
 
 
-create_box_hrule_lower wi ni cw =
+create_box_hrule_lower wi ni eo cw =
     mconcat [if wi then "|" else " ",
              if ni then "|*" else " *",
-             mconcat $ take (cw-4) (repeat " "),
-             "*"]
+             mconcat $ take (cw-6) (repeat " "),
+             if eo then "*|" else "* "]
 
-create_box_contents wi ni c =
+create_box_contents wi ni eo c =
     mconcat [if wi then
                  if ni
                  then "+#>!"
                  else "+->!"
-             else "   !", show c, "!"]
+             else "   !", show c, "!",
+             if eo then "+" else " "]
 
-create_lines c = []
+create_lines p c = []
 
 renderbox :: ExplicitOrder -> [String]
 renderbox crate =
@@ -272,14 +273,14 @@ renderbox crate =
         cw = crate_width west_input (ctnts)
         ctnts = contents crate
         circuitry = wires crate
-        positions = live create
+        positions = live crate
     in
       [create_north_input1 north_input cw,
        create_north_input2 north_input cw,
        create_box_hrule_upper north_input cw,
-       create_box_contents west_input north_input ctnts,
-       create_box_hrule_lower west_input north_input cw] ++
-       create_lines positions circuitry
+       create_box_contents west_input north_input east_output ctnts,
+       create_box_hrule_lower west_input north_input east_output cw] ++
+       (create_lines positions circuitry)
 
 render :: [ExplicitOrder] -> [[String]]
 render boxes = fmap renderbox analyzed_boxes
