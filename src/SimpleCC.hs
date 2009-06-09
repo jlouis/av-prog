@@ -20,7 +20,7 @@ compile (Plus e1 e2) =
     let c1 = compile e1
         c2 = compile e2
     in [JBox $ MkBox (\n w -> Use "plus")]
-compile (Mul e1 e2) = 
+compile (Mul e1 e2) =
     let c1 = compile e1
         c2 = compile e2
     in [JBox $ MkBox (\n w -> Use "mul")]

@@ -23,8 +23,8 @@ eval (Mul e Zero) = Zero
 eval (Mul (Succ Zero) e) = eval e
 eval (Mul e (Succ Zero)) = eval e
 -- Otherwise I let the result be the following
-{- We do not need a second case, since the first value cannot be Zero or (Succ Zero) - 
-otherwise it would have been caught by one of the above statements -}
+{- We do not need a second case, since the first value cannot be Zero or (Succ Zero) -
+   otherwise it would have been caught by one of the above statements -}
 eval (Mul (Succ e) n) = eval (Plus n (eval (Mul e n)))
 
 
