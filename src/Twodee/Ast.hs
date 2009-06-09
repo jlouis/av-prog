@@ -59,17 +59,6 @@ instance Show Command where
           Split e -> mconcat ["split(", show e, ")"]
           Use s -> mconcat ["use ", show s, ""]
 
-width :: Joint -> Int
-width c =
-    (2+) $ length $ show $ command c
-
-hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
-boxRule = hRule "*" '='
-modRule = hRule "," '.'
-
-sorround :: String -> String -> String
-sorround elem str = mconcat [elem, str, elem]
-
 data Joint = JBox { command :: Command,
                     north :: Wire,
                     east :: Wire,
@@ -176,23 +165,6 @@ liveness_analyze l (b : rest) = b {live = updated_live } : (liveness_analyze upd
       kill = find_kill $ wires b
       updated_live = update_liveness gen kill l
 
-renderbox c = []
-
-{-
-renderbox :: ExplicitOrder -> String
-renderbox crate =
-    let
-        north_input = has_north_input crate
-        west_input  = has_west_input crate
-        east_output = has_east_ouput crate
-        south_output = has_south_output crate
-        crate_width = calc_width 
-    in
-      ...
--}
-render :: [ExplicitOrder] -> [[String]]
-render boxes = fmap renderbox analyzed_boxes
-    where analyzed_boxes = liveness_analyze [] boxes
 
 instance Show Joint where
     show b =
@@ -220,6 +192,65 @@ outputJoints layout = present layout
           present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l,
                                                   mconcat $ content l,
                                                   mconcat $ boxRulers l]
+
+width :: Joint -> Int
+width c =
+    (2+) $ length $ show $ command c
+
+hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
+boxRule = hRule "*" '='
+modRule = hRule "," '.'
+
+sorround :: String -> String -> String
+sorround elem str = mconcat [elem, str, elem]
+
+crate_width :: Bool -> Command -> Int
+crate_width west_input command =
+    (if west_input then (2+) else id) $ length $ show command
+
+build = intersperse "\n"
+
+has_north_input crate = case find (\e -> case e of
+                                      End_N _ -> True
+                                      _ -> False) $ wires crate of
+                          Nothing -> False
+                          Just _ -> True
+
+has_south_output crate = find (\e -> case e of
+                                       Start_S _ -> True
+                                       _ -> False) $ wires crate
+
+has_east_output crate = find (\e -> case e of
+                                      Start_E _ -> True
+                                      _ -> False) $ wires crate
+
+has_west_input crate = case find (\e -> case e of
+                                     End_W _ -> True
+                                     _ -> False) $ wires crate of
+                         Nothing -> False
+                         Just _ -> True
+
+create_north_input1 :: Bool -> Int -> String
+create_north_input1 True cw = mconcat [" ++", take (cw-3) (repeat ' ')]
+create_north_input1 False cw = mconcat $ take cw (repeat " ")
+create_north_input2 True cw = mconcat [" |v", take (cw-3) (repeat ' ')]
+create_north_input2 False cw = mconcat $ take cw (repeat " ")
+
+renderbox :: ExplicitOrder -> [String]
+renderbox crate =
+    let
+        north_input = has_north_input crate
+        west_input  = has_west_input crate
+        east_output = has_east_output crate
+        south_output = has_south_output crate
+        cw = crate_width west_input (contents crate)
+    in
+      [create_north_input1 north_input cw,
+       create_north_input2 north_input cw]
+
+render :: [ExplicitOrder] -> [[String]]
+render boxes = fmap renderbox analyzed_boxes
+    where analyzed_boxes = liveness_analyze [] boxes
 
 instance Show Mod where
     show m = modularize contents
