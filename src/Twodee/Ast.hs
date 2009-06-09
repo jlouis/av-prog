@@ -6,8 +6,6 @@ module Twodee.Ast (Inface (..),
                    Mod (..),
                    Joint (..),
                    Wire,
-                   mkBox,
-                   mkBoxGrp,
                    width)
 where
 
@@ -21,7 +19,6 @@ data Outface = S | E
   deriving Show
 
 type Wire = Int
-type Wiring = Maybe Wire
 
 data Exp = Unit
          | Tuple Exp Exp
@@ -70,28 +67,16 @@ modRule = hRule "," '.'
 sorround :: String -> String -> String
 sorround elem str = mconcat [elem, str, elem]
 
-mkBox c = JBox { command = c,
-                 north = Nothing,
-                 east = Nothing,
-                 west = Nothing,
-                 south = Nothing }
-
-mkBoxGrp grp = JBox_Group { boxes = grp,
-                            b_north = Nothing,
-                            b_south = Nothing,
-                            b_east  = Nothing,
-                            b_west  = Nothing }
-
 data Joint = JBox { command :: Command,
-                    north :: Wiring,
-                    east :: Wiring,
-                    south :: Wiring,
-                    west :: Wiring } 
+                    north :: Wire,
+                    east :: Wire,
+                    south :: Wire,
+                    west :: Wire }
            | JBox_Group { boxes :: [Joint],
-                          b_north :: Wiring,
-                          b_south :: Wiring,
-                          b_east  :: Wiring,
-                          b_west  :: Wiring }
+                          b_north :: Wire,
+                          b_south :: Wire,
+                          b_east  :: Wire,
+                          b_west  :: Wire }
            | JSpacing
 
 instance Show Joint where

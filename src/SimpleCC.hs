@@ -21,37 +21,57 @@ new = do
   put (i+1)
   return i
 
+
+mkBox :: Command -> Supply Layout
+mkBox c = do
+  wn <- new
+  we <- new
+  ww <- new
+  ws <- new
+  return $ JBox { command = c,
+                  north = wn,
+                  east = we,
+                  west = ww,
+                  south = ws }
+
+mkBoxGrp w n e s grp =
+    return $ JBox_Group { boxes = grp,
+                          b_north = n,
+                          b_south = s,
+                          b_east  = e,
+                          b_west  = w }
+
 compile :: Ast -> Supply Layout
-compile Zero = return $ (mkBox (Send1 (Inr Unit) E))
+compile Zero = mkBox (Send1 (Inr Unit) E)
 compile (Succ x) =
     do
       cx <- compile x
-      join_ew cx (mkBox (Send1 (Inl (Iface W)) E))
+      b <- mkBox (Send1 (Inl (Iface W)) E)
+      join_ew cx b
 compile (Plus e1 e2) =
     do
       c1 <- compile e1
       c2 <- compile e2
-      join c1 c2 (mkBox (Use "plus"))
+      b <- (mkBox (Use "plus"))
+      join c1 c2 b
 compile (Mul e1 e2) =
     do
       c1 <- compile e1
       c2 <- compile e2
-      join c1 c2 (mkBox (Use "mul"))
+      b <- (mkBox (Use "mul"))
+      join c1 c2 b
 
 join_ew :: Layout -> Layout -> Supply Layout
 join_ew b1 b2 = do
-  wire <- new
-  b1' <- return $ b1 { b_east = Just wire }
-  b2' <- return $ b2 { west = Just wire }
-  return $ mkBoxGrp [b1', b2']
+  wire <- return $ b_east b1
+  b2' <- return $ b2 { west = wire }
+  mkBoxGrp (b_west b1) (north b2) (east b2) (south b2) [b1, b2']
 
 join :: Layout -> Layout -> Layout -> Supply Layout
 join wi ni box = do
-  wire1 <- new
-  wire2 <- new
-  wi' <- return $ wi { b_east = Just wire1 }
-  ni' <- return $ ni { b_south = Just wire2 }
-  box' <- return $ box { north = Just wire2,
-                         west = Just wire1 }
-  return $ mkBoxGrp [wi', ni', box']
+  wire1 <- return $ b_east wi
+  wire2 <- return $ b_north ni
+  box' <- return $ box { north = wire2,
+                         west = wire1 }
+  mkBoxGrp (b_west wi) (b_north ni) (east box') (south box') [wi, ni, box']
 
