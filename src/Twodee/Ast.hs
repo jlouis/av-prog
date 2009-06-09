@@ -85,7 +85,7 @@ boxRulers (JBox b : rest) = (boxRule $ width b) : boxRulers rest
 contents :: [Joint] -> [String]
 contents [] = []
 contents (JSpacing : rest) = "->" : contents rest
-contents (JBox b : rest)   = (sorround "!" $ show b) : contents rest
+contents (JBox b : rest) = (sorround "!" $ show b) : contents rest
 
 outputJoints layout = present layout
         where
