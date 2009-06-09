@@ -3,11 +3,11 @@ module Twodee.Ast (Inface (..),
                    Outface (..),
                    Exp (..),
                    Command (..),
-                   Box (..),
                    Mod (..),
                    Joint (..),
                    Wire,
                    mkBox,
+                   mkBoxGrp,
                    width)
 where
 
@@ -59,7 +59,7 @@ instance Show Command where
           Split e -> mconcat ["split(", show e, ")"]
           Use s -> mconcat ["use ", show s, ""]
 
-width :: Box -> Int
+width :: Joint -> Int
 width c =
     (2+) $ length $ show $ command c
 
@@ -70,35 +70,46 @@ modRule = hRule "," '.'
 sorround :: String -> String -> String
 sorround elem str = mconcat [elem, str, elem]
 
-mkBox c = MkBox { command = c,
-                  north = Nothing, east = Nothing,
-                  west = Nothing, south = Nothing }
+mkBox c = JBox { command = c,
+                 north = Nothing,
+                 east = Nothing,
+                 west = Nothing,
+                 south = Nothing }
 
-data Box = MkBox { command :: Command,
-                   north :: Wiring,
-                   east :: Wiring,
-                   south :: Wiring,
-                   west :: Wiring }
+mkBoxGrp grp = JBox_Group { boxes = grp,
+                            b_north = Nothing,
+                            b_south = Nothing,
+                            b_east  = Nothing,
+                            b_west  = Nothing }
 
-instance Show Box where
+data Joint = JBox { command :: Command,
+                    north :: Wiring,
+                    east :: Wiring,
+                    south :: Wiring,
+                    west :: Wiring } 
+           | JBox_Group { boxes :: [Joint],
+                          b_north :: Wiring,
+                          b_south :: Wiring,
+                          b_east  :: Wiring,
+                          b_west  :: Wiring }
+           | JSpacing
+
+instance Show Joint where
     show b =
         show $ (command b)
 
-data Joint = JBox Box
-           | JSpacing -- Need more attachments here
-
-data Mod = MkModule { boxes :: [Joint],
+data Mod = MkModule { joint :: [Joint],
                       modName :: String }
 
 boxRulers :: [Joint] -> [String]
 boxRulers [] = [""]
 boxRulers (JSpacing : rest) = (take 2 $ repeat ' ') : boxRulers rest
-boxRulers (JBox b : rest) = (boxRule $ width b) : boxRulers rest
+boxRulers (b : rest) = (boxRule $ width b) : boxRulers rest
 
 contents :: [Joint] -> [String]
 contents [] = []
 contents (JSpacing : rest) = "->" : contents rest
-contents (JBox b : rest) = (sorround "!" $ show b) : contents rest
+contents (b : rest) = (sorround "!" $ show b) : contents rest
 
 outputJoints layout = present layout
         where
@@ -107,7 +118,7 @@ outputJoints layout = present layout
 instance Show Mod where
     show m = modularize contents
         where
-          contents = outputJoints $ boxes m
+          contents = outputJoints $ joint m
           modularize contents =
               let
                   ls = lines contents
