@@ -238,6 +238,7 @@ fillline char k = mconcat $ take k (repeat char)
 spaces = fillline " "
 
 boxhrule = fillline "="
+wireline = fillline "-"
 
 line1 :: Bool -> Int -> String
 line1 n cw = mconcat ["    ", if n then "++" else "  ", spaces (cw+2)]
@@ -304,18 +305,47 @@ wirejoin (w : rest) p =
     in
       (w, pos) : (wirejoin rest p)
 
-create_lines :: [WireInfo] -> [(Wire, Int)] -> Bool -> Bool -> Bool -> Bool -> [String]
-create_lines wires p n e w s =
+create_lines :: Int -> [WireInfo] -> [(Wire, Int)] -> Bool -> Bool -> Bool -> Bool -> [String]
+create_lines cw wires p n e w s =
     let
         ordered_wires = sort $ listflip (wirejoin wires p)
         process_wire [] _ _ _ _ accum = reverse accum
         process_wire (wire : rest) n e w s accum =
             case snd wire of
-              PassThrough _ -> process_wire rest n e w s accum
-              Start_E _ -> process_wire rest n e w s accum
-              Start_S _ -> process_wire rest n e w s accum
-              End_W _ -> process_wire rest n e w s accum
-              End_N _ -> process_wire rest n e w s accum
+              PassThrough k -> process_wire rest n e w s (line : accum)
+                  where
+                    line = mconcat [if w then "#" else " ",
+                                    if n then "#" else " ",
+                                    wireline (cw + 3),
+                                    if s then "#" else " ",
+                                    if e then "#" else " "]
+              End_W k -> process_wire rest n e False s (line : accum)
+                  where
+                    line = mconcat ["+", if n then "|" else " ",
+                                    spaces (cw+3),
+                                    if s then "|" else " ",
+                                    if e then "|" else " "]
+              Start_S k -> process_wire rest n e w False (line : accum)
+                  where
+                    line = mconcat [if w then "|" else " ",
+                                    if n then "|" else " ",
+                                    spaces (cw+3),
+                                    "+",
+                                    if e then "#" else "-"]
+              Start_E k -> process_wire rest n False w s (line : accum)
+                  where
+                    line = mconcat [if w then "|" else " ",
+                                    if n then "|" else " ",
+                                    spaces (cw+3),
+                                    if s then "|" else " ",
+                                    "+"]
+              End_N k -> process_wire rest False e w s (line : accum)
+                  where
+                    line = mconcat [if w then "#" else "-",
+                                    "+",
+                                    spaces (cw+3),
+                                    if s then "|" else " ",
+                                    if e then "|" else " "]
     in
       process_wire ordered_wires n e w s []
 
@@ -337,7 +367,7 @@ renderbox crate =
        line4 n e w ctnts,
        line5 n e w cw,
        line6 n e w s cw] ++
-      create_lines circuitry positions n e w s
+      create_lines cw circuitry positions n e w s
        -- TODO: Create lines here
 
 render :: [ExplicitOrder] -> [[String]]
