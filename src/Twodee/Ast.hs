@@ -368,11 +368,11 @@ renderbox crate =
        line5 n e w cw,
        line6 n e w s cw] ++
       create_lines cw circuitry positions n e w s
-       -- TODO: Create lines here
 
 render :: [ExplicitOrder] -> [[String]]
-render boxes = fmap renderbox analyzed_boxes
+render boxes = join $ fmap renderbox analyzed_boxes
     where analyzed_boxes = liveness_analyze [] boxes
+          join = id -- TODO use a zipList for joining this
 
 instance Show Mod where
     show m = modularize contents
