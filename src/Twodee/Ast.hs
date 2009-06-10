@@ -194,8 +194,7 @@ outputJoints layout = present layout
                                                   mconcat $ boxRulers l]
 
 width :: Joint -> Int
-width c =
-    (2+) $ length $ show $ command c
+width c = length $ show $ command c
 
 hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
 boxRule = hRule "*" '='
@@ -205,8 +204,7 @@ sorround :: String -> String -> String
 sorround elem str = mconcat [elem, str, elem]
 
 crate_width :: Bool -> Command -> Int
-crate_width west_input command =
-    (6+) $ length $ show command
+crate_width west_input command = length $ show command
 
 build = intersperse "\n"
 
@@ -234,17 +232,43 @@ has_west_input crate = case find (\e -> case e of
                          Nothing -> False
                          Just _ -> True
 
-create_north_input1 :: Bool -> Int -> String
-create_north_input1 True cw = mconcat ["  ++", take (cw-4) (repeat ' ')]
-create_north_input1 False cw = mconcat $ take cw (repeat " ")
-create_north_input2 True cw = mconcat [" ++v", take (cw-4) (repeat ' ')]
-create_north_input2 False cw = mconcat $ take cw (repeat " ")
+fillline char k = mconcat $ take k (repeat char)
+spaces = fillline " "
 
-create_box_hrule_upper ni cw =
-    mconcat ["  ",
-             if ni then "|*" else " *",
-             mconcat $ take (cw-6) (repeat " "),
-             "* "]
+boxhrule = fillline "="
+
+line1 :: Bool -> Int -> String
+line1 n cw = mconcat ["    ", if n then "++" else "  ", spaces (cw+2)]
+
+line2 :: Bool -> Int -> String
+line2 n cw = mconcat ["   ", if n then "++v" else "   ", spaces (cw+2)]
+
+line3 :: Bool -> Int -> String
+line3 n cw = mconcat ["  ", if n then "++*" else "  *", boxhrule cw,
+                      "*  "]
+
+line4 :: Bool -> Bool -> Bool -> Command -> String
+line4 n e w c = mconcat [if e then "+" else " ",
+                         if e then
+                             if n then "#" else "-"
+                         else " ",
+                         ">!", show c, "!",
+                         if w then "-+" else "  "]
+
+line5 :: Bool -> Bool -> Bool -> Int -> String
+line5 n e w cw = mconcat [if e then "|" else " ",
+                         if n then "|" else " ",
+                         " ",
+                         "*", boxhrule cw, "* ",
+                         if w then "|" else " "]
+
+line6 :: Bool -> Bool -> Bool -> Bool -> Int -> String
+line6 n e w s cw = mconcat [if e then "|" else " ",
+                            if n then "|" else " ",
+                            "  ", spaces (cw-1),
+                            if s then "+-+" else "   ",
+                            if w then "|" else " "]
+
 
 
 create_box_hrule_lower wi ni eo cw =
@@ -268,22 +292,22 @@ create_lines p c = []
 renderbox :: ExplicitOrder -> [String]
 renderbox crate =
     let
-        north_input = has_north_input crate
-        west_input  = has_west_input crate
-        east_output = has_east_output crate
-        south_output = has_south_output crate
-        cw = crate_width west_input (ctnts)
+        n = has_north_input crate
+        w = has_west_input crate
+        e = has_east_output crate
+        s = has_south_output crate
+        cw = crate_width w (ctnts)
         ctnts = contents crate
         circuitry = wires crate
         positions = live crate
     in
-      [create_north_input1 north_input cw,
-       create_north_input2 north_input cw,
-       create_box_hrule_upper north_input cw,
-       create_box_contents west_input north_input east_output ctnts,
-       create_box_hrule_lower west_input north_input east_output cw,
-       create_box_south_output north_input west_input east_output south_output cw] ++
-       (create_lines positions circuitry)
+      [line1 n cw,
+       line2 n cw,
+       line3 n cw,
+       line4 n e w ctnts,
+       line5 n e w cw,
+       line6 n e w s cw]
+       -- TODO: Create lines here
 
 render :: [ExplicitOrder] -> [[String]]
 render boxes = fmap renderbox analyzed_boxes
