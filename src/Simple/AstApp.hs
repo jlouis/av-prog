@@ -1,4 +1,4 @@
-module Simple.Ast (Ast(..), EnvValue(..), ConstValue(..), FuncEnvValue(..), FuncInstValue(..),
+module Simple.Ast (Ast(..), EnvValue(..), ConstValue(..), FuncEnvValue(..),
             start,
             astPrint,
             envPrint)
@@ -21,25 +21,25 @@ data FuncEnvValue = FuncEnv FuncInstValue FuncEnvValue | FuncEnd
 data FuncInstValue = Func String Ast EnvValue EnvValue    
 
 -- Evaluation operation
-eval Zero _ _ = Zero
-eval (Succ e) env fkt = Succ (eval e env fkt)
-eval (Plus Zero e) env fkt = eval e env fkt
-eval (Plus e Zero) env fkt = eval e env fkt
-eval (Plus (Succ n) e) env fkt = Succ (eval (Plus n e) env fkt)
+eval Zero = pure Zero
+eval (Succ e) = pure Succ <*> (eval e)
+eval (Plus Zero e) = eval e 
+eval (Plus e Zero) = eval e
+eval (Plus (Succ n) e) = pure Succ <*> (eval (Plus n e))
 
-eval (Plus e1 e2) env fkt = eval (Plus (eval e1 env fkt) (eval e2 env fkt)) env fkt
+eval (Plus e1 e2) = pure eval <*> (pure Plus <*> (eval e1) <*> (eval e2))
 -- If either is 0, then the result is 0
-eval (Mul Zero e) _ _ = Zero
-eval (Mul e Zero) _ _ = Zero
+eval (Mul Zero e) = pure  Zero
+eval (Mul e Zero) = pure Zero
 -- If one of them is 1, then the result is the other
-eval (Mul (Succ Zero) e) env fkt = eval e env fkt
-eval (Mul e (Succ Zero)) env fkt = eval e env fkt
+eval (Mul (Succ Zero) e) = eval e 
+eval (Mul e (Succ Zero)) = eval e 
 -- Otherwise I let the result be the following
 {- We do not need a second case, since the first value cannot be Zero or (Succ Zero) -
    otherwise it would have been caught by one of the above statements -}
-eval (Mul (Succ e) n) env fkt = eval (Plus n (eval (Mul e n) env fkt)) env fkt
+eval (Mul (Succ e) n) = pure eval <*> (pure Plus <*> pure n <*> (pure eval <*> (pure Mul <*> e <*> pure n)))
 
-eval (Mul e1 e2) env fkt = eval (Mul (eval e1 env fkt) (eval e2 env fkt)) env fkt
+eval (Mul e1 e2) = pure eval <*> (pure Mul <*> (pure eval <*> e1) (pure eval <*> e2))
 
 -- Lookup mechanism
 eval (Lookup str) env fkt = envLookup str env env fkt 
@@ -66,7 +66,6 @@ start ast env = eval ast env
 class (Functor f) => Applicative f where
    pure  :: a -> f a
    (<*>) :: f (a -> b) -> f a -> f b
-
 
 --instance Applicative ((->) EnvValue FuncEnvValue) where
 instance Applicative ((->) env) where

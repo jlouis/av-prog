@@ -10,60 +10,105 @@ import Data.Char (isSpace)
 import List
 
 
-parsePrg :: String -> (Ast, EnvValue)
+parsePrg :: String -> (Ast, EnvValue, FuncEnvValue)
 parsePrg input =
     case parse program "" input of
       Left err -> error $ "Parser Error " ++ show err
       Right p -> p
 
-program :: Parser (Ast, EnvValue)
+program :: Parser (Ast, EnvValue, FuncEnvValue)
 program = do {
-           env <- constStart; 
-           ast <- op;
-           return (ast, env)
+            (ast, env, mainName) <- function;
+            do {
+              funcEnvValue <- try(functions);
+              return (ast, env, (FuncEnv (Func "Main" ast env EnvEnd) funcEnvValue))
+            }
+            <|>
+            do {
+              return (ast, env, (FuncEnv (Func "Main" ast env EnvEnd) FuncEnd))
+            }
+          }
+
+functions :: Parser FuncEnvValue
+functions = do {
+              (ast, env, name) <- function;
+              do{
+                try(whiteSpace);
+                try(string ",");
+                try(whiteSpace);
+                funcEnvValue <- functions;
+                return (FuncEnv (Func name ast env EnvEnd) funcEnvValue)
+              }
+              <|>
+              do{
+                return FuncEnd 
+              }
+            }
+
+function :: Parser (Ast, EnvValue, String)
+function = do {
+             name <- many1 letter; 
+             whiteSpace;
+             string "=>";
+             whiteSpace;
+             env <- constStart;
+             ast <- op;
+             return (ast, env, name)
            }
            
 constStart :: Parser EnvValue
 constStart = do{
-             string "[";
-             do
-             {
-               c <- try(consts);
-               string "]";
-               return c
-             }
-             <|>
-             do {
-             string "]";
-             return End
-             }
+               string "[";
+               do
+                 {
+                   c <- try(consts);
+                   string "]";
+                   return c
+                 }
+               <|>
+               do {
+                 string "]";
+                 return EnvEnd
+               }
              }
 
 consts :: Parser EnvValue
-consts = do 
-         c <- Simple.Parse.const
-         do 
-           {
-           try(string ",");
-           rest <- consts;
-           return (Env c rest);
-           } 
+consts = do { 
+           c <- Simple.Parse.const;
+           do 
+             {
+               try(string ",");
+               rest <- consts;
+               return (Env c rest);
+             } 
            <|> 
-           return (Env c End)
+           do {
+             return (Env c EnvEnd);
+           }
+         }
            
 const :: Parser ConstValue
 const = do 
-        str <- many1 letter
-        whiteSpace
-        string "="
-        whiteSpace
-        value <- op
-        return (Simple.Ast.Const str value)
+  str <- many1 letter
+  whiteSpace
+  string "="
+  whiteSpace
+  value <- op
+  return (Simple.Ast.Const str value)
 
 whiteSpace :: Parser ()
 whiteSpace = skipMany space
 
-expr = zero_expr <|> succ_expr <|> parens op <|> Simple.Parse.lookup <|> op
+expr = zero_expr <|> succ_expr <|> parens op <|> Simple.Parse.lookup <|> call <|> op
+
+call :: Parser Ast
+call = do {
+         whiteSpace;
+         string "Call";
+         whiteSpace;
+         fktName <- try(many1 letter);
+         return (Call fktName FuncEnd)
+       }
 
 lookup :: Parser Ast
 lookup = do {
