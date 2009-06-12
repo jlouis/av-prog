@@ -184,7 +184,7 @@ renderbox (crate@(EOB _ _ _)) =
 
 render_eo :: [ExplicitOrder] -> [String]
 render_eo boxes = join $ catMaybes $ fmap renderbox analyzed_boxes
-    where analyzed_boxes = liveness_analyze [] boxes
+    where analyzed_boxes = liveness_analyze [] [] boxes
           join x = fmap mconcat $ transpose x
 
 create_module_boxes :: Wire -> Wire -> [Wire] -> [ExplicitOrder]
