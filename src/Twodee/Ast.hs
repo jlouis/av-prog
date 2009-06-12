@@ -70,12 +70,10 @@ data Joint = JBox { command :: Command,
                           b_south :: Wire,
                           b_east  :: Wire,
                           b_west  :: Wire }
-
-extract_boxes :: Joint -> [Joint]
-extract_boxes jnt =
-    case jnt of
-      b @ (JBox _ _ _ _ _) -> [b]
-      JBox_Group boxes _ _ _ _ -> mconcat $ fmap extract_boxes boxes
+           | Module { boxes :: [Joint],
+                      input_north :: Wire,
+                      input_west :: Wire,
+                      output_east :: Wire }
 
 findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
 findEdges [] = []

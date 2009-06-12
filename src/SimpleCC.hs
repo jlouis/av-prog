@@ -33,6 +33,17 @@ mkBox c = do
                   west = ww,
                   south = ws }
 
+mkModule :: Supply Layout -> Supply Layout
+mkModule jnt = do
+  wn <- new
+  ww <- new
+  we <- new
+  bxs <- jnt
+  return $ Module { boxes = boxes bxs,
+                    input_north = wn,
+                    input_west  = ww,
+                    output_east = we }
+
 mkBoxGrp w n e s grp =
     return $ JBox_Group { boxes = grp,
                           b_north = n,
