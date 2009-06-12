@@ -31,7 +31,6 @@ program = do {
 
 functions :: Parser FuncEnvValue
 functions = do {
-              --(ast, env, name) <- try(function);
               do{
                 whiteSpace;
                 try(string ",");
@@ -59,17 +58,20 @@ function = do {
            
 constStart :: Parser EnvValue
 constStart = do{
-               string "[";
+               whiteSpace;
+               try(string "[");
                do
                  {
                    c <- try(consts);
                    string "]";
-                   return c
+                   whiteSpace;
+                   return c;
                  }
                <|>
                do {
                  string "]";
-                 return EnvEnd
+                 whiteSpace;
+                 return EnvEnd;
                }
              }
 
@@ -78,7 +80,9 @@ consts = do {
            c <- Simple.Parse.const;
            do 
              {
+               whiteSpace;
                try(string ",");
+               whiteSpace;
                rest <- consts;
                return (Env c rest);
              } 
@@ -90,6 +94,7 @@ consts = do {
            
 const :: Parser ConstValue
 const = do 
+  whiteSpace
   str <- many1 letter
   whiteSpace
   string "="
@@ -100,7 +105,34 @@ const = do
 whiteSpace :: Parser ()
 whiteSpace = skipMany space
 
-expr = zero_expr <|> succ_expr <|> parens op <|> Simple.Parse.lookup <|> call <|> op
+expr = contz <|> zero_expr <|> succ_expr <|> parens op <|> lookUp <|> call <|> contz <|> op
+
+contz :: Parser Ast
+contz = do {
+          whiteSpace;
+          try(string "zeroCheck");
+          whiteSpace;
+          string "(";
+          whiteSpace;
+          compare <- expr;
+          whiteSpace;
+          string ")";
+          whiteSpace;
+          string "{";
+          whiteSpace;
+          first <- expr;
+          whiteSpace;
+          string "}";
+          whiteSpace;
+          string "else";
+          whiteSpace;
+          string "{";
+          whiteSpace;
+          second <- op;
+          whiteSpace;
+          string "}";
+          return (Contz compare first second);
+        }
 
 call :: Parser Ast
 call = do {
@@ -110,34 +142,34 @@ call = do {
          fktName <- try(many1 letter);
          whiteSpace;
          input <- op;
-         return (Call fktName input)
+         return (Call fktName input);
        }
 
-lookup :: Parser Ast
-lookup = do {
+lookUp :: Parser Ast
+lookUp = do {
            whiteSpace;
            try(string "Lookup");
            whiteSpace;
            look <- try(many1 letter);
-           return (Lookup look)
+           return (Lookup look);
          }
 
 opTest sign = 
       do {whiteSpace;
           try(string sign);
-          whiteSpace}
+          whiteSpace;
+         }
 
 table = [[tableOp (opTest "*") mul_expr AssocLeft],
          [tableOp (opTest "+") (plus_expr) AssocLeft]] where 
-           tableOp s f assoc = Infix (do {s; return f}) assoc 
+           tableOp s f assoc = Infix (do {try(s); return f}) assoc 
 
-op = buildExpressionParser table expr
-     
+op = buildExpressionParser table expr     
 
 parens :: Parser Ast -> Parser Ast
 parens exp = do
     whiteSpace
-    string "("
+    try(string "(")
     whiteSpace
     e <- exp
     whiteSpace
@@ -146,12 +178,14 @@ parens exp = do
     return e
 
 zero_expr = do
-    string "z"
+    whiteSpace
+    try(string "z")
     whiteSpace
     return Zero
 
 succ_expr = do
-    string "s"
+    whiteSpace
+    try(string "s")
     whiteSpace
     e <- op
     whiteSpace

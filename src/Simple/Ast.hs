@@ -10,7 +10,7 @@ import Data.Map as M
 import Control.Monad.Reader.Class
 
 -- Syntax of the small language
-data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast | Lookup String | Call String Ast
+data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast | Lookup String | Call String Ast | Contz Ast Ast Ast | Pre Ast
 
 -- The environment
 data EnvValue = Env ConstValue EnvValue | EnvEnd
@@ -20,6 +20,8 @@ data ConstValue = Const String Ast
 data FuncEnvValue = FuncEnv FuncInstValue FuncEnvValue | FuncEnd
 data FuncInstValue = Func String Ast EnvValue
 
+
+
 -- Evaluation operation
 eval Zero _ _ = Zero
 eval (Succ e) env fkt = Succ (eval e env fkt)
@@ -28,12 +30,15 @@ eval (Plus e Zero) env fkt = eval e env fkt
 eval (Plus (Succ n) e) env fkt = Succ (eval (Plus n e) env fkt)
 
 eval (Plus e1 e2) env fkt = eval (Plus (eval e1 env fkt) (eval e2 env fkt)) env fkt
+
 -- If either is 0, then the result is 0
 eval (Mul Zero e) _ _ = Zero
 eval (Mul e Zero) _ _ = Zero
+
 -- If one of them is 1, then the result is the other
 eval (Mul (Succ Zero) e) env fkt = eval e env fkt
 eval (Mul e (Succ Zero)) env fkt = eval e env fkt
+
 -- Otherwise I let the result be the following
 {- We do not need a second case, since the first value cannot be Zero or (Succ Zero) -
    otherwise it would have been caught by one of the above statements -}
@@ -43,10 +48,13 @@ eval (Mul e1 e2) env fkt = eval (Mul (eval e1 env fkt) (eval e2 env fkt)) env fk
 
 -- Lookup mechanism
 eval (Lookup str) env fkt = envLookup str env env fkt 
---eval (Lookup str) (Env (Const id calc) env) = if str == id 
---                                               then eval calc env
---                                               else eval (Lookup str) env
-eval (Call str input) env fkt = fktCall str env input fkt fkt
+eval (Call str input) env fkt = fktCall str env (eval input env fkt) fkt fkt
+eval (Contz Zero first _) env fkt = eval first env fkt
+eval (Contz (Succ k) _ second) env fkt = eval second (Env (Const "k"  k) env) fkt
+eval (Contz check first second) env fkt = eval (Contz (eval check env fkt) first second) env fkt
+---eval (Pre Zero) _ _ = Zero
+--eval (Pre (Succ c)) env fkt = eval c env fkt
+--eval (Pre e) env fkt = eval (Pre (eval e env fkt)) env fkt
 
 envLookup _ EnvEnd _ _ = Zero
 envLookup str (Env (Const id calc) env) constantEnv fkt = 
@@ -58,6 +66,8 @@ fktCall str env input (FuncEnv (Func id ast localEnv) funcValue) constantFkt =
                                                if str == id
                                                then eval ast (Env (Const "input" input) env) constantFkt 
                                                else fktCall str env input funcValue constantFkt
+
+
 
 -- Program mechanism
 start ast env = eval ast env
