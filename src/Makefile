@@ -6,10 +6,10 @@ HAX0R=data/hack-attempt.input
 PUBCHECK=data/pubcheck.input
 ADVISE_ARITH=data/advise.arith.input
 
-GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all
+GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all -Wall
 
 .phony: all build run clean two
-all: build build-two build-ocultcc build-simple
+all: build build-simple
 
 build:
 	ghc ${GHCFLAGS} --make *.hs UM/Main.hs -main-is UM.Main.main -o uvm

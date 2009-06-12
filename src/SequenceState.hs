@@ -6,6 +6,7 @@ import Data.Word
 import Data.Sequence
 import qualified Data.Array.IO as A
 
+c_MAX_SIZE :: Double
 c_MAX_SIZE = (2 ** 32) - 1
 
 instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word32)) where
@@ -14,7 +15,7 @@ instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word3
                     return ([], program, Data.Sequence.empty)
 
     lookupE (_, prg, _) 0 off = A.readArray prg off
-    lookupE (_, prg, s) a off =
+    lookupE (_, _, s) a off =
         let arr = index s (fromIntegral (a-1)) in
         A.readArray arr off
 
@@ -35,13 +36,13 @@ instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word3
                  let s' = update (fromIntegral (i-1)) new_arr s in
                    return $! ((n', prg, s'), i)
 
-    free (n, prg, s) 0 = error "Can't free the program"
+    free _ 0 = error "Can't free the program"
     free (n, prg, s) x =
         do new_arr <-  A.newArray (0, 0) (0 :: Word32)
            let s' = update (fromIntegral x) new_arr s in
              return (x:n, prg, s)
-        
- 
+
+
     load s 0 = return $! s
     load (n, prg, s) arr =
         do source <- return $! index s (fromIntegral (arr-1))
@@ -62,7 +63,7 @@ instance State ([Word32], Seq (Seq Word32)) where
 
     allocate (n, s) cap =
         let seq  = fromList (Prelude.take (fromIntegral cap) $ repeat 0) in
-        case n of 
+        case n of
           [] ->
               let s' = s |> seq in
               return (([], s'), fromIntegral (Data.Sequence.length s' - 1))

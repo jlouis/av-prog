@@ -8,9 +8,8 @@ module Ocult.Ast(
 ) where
 
 import Control.Monad.State
-import Data.List
 import Data.Map as M
-
+import Data.List
 import Text.PrettyPrint
 
 -- Terms are the objects the language manipulates

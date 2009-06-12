@@ -9,11 +9,7 @@ module Twodee.Ast (Inface (..),
                    extract_base_box)
 where
 
-import qualified Data.Graph as Graph
-import qualified Data.Set as Set
 import Data.List
-import Data.Maybe (fromJust, catMaybes)
-
 import Data.Monoid
 
 data Inface = N | W
@@ -80,9 +76,9 @@ data Mod = Module { mod_boxes :: [Box],
 
 -- Simplify the boxs, removing the Groups
 extract_base_box :: [Box] -> [Box]
-extract_base_box ((JBox_Group boxes _ _ _ _) : rest) = simplified ++ (extract_base_box rest)
+extract_base_box ((JBox_Group bxs _ _ _ _) : rest) = simplified ++ (extract_base_box rest)
     where
-      simplified = extract_base_box boxes
+      simplified = extract_base_box bxs
 extract_base_box (b : rest) = [b] ++ (extract_base_box rest)
 extract_base_box [] = []
 

@@ -8,50 +8,51 @@ import Twodee.AstExplicit
 import Data.Monoid
 import Data.List
 import Data.Maybe (fromJust, catMaybes)
-import qualified Data.Graph as Graph
 
-width :: Box -> Int
-width c = length $ show $ command c
+crate_width :: Command -> Int
+crate_width cmd = length $ show cmd
 
-hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
-boxRule = hRule "*" '='
-modRule = hRule "," '.'
-
-sorround :: String -> String -> String
-sorround elem str = mconcat [elem, str, elem]
-
-crate_width :: Bool -> Command -> Int
-crate_width west_input command = length $ show command
-
+has_north_input :: ExplicitOrder -> Bool
 has_north_input crate = case find (\e -> case e of
                                       End_N _ -> True
                                       _ -> False) $ wires crate of
                           Nothing -> False
                           Just _ -> True
 
+has_south_output :: ExplicitOrder -> Bool
 has_south_output crate = case find (\e -> case e of
                                        Start_S _ -> True
                                        _ -> False) $ wires crate of
                            Nothing -> False
                            Just _ -> True
 
+has_east_output :: ExplicitOrder -> Bool
 has_east_output crate = case find (\e -> case e of
                                       Start_E _ -> True
                                       _ -> False) $ wires crate of
                           Nothing -> False
                           Just _ -> True
 
+has_west_input :: ExplicitOrder -> Bool
 has_west_input crate = case find (\e -> case e of
                                      End_W _ -> True
                                      _ -> False) $ wires crate of
                          Nothing -> False
                          Just _ -> True
 
+fillline :: String -> Int -> String
 fillline char k = mconcat $ take k (repeat char)
+
+spaces :: Int -> String
 spaces = fillline " "
 
+modhrule :: Int -> String
 modhrule = fillline "."
+
+boxhrule :: Int -> String
 boxhrule = fillline "="
+
+wireline :: Int -> String
 wireline = fillline "-"
 
 line1 :: Bool -> Int -> String
@@ -86,69 +87,53 @@ line6 n e w s cw = mconcat [if w then "|" else " ",
                             if s then "+-+" else "   ",
                             if e then "|" else " "]
 
-create_box_hrule_lower wi ni eo cw =
-    mconcat [if wi then "|" else " ",
-             if ni then "|*" else " *",
-             mconcat $ take (cw-6) (repeat " "),
-             if eo then "*|" else "* "]
-
-create_box_contents wi ni eo c =
-    mconcat [if wi then
-                 if ni
-                 then "+#>!"
-                 else "+->!"
-             else "   !", show c, "!",
-             if eo then "+" else " "]
-
-create_box_south_output ni wi eo so cw = ""
-
 order_wires :: [WireInfo] -> [(Wire, Int)] -> [(Int, [WireInfo])]
-order_wires wires positions =
+order_wires wrs positions =
     collect $ groupBy (\(p1, _) -> \(p2, _) -> p1 == p2) $ sort poslist
         where
           collect [] = []
-          collect (elem : rest) =
-              (fst $ head elem, fmap snd elem) : collect rest
+          collect (elm : rest) =
+              (fst $ head elm, fmap snd elm) : collect rest
           poslist :: [(Int, WireInfo)]
-          poslist = fmap findpos wires
+          poslist = fmap findpos wrs
           findpos wire =
               (fromJust $ lookup (wirenum wire) positions, wire)
 
 create_lines :: Int -> [WireInfo] -> [(Wire, Int)] -> Bool -> Bool -> Bool -> Bool -> [String]
-create_lines cw wires p n e w s =
+create_lines cw wrs p n1 e1 w1 s1 =
     let
-        ordered_wires = order_wires wires p
+        ordered_wires = order_wires wrs p
         process_wire [] _ _ _ _ accum = reverse accum
         process_wire (wire : rest) n e w s accum =
             case snd wire of
-              PassThrough k -> process_wire rest n e w s (line : accum)
+              PassThrough _ -> process_wire rest n e w s (line : accum)
                   where
                     line = mconcat [if w then "#" else "-",
                                     if n then "#" else "-",
                                     wireline (cw + 3),
                                     if s then "#" else "-",
                                     if e then "#" else "-"]
-              End_W k -> process_wire rest n e False s (line : accum)
+              End_W _ -> process_wire rest n e False s (line : accum)
                   where
                     line = mconcat ["+", if n then "|" else " ",
                                     spaces (cw+3),
                                     if s then "|" else " ",
                                     if e then "|" else " "]
-              Start_S k -> process_wire rest n e w False (line : accum)
+              Start_S _ -> process_wire rest n e w False (line : accum)
                   where
                     line = mconcat [if w then "|" else " ",
                                     if n then "|" else " ",
                                     spaces (cw+3),
                                     "+",
                                     if e then "#" else "-"]
-              Start_E k -> process_wire rest n False w s (line : accum)
+              Start_E _ -> process_wire rest n False w s (line : accum)
                   where
                     line = mconcat [if w then "|" else " ",
                                     if n then "|" else " ",
                                     spaces (cw+3),
                                     if s then "|" else " ",
                                     "+"]
-              End_N k -> process_wire rest False e w s (line : accum)
+              End_N _ -> process_wire rest False e w s (line : accum)
                   where
                     line = mconcat [if w then "#" else "-",
                                     "+",
@@ -157,7 +142,7 @@ create_lines cw wires p n e w s =
                                     if e then "|" else " "]
     in
       []
---      process_wire ordered_wires n e w s []
+--      process_wire ordered_wires n1 e1 w1 s1 []
 
 renderbox :: ExplicitOrder -> Maybe [String]
 renderbox (EOM _) = Nothing
@@ -167,7 +152,7 @@ renderbox (crate@(EOB _ _ _)) =
         w = has_west_input crate
         e = has_east_output crate
         s = has_south_output crate
-        cw = crate_width w ctnts
+        cw = crate_width ctnts
         ctnts = contents crate
         circuitry = wires crate
         positions = live crate
@@ -181,8 +166,8 @@ renderbox (crate@(EOB _ _ _)) =
              create_lines cw circuitry positions n e w s
 
 render_eo :: [ExplicitOrder] -> [String]
-render_eo boxes = join $ catMaybes $ fmap renderbox analyzed_boxes
-    where analyzed_boxes = liveness_analyze [] [] boxes
+render_eo bxs = join $ catMaybes $ fmap renderbox analyzed_boxes
+    where analyzed_boxes = liveness_analyze [] [] bxs
           join x = fmap mconcat $ transpose x
 
 create_module_boxes :: Wire -> Wire -> [Wire] -> [ExplicitOrder]
@@ -193,29 +178,26 @@ create_module_boxes inp_n inp_w out_e = [start_box, end_box]
       end_box   = EOM { wires = fmap End_W out_e }
 
 render_module :: Mod -> String
-render_module (Module bxs name inp_n inp_w out_e) =
+render_module (Module bxs nam inp_n inp_w out_e) =
     let
         boxs = extract_base_box bxs
         [start_box, end_box] = create_module_boxes inp_n inp_w out_e
         eobs = explicit_wiring boxs
         rendered = render_eo ([start_box] ++ eobs ++ [end_box])
         module_width = foldl1 max $ fmap length rendered
-        name_width = length name
+        name_width = length nam
         north_input = False -- TODO: Fix me.
-        line0 = mconcat [",", modhrule (name_width + module_width + 2),","]
-        line1 = mconcat [":", name, " ", if north_input then "|" else " ",
+        l0 = mconcat [",", modhrule (name_width + module_width + 2),","]
+        l1 = mconcat [":", nam, " ", if north_input then "|" else " ",
                          spaces (module_width), ":"]
         -- Add the line here to get a west input
         -- Add the lines here to start connecting via the rendered lines
         -- Add the lines here to add exits from the box
-        linef = mconcat [",", modhrule (name_width + module_width + 2), ","]
+        lf = mconcat [",", modhrule (name_width + module_width + 2), ","]
 
     in
-      mconcat [line0, line1, linef]
-
-instance Show Mod where
-    show m = render_module m
+      mconcat [l0, l1, lf]
 
 render :: [Mod] -> String -> String
 render modules stdlib = mconcat [rendered_mods, stdlib]
-  where rendered_mods = mconcat $ fmap show modules
+  where rendered_mods = mconcat $ fmap render_module modules

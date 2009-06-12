@@ -2,6 +2,7 @@ module Twodee.AstExplicit (WireInfo(..),
                            ExplicitOrder(..),
                            liveness_analyze,
                            wirenum,
+                           prune,
                            explicit_wiring)
 where
 
@@ -61,20 +62,20 @@ findEdges lst = mconcat $ findEdges' lst
   where
     findEdges' :: [(Int, Box)] -> [[(Int, Int)]]
     findEdges' [] = []
-    findEdges' ((id, box) : rest) =
+    findEdges' ((sid, box) : rest) =
       let
         getOutEdges bx = Set.fromList [south bx, west bx]
         getInEdges bx = Set.fromList [north bx, east bx]
         s = getOutEdges box
-        matches boxes = fil boxsets
-            where boxsets = fmap (\(id, b) -> (id, getInEdges b)) boxes
+        matches bxs = fil boxsets
+            where boxsets = fmap (\(iden, b) -> (iden, getInEdges b)) bxs
                   fil :: [(Int, Set.Set Int)] -> [Int]
                   fil [] = []
                   fil ((tid, bs) : r) = if Set.intersection s bs /= Set.empty
                                         then tid : (fil r)
                                         else fil r
       in
-        ([(id, tid) | tid <- matches rest] : findEdges' rest)
+        ([(sid, tid) | tid <- matches rest] : findEdges' rest)
 
 -- Sort a list of boxes topologically
 topsort :: [Box] -> [Box]
@@ -85,21 +86,22 @@ topsort jnts =
         edges = findEdges numbered
         vertices = Graph.topSort $ Graph.buildG bnds edges
 
-        order [] numbered = []
-        order (v : vs) numbered =
-            (fromJust $ lookup v numbered) : (order vs numbered)
+        order [] = []
+        order (v : vs) =
+            (fromJust $ lookup v numbered) : (order vs)
     in
-      order vertices numbered
+      order vertices
 
 -- Helper function. Updated liveness w.r.t. a gen/kill set.
+update_liveness :: [Wire] -> [Wire] -> [(Wire, Int)] -> [Int] -> ([(Wire,Int)], [Int])
 update_liveness genset killset liveelements freelist =
     let
-        remove [] es freelist = (es, freelist)
-        remove (e : rest) es freelist =
+        remove [] es fl = (es, fl)
+        remove (e : rest) es fl =
             let
                 culprits = [n | (w, n) <- es, e == w]
             in
-              remove rest (filter (\(w, _) -> w /= e) es) (culprits ++ freelist)
+              remove rest (filter (\(w, _) -> w /= e) es) (culprits ++ fl)
         -- Gather liveness not containing the numbers we killed
         (killed, freelist') =
             remove killset liveelements freelist
@@ -112,11 +114,11 @@ update_liveness genset killset liveelements freelist =
         add n [] (e : rest) es = add (n+1) [] rest ((e, n+1) : es)
         add n (free : slots) (e : rest) es = add n slots rest ((e, free) : es)
     in
-      add max_num freelist genset killed
+      add max_num freelist' genset killed
 
 -- Analyze liveness for an explicitly ordered representation
 liveness_analyze :: [(Wire, Int)] -> [Int] -> [ExplicitOrder] -> [ExplicitOrder]
-liveness_analyze l fl [] = []
+liveness_analyze _ _ [] = []
 liveness_analyze l fl (b : rest) = b {live = updated_live } : (liveness_analyze updated_live fl' rest)
     where
       find_gen [] = []
@@ -139,32 +141,34 @@ liveness_analyze l fl (b : rest) = b {live = updated_live } : (liveness_analyze 
 -- First a number of helpers are declared. Then they are used.
 prune_kill :: [ExplicitOrder] -> Set.Set Int -> [ExplicitOrder]
 prune_kill [] _ = []
-prune_kill (w@(EOM wires) : rest) pruneset = w { wires = filtered} : (prune_kill rest pruneset)
+prune_kill (w@(EOM wrs) : rest) pruneset = w { wires = filtered} : (prune_kill rest pruneset)
   where
-    filtered = filter (\w -> not $ Set.member (wirenum w) pruneset) wires
-prune_kill (w@(EOB _ wires _) : rest) pruneset = w { wires = filtered } : (prune_kill rest pruneset)
+    filtered = filter (\wi -> not $ Set.member (wirenum wi) pruneset) wrs
+prune_kill (w@(EOB _ wrs _) : rest) pruneset = w { wires = filtered } : (prune_kill rest pruneset)
   where
-    filtered = filter (\w -> not $ Set.member (wirenum w) pruneset) wires
+    filtered = filter (\wi -> not $ Set.member (wirenum wi) pruneset) wrs
 
-search_wire wn [] = False
-search_wire wn (w@(EOB _ wires _) : rest) =
-    if wn `elem` (fmap wirenum wires)
+search_wire :: Wire -> [ExplicitOrder] -> Bool
+search_wire _ [] = False
+search_wire wn ((EOB _ wrs _) : rest) =
+    if wn `elem` (fmap wirenum wrs)
     then True
     else search_wire wn rest
-search_wire wn (w@(EOM wires) : rest) =
-    if wn `elem` (fmap wirenum wires)
+search_wire wn ((EOM wrs) : rest) =
+    if wn `elem` (fmap wirenum wrs)
     then True
     else search_wire wn rest
 
+mkPruneSet :: [ExplicitOrder] -> Set.Set Int -> Set.Set Int
 mkPruneSet [] s = s
 mkPruneSet (wr : rest) s =
     case wr of
-      EOB _ wires _ -> p wires
-      EOM wires     -> p wires
+      EOB _ wrs _ -> p wrs
+      EOM wrs     -> p wrs
   where
-    p wires = mkPruneSet rest s'
+    p wrs = mkPruneSet rest s'
       where
-        s' = Set.union s (Set.fromList $ find_dead wires)
+        s' = Set.union s (Set.fromList $ find_dead wrs)
         find_dead [] = []
         find_dead (w : ws) =
             if search_wire (wirenum w) rest
