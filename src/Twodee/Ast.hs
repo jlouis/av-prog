@@ -70,14 +70,12 @@ data Joint = JBox { command :: Command,
                           b_south :: Wire,
                           b_east  :: Wire,
                           b_west  :: Wire }
-           | JSpacing
 
 extract_boxes :: Joint -> [Joint]
 extract_boxes jnt =
     case jnt of
       b @ (JBox _ _ _ _ _) -> [b]
       JBox_Group boxes _ _ _ _ -> mconcat $ fmap extract_boxes boxes
-      JSpacing -> []
 
 findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
 findEdges [] = []
@@ -174,26 +172,6 @@ instance Show Joint where
 
 data Mod = MkModule { joint :: [Joint],
                       modName :: String }
-
-boxRulers :: [Joint] -> [String]
-boxRulers [] = [""]
-boxRulers (JSpacing : rest) = (take 2 $ repeat ' ') : boxRulers rest
-boxRulers (b : rest) = (boxRule $ width b) : boxRulers rest
-
-content :: [Joint] -> [String]
-content [] = []
-content (JSpacing : rest) = "->" : content rest
-content (b : rest) = (sorround "!" $ show b) : content rest
-
-extraSign :: Int -> String  -> String
-extraSign 0 string = ""
-extraSign number string = string ++ extraSign (number - 1) string
-
-outputJoints layout = present layout
-        where
-          present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l,
-                                                  mconcat $ content l,
-                                                  mconcat $ boxRulers l]
 
 width :: Joint -> Int
 width c = length $ show $ command c
@@ -373,23 +351,4 @@ render :: [ExplicitOrder] -> [String]
 render boxes = join $ fmap renderbox analyzed_boxes
     where analyzed_boxes = liveness_analyze [] boxes
           join x = fmap mconcat $ transpose x
-
-instance Show Mod where
-    show m = modularize contents
-        where
-          contents = outputJoints $ joint m
-          modularize contents =
-              let
-                  ls = lines contents
-                  size = foldl1 max $ fmap length ls
-                  name = ": " ++ modName m
-                  modLength = size - length name + 1
-                  finalName = name ++ (extraSign modLength " ") ++ ":"
-              in
-                unlines [modRule $ 2 + size,
-                         finalName,
-                         mconcat $ intersperse "\n" $ fmap (sorround ":") ls,
-                         modRule $ 2 + size]
-
-
 
