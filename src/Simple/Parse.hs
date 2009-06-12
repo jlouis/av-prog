@@ -20,24 +20,24 @@ program :: Parser (Ast, EnvValue, FuncEnvValue)
 program = do {
             (ast, env, mainName) <- function;
             do {
-              funcEnvValue <- try(functions);
-              return (ast, env, (FuncEnv (Func "Main" ast env EnvEnd) funcEnvValue))
+              funcEnvValue <- functions;
+              return (ast, env, (FuncEnv (Func "Main" ast env) funcEnvValue))
             }
             <|>
             do {
-              return (ast, env, (FuncEnv (Func "Main" ast env EnvEnd) FuncEnd))
+              return (ast, env, (FuncEnv (Func "Main" ast env) FuncEnd))
             }
           }
 
 functions :: Parser FuncEnvValue
 functions = do {
-              (ast, env, name) <- function;
+              --(ast, env, name) <- try(function);
               do{
-                try(whiteSpace);
+                whiteSpace;
                 try(string ",");
-                try(whiteSpace);
+                (ast, env, name) <- try(function);
                 funcEnvValue <- functions;
-                return (FuncEnv (Func name ast env EnvEnd) funcEnvValue)
+                return (FuncEnv (Func name ast env) funcEnvValue)
               }
               <|>
               do{
@@ -47,6 +47,7 @@ functions = do {
 
 function :: Parser (Ast, EnvValue, String)
 function = do {
+             whiteSpace;
              name <- many1 letter; 
              whiteSpace;
              string "=>";
@@ -104,16 +105,18 @@ expr = zero_expr <|> succ_expr <|> parens op <|> Simple.Parse.lookup <|> call <|
 call :: Parser Ast
 call = do {
          whiteSpace;
-         string "Call";
+         try(string "Call");
          whiteSpace;
          fktName <- try(many1 letter);
-         return (Call fktName FuncEnd)
+         whiteSpace;
+         input <- op;
+         return (Call fktName input)
        }
 
 lookup :: Parser Ast
 lookup = do {
            whiteSpace;
-           string "Lookup";
+           try(string "Lookup");
            whiteSpace;
            look <- try(many1 letter);
            return (Lookup look)
@@ -133,6 +136,7 @@ op = buildExpressionParser table expr
 
 parens :: Parser Ast -> Parser Ast
 parens exp = do
+    whiteSpace
     string "("
     whiteSpace
     e <- exp

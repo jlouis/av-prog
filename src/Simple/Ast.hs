@@ -10,7 +10,7 @@ import Data.Map as M
 import Control.Monad.Reader.Class
 
 -- Syntax of the small language
-data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast | Lookup String | Call String FuncEnvValue
+data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast | Lookup String | Call String Ast
 
 -- The environment
 data EnvValue = Env ConstValue EnvValue | EnvEnd
@@ -18,7 +18,7 @@ data ConstValue = Const String Ast
 
 -- The functions
 data FuncEnvValue = FuncEnv FuncInstValue FuncEnvValue | FuncEnd
-data FuncInstValue = Func String Ast EnvValue EnvValue    
+data FuncInstValue = Func String Ast EnvValue
 
 -- Evaluation operation
 eval Zero _ _ = Zero
@@ -46,19 +46,18 @@ eval (Lookup str) env fkt = envLookup str env env fkt
 --eval (Lookup str) (Env (Const id calc) env) = if str == id 
 --                                               then eval calc env
 --                                               else eval (Lookup str) env
---eval (Call str vars) env  = 
-eval (Call str fktEnv) env fkt = fktCall str env fkt fkt
+eval (Call str input) env fkt = fktCall str env input fkt fkt
 
 envLookup _ EnvEnd _ _ = Zero
 envLookup str (Env (Const id calc) env) constantEnv fkt = 
                                                if str == id 
                                                then eval calc constantEnv fkt
                                                else envLookup str env constantEnv fkt
-fktCall _ _ FuncEnd _ = Zero
-fktCall str env (FuncEnv (Func id ast localEnv inputEnv) funcValue) constantFkt =
+fktCall _ _ _ FuncEnd _ = Zero
+fktCall str env input (FuncEnv (Func id ast localEnv) funcValue) constantFkt =
                                                if str == id
-                                               then eval ast env constantFkt 
-                                               else fktCall str env funcValue constantFkt
+                                               then eval ast (Env (Const "input" input) env) constantFkt 
+                                               else fktCall str env input funcValue constantFkt
 
 -- Program mechanism
 start ast env = eval ast env
