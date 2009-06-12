@@ -33,13 +33,14 @@ mkBox c = do
                   west = ww,
                   south = ws }
 
-mkModule :: Supply Layout -> Supply Layout
-mkModule jnt = do
+mkModule :: String -> Supply Layout -> Supply Layout
+mkModule module_name jnt = do
   wn <- new
   ww <- new
   we <- new
   bxs <- jnt
   return $ Module { boxes = boxes bxs,
+                    name = module_name,
                     input_north = wn,
                     input_west  = ww,
                     output_east = we }

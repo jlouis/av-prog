@@ -71,6 +71,7 @@ data Joint = JBox { command :: Command,
                           b_east  :: Wire,
                           b_west  :: Wire }
            | Module { boxes :: [Joint],
+                      name :: String,
                       input_north :: Wire,
                       input_west :: Wire,
                       output_east :: Wire }
@@ -116,6 +117,8 @@ data WireInfo = PassThrough Int
 data ExplicitOrder = EOB { contents :: Command,
                            wires :: [WireInfo],
                            live :: [(Wire, Int)] }
+                   | EOM { wires :: [WireInfo],
+                           mod_name :: String }
 
 process_box :: Joint -> ExplicitOrder
 process_box box = EOB { contents = command box,
