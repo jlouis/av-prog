@@ -83,7 +83,7 @@ data Mod = Module { mod_boxes :: [Joint],
                     name :: String,
                     input_north :: Wire,
                     input_west :: Wire,
-                    output_east :: Wire }
+                    outputs_east :: [Wire] }
 
 findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
 findEdges [] = []
@@ -222,6 +222,7 @@ has_west_input crate = case find (\e -> case e of
 fillline char k = mconcat $ take k (repeat char)
 spaces = fillline " "
 
+modhrule = fillline "."
 boxhrule = fillline "="
 wireline = fillline "-"
 
@@ -236,26 +237,26 @@ line3 n cw = mconcat ["  ", if n then "++*" else "  *", boxhrule cw,
                       "*  "]
 
 line4 :: Bool -> Bool -> Bool -> Command -> String
-line4 n e w c = mconcat [if e then "+" else " ",
-                         if e then
-                             if n then "#" else "-"
-                         else " ",
-                         ">!", show c, "!",
-                         if w then "-+" else "  "]
+line4 n e w c = mconcat [if w then "+" else " ",
+                         if w then
+                             if n then "#>" else "->"
+                         else "  ",
+                         "!", show c, "!",
+                         if e then "-+" else "  "]
 
 line5 :: Bool -> Bool -> Bool -> Int -> String
-line5 n e w cw = mconcat [if e then "|" else " ",
+line5 n e w cw = mconcat [if w then "|" else " ",
                          if n then "|" else " ",
                          " ",
                          "*", boxhrule cw, "* ",
-                         if w then "|" else " "]
+                         if e then "|" else " "]
 
 line6 :: Bool -> Bool -> Bool -> Bool -> Int -> String
-line6 n e w s cw = mconcat [if e then "|" else " ",
+line6 n e w s cw = mconcat [if w then "|" else " ",
                             if n then "|" else " ",
                             "  ", spaces (cw-1),
                             if s then "+-+" else "   ",
-                            if w then "|" else " "]
+                            if e then "|" else " "]
 
 
 
@@ -299,11 +300,11 @@ create_lines cw wires p n e w s =
             case snd wire of
               PassThrough k -> process_wire rest n e w s (line : accum)
                   where
-                    line = mconcat [if w then "#" else " ",
-                                    if n then "#" else " ",
+                    line = mconcat [if w then "#" else "-",
+                                    if n then "#" else "-",
                                     wireline (cw + 3),
-                                    if s then "#" else " ",
-                                    if e then "#" else " "]
+                                    if s then "#" else "-",
+                                    if e then "#" else "-"]
               End_W k -> process_wire rest n e False s (line : accum)
                   where
                     line = mconcat ["+", if n then "|" else " ",
@@ -341,7 +342,7 @@ renderbox crate =
         w = has_west_input crate
         e = has_east_output crate
         s = has_south_output crate
-        cw = crate_width w (ctnts)
+        cw = crate_width w ctnts
         ctnts = contents crate
         circuitry = wires crate
         positions = live crate
@@ -359,7 +360,7 @@ render_eo boxes = join $ fmap renderbox analyzed_boxes
     where analyzed_boxes = liveness_analyze [] boxes
           join x = fmap mconcat $ transpose x
 
-create_module_boxes :: String -> Wire -> Wire -> Wire -> [ExplicitOrder]
+create_module_boxes :: String -> Wire -> Wire -> [Wire] -> [ExplicitOrder]
 create_module_boxes name inp_n inp_w out_e = []
 
 render_module :: Mod -> String
