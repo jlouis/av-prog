@@ -12,16 +12,15 @@ import Twodee.Ast
 compileV Zero = Inr Unit
 compileV (Succ e) = Inl (compileV e)
 
-type Layout = Joint
-type Supply a = State Int a
+type Supply a = State (Int, [Int]) a
 
-new :: State Int Int
+new :: Supply Int
 new = do
-  i <- get
-  put (i+1)
-  return i
+  (count, outlist) <- get
+  put (count+1, outlist)
+  return count
 
-mkBox :: Command -> Supply Layout
+mkBox :: Command -> Supply Joint
 mkBox c = do
   wn <- new
   we <- new
@@ -33,6 +32,23 @@ mkBox c = do
                   west = ww,
                   south = ws }
 
+mod_in_n = 0
+mod_in_w = 1
+
+output w = do
+  (count, outs) <- get
+  put (count, w : outs)
+
+mkModule :: String -> Supply Joint -> Mod
+mkModule n jnt =
+    Module { mod_boxes = [j],
+             name = n,
+             input_north = 0,
+             input_west  = 1,
+             outputs_east = outs }
+  where
+    (j, (_, outs)) = (runState jnt) (2, [])
+
 mkBoxGrp w n e s grp =
     return $ JBox_Group { boxes = grp,
                           b_north = n,
@@ -40,7 +56,7 @@ mkBoxGrp w n e s grp =
                           b_east  = e,
                           b_west  = w }
 
-compile :: Ast -> Supply Layout
+compile :: Ast -> Supply Joint
 compile Zero = mkBox (Send1 (Inr Unit) E)
 compile (Succ x) =
     do
@@ -60,13 +76,13 @@ compile (Mul e1 e2) =
       b <- (mkBox (Use "mul"))
       join c1 c2 b
 
-join_ew :: Layout -> Layout -> Supply Layout
+join_ew :: Joint -> Joint -> Supply Joint
 join_ew b1 b2 = do
   wire <- return $ b_east b1
   b2' <- return $ b2 { west = wire }
   mkBoxGrp (b_west b1) (north b2) (east b2) (south b2) [b1, b2']
 
-join :: Layout -> Layout -> Layout -> Supply Layout
+join :: Joint -> Joint -> Joint -> Supply Joint
 join wi ni box = do
   wire1 <- return $ b_east wi
   wire2 <- return $ b_north ni

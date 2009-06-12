@@ -12,7 +12,7 @@ where
 import qualified Data.Graph as Graph
 import qualified Data.Set as Set
 import Data.List
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, catMaybes)
 
 import Data.Monoid
 
@@ -70,14 +70,20 @@ data Joint = JBox { command :: Command,
                           b_south :: Wire,
                           b_east  :: Wire,
                           b_west  :: Wire }
-           | JSpacing
 
-extract_boxes :: Joint -> [Joint]
-extract_boxes jnt =
-    case jnt of
-      b @ (JBox _ _ _ _ _) -> [b]
-      JBox_Group boxes _ _ _ _ -> mconcat $ fmap extract_boxes boxes
-      JSpacing -> []
+-- Simplify the joints, removing the Groups
+simplify_joint :: [Joint] -> [Joint]
+simplify_joint ((JBox_Group boxes _ _ _ _) : rest) = simplified ++ (simplify_joint rest)
+    where
+      simplified = simplify_joint boxes
+simplify_joint (b : rest) = [b] ++ (simplify_joint rest)
+simplify_joint [] = []
+
+data Mod = Module { mod_boxes :: [Joint],
+                    name :: String,
+                    input_north :: Wire,
+                    input_west :: Wire,
+                    outputs_east :: [Wire] }
 
 findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
 findEdges [] = []
@@ -120,6 +126,7 @@ data WireInfo = PassThrough Int
 data ExplicitOrder = EOB { contents :: Command,
                            wires :: [WireInfo],
                            live :: [(Wire, Int)] }
+                   | EOM { wires :: [WireInfo] }
 
 process_box :: Joint -> ExplicitOrder
 process_box box = EOB { contents = command box,
@@ -172,29 +179,6 @@ instance Show Joint where
     show b =
         show $ (command b)
 
-data Mod = MkModule { joint :: [Joint],
-                      modName :: String }
-
-boxRulers :: [Joint] -> [String]
-boxRulers [] = [""]
-boxRulers (JSpacing : rest) = (take 2 $ repeat ' ') : boxRulers rest
-boxRulers (b : rest) = (boxRule $ width b) : boxRulers rest
-
-content :: [Joint] -> [String]
-content [] = []
-content (JSpacing : rest) = "->" : content rest
-content (b : rest) = (sorround "!" $ show b) : content rest
-
-extraSign :: Int -> String  -> String
-extraSign 0 string = ""
-extraSign number string = string ++ extraSign (number - 1) string
-
-outputJoints layout = present layout
-        where
-          present l = mconcat $ intersperse "\n" [mconcat $ boxRulers l,
-                                                  mconcat $ content l,
-                                                  mconcat $ boxRulers l]
-
 width :: Joint -> Int
 width c = length $ show $ command c
 
@@ -237,6 +221,7 @@ has_west_input crate = case find (\e -> case e of
 fillline char k = mconcat $ take k (repeat char)
 spaces = fillline " "
 
+modhrule = fillline "."
 boxhrule = fillline "="
 wireline = fillline "-"
 
@@ -251,26 +236,26 @@ line3 n cw = mconcat ["  ", if n then "++*" else "  *", boxhrule cw,
                       "*  "]
 
 line4 :: Bool -> Bool -> Bool -> Command -> String
-line4 n e w c = mconcat [if e then "+" else " ",
-                         if e then
-                             if n then "#" else "-"
-                         else " ",
-                         ">!", show c, "!",
-                         if w then "-+" else "  "]
+line4 n e w c = mconcat [if w then "+" else " ",
+                         if w then
+                             if n then "#>" else "->"
+                         else "  ",
+                         "!", show c, "!",
+                         if e then "-+" else "  "]
 
 line5 :: Bool -> Bool -> Bool -> Int -> String
-line5 n e w cw = mconcat [if e then "|" else " ",
+line5 n e w cw = mconcat [if w then "|" else " ",
                          if n then "|" else " ",
                          " ",
                          "*", boxhrule cw, "* ",
-                         if w then "|" else " "]
+                         if e then "|" else " "]
 
 line6 :: Bool -> Bool -> Bool -> Bool -> Int -> String
-line6 n e w s cw = mconcat [if e then "|" else " ",
+line6 n e w s cw = mconcat [if w then "|" else " ",
                             if n then "|" else " ",
                             "  ", spaces (cw-1),
                             if s then "+-+" else "   ",
-                            if w then "|" else " "]
+                            if e then "|" else " "]
 
 
 
@@ -314,11 +299,11 @@ create_lines cw wires p n e w s =
             case snd wire of
               PassThrough k -> process_wire rest n e w s (line : accum)
                   where
-                    line = mconcat [if w then "#" else " ",
-                                    if n then "#" else " ",
+                    line = mconcat [if w then "#" else "-",
+                                    if n then "#" else "-",
                                     wireline (cw + 3),
-                                    if s then "#" else " ",
-                                    if e then "#" else " "]
+                                    if s then "#" else "-",
+                                    if e then "#" else "-"]
               End_W k -> process_wire rest n e False s (line : accum)
                   where
                     line = mconcat ["+", if n then "|" else " ",
@@ -349,47 +334,69 @@ create_lines cw wires p n e w s =
     in
       process_wire ordered_wires n e w s []
 
-renderbox :: ExplicitOrder -> [String]
-renderbox crate =
+renderbox :: ExplicitOrder -> Maybe [String]
+renderbox (EOM _) = Nothing
+renderbox (crate@(EOB _ _ _)) =
     let
         n = has_north_input crate
         w = has_west_input crate
         e = has_east_output crate
         s = has_south_output crate
-        cw = crate_width w (ctnts)
+        cw = crate_width w ctnts
         ctnts = contents crate
         circuitry = wires crate
         positions = live crate
     in
-      [line1 n cw,
-       line2 n cw,
-       line3 n cw,
-       line4 n e w ctnts,
-       line5 n e w cw,
-       line6 n e w s cw] ++
-      create_lines cw circuitry positions n e w s
+      Just $ [line1 n cw,
+              line2 n cw,
+              line3 n cw,
+              line4 n e w ctnts,
+              line5 n e w cw,
+              line6 n e w s cw] ++
+             create_lines cw circuitry positions n e w s
 
-render :: [ExplicitOrder] -> [String]
-render boxes = join $ fmap renderbox analyzed_boxes
+render_eo :: [ExplicitOrder] -> [String]
+render_eo boxes = join $ catMaybes $ fmap renderbox analyzed_boxes
     where analyzed_boxes = liveness_analyze [] boxes
           join x = fmap mconcat $ transpose x
 
+create_module_boxes :: Wire -> Wire -> [Wire] -> [ExplicitOrder]
+create_module_boxes inp_n inp_w out_e = [start_box, end_box]
+    where
+      -- Map the Start_S to the north input and the Start_E to the west input
+      start_box = EOM { wires = [Start_S inp_n, Start_E inp_w] }
+      end_box   = EOM { wires = fmap End_W out_e }
+
+render_module :: Mod -> String
+render_module (Module bxs name inp_n inp_w out_e) =
+{-
+  First, we should build up the correct ExplicitOrder with Fake boxes for the module.
+  Then we should call the render_eo function which also liveness analyzes. It should
+    output the information we need to render the module itself
+  Then we must gather the width and height of the module to output it correctly
+ -}
+    let
+        joints = simplify_joint bxs
+        [start_box, end_box] = create_module_boxes inp_n inp_w out_e
+        eobs = explicit_wiring joints
+        rendered = render_eo ([start_box] ++ eobs ++ [end_box])
+        module_width = foldl1 max $ fmap length rendered
+        name_width = length name
+        north_input = False -- TODO: Fix me.
+        line0 = mconcat [",", modhrule (name_width + module_width + 2),","]
+        line1 = mconcat [":", name, " ", if north_input then "|" else " ",
+                         spaces (module_width), ":"]
+        -- Add the line here to get a west input
+        -- Add the lines here to start connecting via the rendered lines
+        -- Add the lines here to add exits from the box
+        linef = mconcat [",", modhrule (name_width + module_width + 2), ","]
+
+    in
+      mconcat [line0, line1, linef]
+
 instance Show Mod where
-    show m = modularize contents
-        where
-          contents = outputJoints $ joint m
-          modularize contents =
-              let
-                  ls = lines contents
-                  size = foldl1 max $ fmap length ls
-                  name = ": " ++ modName m
-                  modLength = size - length name + 1
-                  finalName = name ++ (extraSign modLength " ") ++ ":"
-              in
-                unlines [modRule $ 2 + size,
-                         finalName,
-                         mconcat $ intersperse "\n" $ fmap (sorround ":") ls,
-                         modRule $ 2 + size]
+    show m = render_module m
 
-
-
+render :: [Mod] -> String -> String
+render modules stdlib = mconcat [rendered_mods, stdlib]
+  where rendered_mods = mconcat $ fmap show modules
