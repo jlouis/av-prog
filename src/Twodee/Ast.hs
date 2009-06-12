@@ -71,6 +71,14 @@ data Joint = JBox { command :: Command,
                           b_east  :: Wire,
                           b_west  :: Wire }
 
+-- Simplify the joints, removing the Groups
+simplify_joint :: [Joint] -> [Joint]
+simplify_joint ((JBox_Group boxes _ _ _ _) : rest) = simplified ++ (simplify_joint rest)
+    where
+      simplified = simplify_joint boxes
+simplify_joint (b : rest) = [b] ++ (simplify_joint rest)
+simplify_joint [] = []
+
 data Mod = Module { mod_boxes :: [Joint],
                     name :: String,
                     input_north :: Wire,
@@ -346,8 +354,34 @@ renderbox crate =
        line6 n e w s cw] ++
       create_lines cw circuitry positions n e w s
 
-render :: [ExplicitOrder] -> [String]
-render boxes = join $ fmap renderbox analyzed_boxes
+render_eo :: [ExplicitOrder] -> [String]
+render_eo boxes = join $ fmap renderbox analyzed_boxes
     where analyzed_boxes = liveness_analyze [] boxes
           join x = fmap mconcat $ transpose x
 
+create_module_boxes :: String -> Wire -> Wire -> Wire -> [ExplicitOrder]
+create_module_boxes name inp_n inp_w out_e = []
+
+render_module :: Mod -> String
+render_module (Module bxs name inp_n inp_w out_e) =
+{-
+  First, we should build up the correct ExplicitOrder with Fake boxes for the module.
+  Then we should call the render_eo function which also liveness analyzes. It should
+    output the information we need to render the module itself
+  Then we must gather the width and height of the module to output it correctly
+ -}
+    let
+        joints = simplify_joint bxs
+        module_boxes = create_module_boxes name inp_n inp_w out_e
+        eobs = explicit_wiring joints
+        rendered = render_eo (eobs ++ module_boxes)
+        boxes = ""
+    in
+      boxes
+
+instance Show Mod where
+    show m = render_module m
+
+render :: [Mod] -> String -> String
+render modules stdlib = mconcat [rendered_mods, stdlib]
+  where rendered_mods = mconcat $ fmap show modules
