@@ -8,6 +8,7 @@ import Twodee.Ast
 import qualified Data.Set as Set
 import qualified Data.Graph as Graph
 import Data.Monoid
+import Data.Maybe (fromJust)
 
 
 -- This datatype explicitly tells what kind of wire we are working with
@@ -24,7 +25,7 @@ data ExplicitOrder = EOB { contents :: Command,
                            live :: [(Wire, Int)] }
                    | EOM { wires :: [WireInfo] }
 
-
+-- Convert a box to its explicit representation
 process_box :: Box -> ExplicitOrder
 process_box box = EOB { contents = command box,
                         wires = wi,
@@ -35,16 +36,22 @@ process_box box = EOB { contents = command box,
             Start_E $ east box,
             Start_S $ south box]
 
+-- Lift process_box via a functor
 explicit_wiring :: [Box] -> [ExplicitOrder]
 explicit_wiring jnts = fmap process_box ordered
   where
     ordered = topsort jnts
 
-
-findEdges :: [(Int, Box)] -> [[(Int, Int)]]
-findEdges [] = []
-findEdges ((id, box) : rest) =
-    let
+-- Given a list of numbered boxes, find the boxes each box connects to and
+-- build up a list of these edges.
+-- TODO: Work on explicit representation?
+findEdges :: [(Int, Box)] -> [(Int, Int)]
+findEdges lst = mconcat $ findEdges' lst
+  where
+    findEdges' :: [(Int, Box)] -> [[(Int, Int)]]
+    findEdges' [] = []
+    findEdges' ((id, box) : rest) =
+      let
         getOutEdges bx = Set.fromList [south bx, west bx]
         getInEdges bx = Set.fromList [north bx, east bx]
         s = getOutEdges box
@@ -55,23 +62,25 @@ findEdges ((id, box) : rest) =
                   fil ((tid, bs) : r) = if Set.intersection s bs /= Set.empty
                                         then tid : (fil r)
                                         else fil r
-    in
-      ([(id, tid) | tid <- matches rest] : findEdges rest)
+      in
+        ([(id, tid) | tid <- matches rest] : findEdges' rest)
 
-order [] numbered = []
-order (v : vs) numbered =
-    case lookup v numbered of
-      Just b -> b : (order vs numbered)
-
+-- Sort a list of boxes topologically
+topsort :: [Box] -> [Box]
 topsort jnts =
     let
         numbered = zip [1..] jnts
         bnds = (1, length numbered)
         edges = findEdges numbered
-        vertices = Graph.topSort $ Graph.buildG bnds $ mconcat edges
+        vertices = Graph.topSort $ Graph.buildG bnds edges
+
+        order [] numbered = []
+        order (v : vs) numbered =
+            (fromJust $ lookup v numbered) : (order vs numbered)
     in
       order vertices numbered
 
+-- Helper function. Updated liveness w.r.t. a gen/kill set.
 update_liveness genset killset liveelements =
     let
         remove [] es = es
@@ -82,6 +91,7 @@ update_liveness genset killset liveelements =
     in
       ((add max_num genset) . (remove killset)) liveelements
 
+-- Analyze liveness for an explicitly ordered representation
 liveness_analyze :: [(Wire, Int)] -> [ExplicitOrder] -> [ExplicitOrder]
 liveness_analyze l [] = []
 liveness_analyze l (b : rest) = b {live = updated_live } : (liveness_analyze updated_live rest)
