@@ -13,9 +13,17 @@ Task 2a: Mikkel has looked at Parsec.
 Task 2b: We need 2 things here:
      New TODO:
 
-     * In topological order, we should lay out the blocks with implicit
-       representation.
+     * Figure out the representation of modules w.r.t. the explicitorder.
+       DRAW THIS ON PAPER.
 
-     * For each subblock, output the things we need to output.
-     * join together the type errors
+     * Build a renderer for the module.
+
+     * Correct the way we introduce a module from the perspective of compilation.
+
+     * Compile a subset of our language.
+
+     * TEST
+
+     * Iteratively extend the compilation to more parts.
+
 
