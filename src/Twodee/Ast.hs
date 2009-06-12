@@ -70,11 +70,12 @@ data Joint = JBox { command :: Command,
                           b_south :: Wire,
                           b_east  :: Wire,
                           b_west  :: Wire }
-           | Module { boxes :: [Joint],
-                      name :: String,
-                      input_north :: Wire,
-                      input_west :: Wire,
-                      output_east :: Wire }
+
+data Mod = Module { mod_boxes :: [Joint],
+                    name :: String,
+                    input_north :: Wire,
+                    input_west :: Wire,
+                    output_east :: Wire }
 
 findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
 findEdges [] = []
@@ -170,9 +171,6 @@ liveness_analyze l (b : rest) = b {live = updated_live } : (liveness_analyze upd
 instance Show Joint where
     show b =
         show $ (command b)
-
-data Mod = MkModule { joint :: [Joint],
-                      modName :: String }
 
 width :: Joint -> Int
 width c = length $ show $ command c
