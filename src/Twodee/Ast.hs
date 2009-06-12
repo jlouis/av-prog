@@ -12,7 +12,7 @@ where
 import qualified Data.Graph as Graph
 import qualified Data.Set as Set
 import Data.List
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, catMaybes)
 
 import Data.Monoid
 
@@ -126,8 +126,7 @@ data WireInfo = PassThrough Int
 data ExplicitOrder = EOB { contents :: Command,
                            wires :: [WireInfo],
                            live :: [(Wire, Int)] }
-                   | EOM { wires :: [WireInfo],
-                           mod_name :: String }
+                   | EOM { wires :: [WireInfo] }
 
 process_box :: Joint -> ExplicitOrder
 process_box box = EOB { contents = command box,
@@ -335,8 +334,9 @@ create_lines cw wires p n e w s =
     in
       process_wire ordered_wires n e w s []
 
-renderbox :: ExplicitOrder -> [String]
-renderbox crate =
+renderbox :: ExplicitOrder -> Maybe [String]
+renderbox (EOM _) = Nothing
+renderbox (crate@(EOB _ _ _)) =
     let
         n = has_north_input crate
         w = has_west_input crate
@@ -347,21 +347,25 @@ renderbox crate =
         circuitry = wires crate
         positions = live crate
     in
-      [line1 n cw,
-       line2 n cw,
-       line3 n cw,
-       line4 n e w ctnts,
-       line5 n e w cw,
-       line6 n e w s cw] ++
-      create_lines cw circuitry positions n e w s
+      Just $ [line1 n cw,
+              line2 n cw,
+              line3 n cw,
+              line4 n e w ctnts,
+              line5 n e w cw,
+              line6 n e w s cw] ++
+             create_lines cw circuitry positions n e w s
 
 render_eo :: [ExplicitOrder] -> [String]
-render_eo boxes = join $ fmap renderbox analyzed_boxes
+render_eo boxes = join $ catMaybes $ fmap renderbox analyzed_boxes
     where analyzed_boxes = liveness_analyze [] boxes
           join x = fmap mconcat $ transpose x
 
-create_module_boxes :: String -> Wire -> Wire -> [Wire] -> [ExplicitOrder]
-create_module_boxes name inp_n inp_w out_e = []
+create_module_boxes :: Wire -> Wire -> [Wire] -> [ExplicitOrder]
+create_module_boxes inp_n inp_w out_e = [start_box, end_box]
+    where
+      -- Map the Start_S to the north input and the Start_E to the west input
+      start_box = EOM { wires = [Start_S inp_n, Start_E inp_w] }
+      end_box   = EOM { wires = fmap End_W out_e }
 
 render_module :: Mod -> String
 render_module (Module bxs name inp_n inp_w out_e) =
@@ -373,9 +377,9 @@ render_module (Module bxs name inp_n inp_w out_e) =
  -}
     let
         joints = simplify_joint bxs
-        module_boxes = create_module_boxes name inp_n inp_w out_e
+        [start_box, end_box] = create_module_boxes inp_n inp_w out_e
         eobs = explicit_wiring joints
-        rendered = render_eo (eobs ++ module_boxes)
+        rendered = render_eo ([start_box] ++ eobs ++ [end_box])
         boxes = ""
     in
       boxes
