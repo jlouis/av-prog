@@ -7,6 +7,7 @@ import Simple.Ast
 import Simple.Parse
 
 import Twodee.Ast
+import Twodee.AstRender
 
 -- Compilation from Simple values to 2d values. Not exhaustive.
 compileV Zero = Inr Unit
