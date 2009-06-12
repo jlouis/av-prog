@@ -380,9 +380,19 @@ render_module (Module bxs name inp_n inp_w out_e) =
         [start_box, end_box] = create_module_boxes inp_n inp_w out_e
         eobs = explicit_wiring joints
         rendered = render_eo ([start_box] ++ eobs ++ [end_box])
-        boxes = ""
+        module_width = foldl1 max $ fmap length rendered
+        name_width = length name
+        north_input = False -- TODO: Fix me.
+        line0 = mconcat [",", modhrule (name_width + module_width + 2),","]
+        line1 = mconcat [":", name, " ", if north_input then "|" else " ",
+                         spaces (module_width), ":"]
+        -- Add the line here to get a west input
+        -- Add the lines here to start connecting via the rendered lines
+        -- Add the lines here to add exits from the box
+        linef = mconcat [",", modhrule (name_width + module_width + 2), ","]
+
     in
-      boxes
+      mconcat [line0, line1, linef]
 
 instance Show Mod where
     show m = render_module m
