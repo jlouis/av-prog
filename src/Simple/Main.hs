@@ -8,7 +8,7 @@ import Twodee.Ast
 --printTree ast env = astPrint (envPrint "" env) ast
 
 main = do
-  (ast, env, fkt) <- return $ parsePrg "Main => [hello = (s (s z)) + (s z)] Lookup hello * (Call Test), Test => [] s (s z)"
+  (ast, env, fkt) <- return $ parsePrg "Main => [hello = (s (s z)) + (s z)] (Lookup hello) * (Call Test (s z)), Test => [] (s (s z)) + (Lookup input)"
   putStrLn $ astPrint "" (start ast env fkt)
 --  bxs <- return $ SimpleCC.compile ast
 --  nodule <- return $ Twodee.Ast.MkModule { boxes = bxs, modName = "Main" }
