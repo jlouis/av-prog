@@ -17,7 +17,7 @@ import qualified Register as R
 
 -- Change this to use the new Sequence State system
 type WordState = IO ([Word32], IOUArray Word32 Word32, Seq (IOUArray Word32 Word32))
---type WordState = (Word32, Seq (Word32, (Seq Word32))) 
+--type WordState = (Word32, Seq (Word32, (Seq Word32)))
 
 interpret :: [Word32] -> IO ()
 interpret opcodes = do initial_store <- (empty opcodes :: WordState)
@@ -43,7 +43,7 @@ interp s rs op_ptr =
     in
     do opcode <- lookupE s 0 op_ptr
        instr <- return $ decode opcode
---       putStrLn $ (pad ( showHex opcode "")) ++ "\t" ++ (show op_ptr) ++ "\t" ++ (show instr) 
+--       putStrLn $ (pad ( showHex opcode "")) ++ "\t" ++ (show op_ptr) ++ "\t" ++ (show instr)
        case instr of
          Move { src=src, reg=reg, guard=guard } ->
              do guard'          <- R.getReg rs guard
@@ -86,12 +86,12 @@ interp s rs op_ptr =
              do c <- getChar
                 R.writeReg rs reg $ (fromIntegral . ord) c
                 interp s rs (op_ptr+1)
-         Load { from=from, jumppoint=jumppoint } ->
-             do f <- R.getReg rs from
-                j <- R.getReg rs jumppoint
+         Load { from=frm, jumppoint=jp } ->
+             do f <- R.getReg rs frm
+                j <- R.getReg rs jp
                 s' <- load s f
                 interp s' rs j
-         LoadImm { value=value, reg=reg } ->
-             do R.writeReg rs reg value
+         LoadImm { value=v, reg=r } ->
+             do R.writeReg rs r v
                 interp s rs (op_ptr+1)
 
