@@ -1,6 +1,7 @@
 module Twodee.AstExplicit (WireInfo(..),
                            ExplicitOrder(..),
                            liveness_analyze,
+                           wirenum,
                            explicit_wiring)
 where
 

@@ -102,25 +102,22 @@ create_box_contents wi ni eo c =
 
 create_box_south_output ni wi eo so cw = ""
 
-listflip = fmap (\(x, y) -> (y, x))
-
-wirejoin [] p = []
-wirejoin (w : rest) p =
-    let
-        wnum = case w of
-                 PassThrough n -> n
-                 Start_E n -> n
-                 Start_S n -> n
-                 End_W n -> n
-                 End_N n -> n
-        pos = fromJust $ lookup wnum p
-    in
-      (w, pos) : (wirejoin rest p)
+order_wires :: [WireInfo] -> [(Wire, Int)] -> [(Int, [WireInfo])]
+order_wires wires positions =
+    collect $ groupBy (\(p1, _) -> \(p2, _) -> p1 == p2) $ sort poslist
+        where
+          collect [] = []
+          collect (elem : rest) =
+              (fst $ head elem, fmap snd elem) : collect rest
+          poslist :: [(Int, WireInfo)]
+          poslist = fmap findpos wires
+          findpos wire =
+              (fromJust $ lookup (wirenum wire) positions, wire)
 
 create_lines :: Int -> [WireInfo] -> [(Wire, Int)] -> Bool -> Bool -> Bool -> Bool -> [String]
 create_lines cw wires p n e w s =
     let
-        ordered_wires = sort $ listflip (wirejoin wires p)
+        ordered_wires = order_wires wires p
         process_wire [] _ _ _ _ accum = reverse accum
         process_wire (wire : rest) n e w s accum =
             case snd wire of
@@ -159,7 +156,8 @@ create_lines cw wires p n e w s =
                                     if s then "|" else " ",
                                     if e then "|" else " "]
     in
-      process_wire ordered_wires n e w s []
+      []
+--      process_wire ordered_wires n e w s []
 
 renderbox :: ExplicitOrder -> Maybe [String]
 renderbox (EOM _) = Nothing
