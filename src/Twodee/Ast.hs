@@ -4,7 +4,7 @@ module Twodee.Ast (Inface (..),
                    Exp (..),
                    Command (..),
                    Mod (..),
-                   Joint (..),
+                   Box (..),
                    Wire,
                    width)
 where
@@ -30,6 +30,14 @@ data Exp = Unit
          | Inr   Exp
          | Iface Inface
 
+data Command = SendEmpty
+             | Send1 Exp Outface
+             | Send2 Exp Outface
+                     Exp Outface
+             | Case  Exp Outface Outface
+             | Split Exp
+             | Use   String
+
 instance Show Exp where
     show x =
         case x of
@@ -38,14 +46,6 @@ instance Show Exp where
           Inl e -> mconcat ["inl ", show e]
           Inr e -> mconcat ["inr ", show e]
           Iface i -> show i
-
-data Command = SendEmpty
-             | Send1 Exp Outface
-             | Send2 Exp Outface
-                     Exp Outface
-             | Case  Exp Outface Outface
-             | Split Exp
-             | Use   String
 
 instance Show Command where
     show x =
@@ -60,32 +60,34 @@ instance Show Command where
           Split e -> mconcat ["split(", show e, ")"]
           Use s -> mconcat ["use ", show s, ""]
 
-data Joint = JBox { command :: Command,
+-- Boxs are vertices in a graph connecting boxes via wires.
+data Box = JBox { command :: Command,
                     north :: Wire,
                     east :: Wire,
                     south :: Wire,
                     west :: Wire }
-           | JBox_Group { boxes :: [Joint],
+           | JBox_Group { boxes :: [Box],
                           b_north :: Wire,
                           b_south :: Wire,
                           b_east  :: Wire,
                           b_west  :: Wire }
 
--- Simplify the joints, removing the Groups
-simplify_joint :: [Joint] -> [Joint]
-simplify_joint ((JBox_Group boxes _ _ _ _) : rest) = simplified ++ (simplify_joint rest)
-    where
-      simplified = simplify_joint boxes
-simplify_joint (b : rest) = [b] ++ (simplify_joint rest)
-simplify_joint [] = []
-
-data Mod = Module { mod_boxes :: [Joint],
+data Mod = Module { mod_boxes :: [Box],
                     name :: String,
                     input_north :: Wire,
                     input_west :: Wire,
                     outputs_east :: [Wire] }
 
-findEdges :: [(Int, Joint)] -> [[(Int, Int)]]
+-- Simplify the boxs, removing the Groups
+extract_base_box :: [Box] -> [Box]
+extract_base_box ((JBox_Group boxes _ _ _ _) : rest) = simplified ++ (extract_base_box rest)
+    where
+      simplified = extract_base_box boxes
+extract_base_box (b : rest) = [b] ++ (extract_base_box rest)
+extract_base_box [] = []
+
+
+findEdges :: [(Int, Box)] -> [[(Int, Int)]]
 findEdges [] = []
 findEdges ((id, box) : rest) =
     let
@@ -128,7 +130,7 @@ data ExplicitOrder = EOB { contents :: Command,
                            live :: [(Wire, Int)] }
                    | EOM { wires :: [WireInfo] }
 
-process_box :: Joint -> ExplicitOrder
+process_box :: Box -> ExplicitOrder
 process_box box = EOB { contents = command box,
                         wires = wi,
                         live = [] }
@@ -138,7 +140,7 @@ process_box box = EOB { contents = command box,
             Start_E $ east box,
             Start_S $ south box]
 
-explicit_wiring :: [Joint] -> [ExplicitOrder]
+explicit_wiring :: [Box] -> [ExplicitOrder]
 explicit_wiring jnts = fmap process_box ordered
   where
     ordered = topsort jnts
@@ -175,11 +177,11 @@ liveness_analyze l (b : rest) = b {live = updated_live } : (liveness_analyze upd
       updated_live = update_liveness gen kill l
 
 
-instance Show Joint where
+instance Show Box where
     show b =
         show $ (command b)
 
-width :: Joint -> Int
+width :: Box -> Int
 width c = length $ show $ command c
 
 hRule corner line w = mconcat [corner, take (w-2) $ repeat line, corner]
@@ -369,16 +371,10 @@ create_module_boxes inp_n inp_w out_e = [start_box, end_box]
 
 render_module :: Mod -> String
 render_module (Module bxs name inp_n inp_w out_e) =
-{-
-  First, we should build up the correct ExplicitOrder with Fake boxes for the module.
-  Then we should call the render_eo function which also liveness analyzes. It should
-    output the information we need to render the module itself
-  Then we must gather the width and height of the module to output it correctly
- -}
     let
-        joints = simplify_joint bxs
+        boxs = extract_base_box bxs
         [start_box, end_box] = create_module_boxes inp_n inp_w out_e
-        eobs = explicit_wiring joints
+        eobs = explicit_wiring boxs
         rendered = render_eo ([start_box] ++ eobs ++ [end_box])
         module_width = foldl1 max $ fmap length rendered
         name_width = length name
