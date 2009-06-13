@@ -163,8 +163,34 @@ start_line :: String -> Bool -> String
 start_line name n = mconcat [":", spaces $ length name + 1,
                              if n then "|" else " "]
 
-create_start_lines :: Bool -> Bool -> [WireInfo] -> Int -> [String]
-create_start_lines n w wires max_pos = [] -- TODO
+create_start_lines :: Bool -> Bool -> [WireInfo] -> Int -> Position -> Int -> [String]
+create_start_lines n w wires max_pos p nl =
+    let
+        ordered_wires = order_wires wires p
+        process n k [] accum = reverse ((++ accum) $ take (max_pos - k) $ repeat line)
+            where
+              line = mconcat [":", spaces (nl+2)]
+        process n k ((pos, wr) : rest) accum =
+            if k == max_pos then reverse accum
+            else if k < pos then
+                     let
+                         line = mconcat [":", spaces (nl+1),
+                                         if n then "|" else " "]
+                     in
+                       process n (k+1) ((pos, wr) : rest) (line : accum)
+                 else
+                     let
+                         (line, next) = case wr of
+                                          [Start_S _] ->
+                                              (mconcat [":", spaces (nl+1), "+"], False)
+                                          [Start_E _] ->
+                                              (wireline (nl+3), n)
+                                          _ -> error "Impossible case"
+                     in
+                       process next (k+1) rest (line : accum)
+
+    in
+      process n 0 ordered_wires []
 
 create_end_lines :: [WireInfo] -> Position -> Int -> [String]
 create_end_lines wires p max_pos =
@@ -194,7 +220,7 @@ renderbox_start max_pos pos name wires =
         start_line name n,
         start_line name n, -- 6
         start_line name n] ++
-       create_start_lines n w wires max_pos ++
+       create_start_lines n w wires max_pos pos (length name) ++
        [start_line0 name n]
 
 renderbox_end :: Int -> Position -> [WireInfo] -> [String]
@@ -240,7 +266,6 @@ render_eo bxs = join $ fmap (renderbox (freeMax fl)) analyzed_boxes
 create_module_boxes :: String -> Wire -> Wire -> [Wire] -> [ExplicitOrder]
 create_module_boxes n inp_n inp_w out_e = [start_box, end_box]
     where
-      -- Map the Start_S to the north input and the Start_E to the west input
       start_box = EOM { wires = [Start_S inp_n, Start_E inp_w],
                         mod_name = n,
                         ty = StartMod,
