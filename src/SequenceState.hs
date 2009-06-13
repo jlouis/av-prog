@@ -6,9 +6,6 @@ import Data.Word
 import Data.Sequence
 import qualified Data.Array.IO as A
 
-c_MAX_SIZE :: Double
-c_MAX_SIZE = (2 ** 32) - 1
-
 instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word32)) where
     empty init = do l <- return $! Prelude.length init
                     program <- A.newListArray (0 :: Word32, fromIntegral (l-1)) init
@@ -38,13 +35,11 @@ instance State ([Word32], A.IOUArray Word32 Word32, Seq (A.IOUArray Word32 Word3
 
     free _ 0 = error "Can't free the program"
     free (n, prg, s) x =
-        do new_arr <-  A.newArray (0, 0) (0 :: Word32)
-           let s' = update (fromIntegral x) new_arr s in
              return (x:n, prg, s)
 
 
     load s 0 = return $! s
-    load (n, prg, s) arr =
+    load (n, _, s) arr =
         do source <- return $! index s (fromIntegral (arr-1))
            target <- A.mapArray id source
            return $! (n, target, s)
