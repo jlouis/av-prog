@@ -149,9 +149,9 @@ create_lines cw wrs p n1 e1 w1 s1 =
       []
 --      process_wire ordered_wires n1 e1 w1 s1 []
 
-renderbox :: ExplicitOrder -> Maybe [String]
-renderbox (EOM _) = Nothing
-renderbox (crate@(EOB _ _ _)) =
+renderbox :: Int -> ExplicitOrder -> Maybe [String]
+renderbox _ (EOM _) = Nothing
+renderbox max_pos (crate@(EOB _ _ _)) =
     let
         n = has_north_input crate
         w = has_west_input crate
@@ -174,9 +174,10 @@ renderbox (crate@(EOB _ _ _)) =
              [line0 cw]
 
 render_eo :: [ExplicitOrder] -> [String]
-render_eo bxs = join $ catMaybes $ fmap renderbox analyzed_boxes
-    where analyzed_boxes = liveness_analyze [] [] bxs
-          join x = fmap mconcat $ transpose x
+render_eo bxs = join $ catMaybes $ fmap (renderbox (freeMax fl)) analyzed_boxes
+    where
+      (fl, analyzed_boxes) = liveness_analyze [] emptyFreelist bxs []
+      join x = fmap mconcat $ transpose x
 
 create_module_boxes :: Wire -> Wire -> [Wire] -> [ExplicitOrder]
 create_module_boxes inp_n inp_w out_e = [start_box, end_box]

@@ -1,5 +1,7 @@
 module Twodee.AstExplicit (WireInfo(..),
                            ExplicitOrder(..),
+                           emptyFreelist,
+                           freeMax,
                            liveness_analyze,
                            wirenum,
                            prune,
@@ -36,6 +38,32 @@ data ExplicitOrder = EOB { contents :: Command,
                            wires :: [WireInfo],
                            live :: [(Wire, Int)] }
                    | EOM { wires :: [WireInfo] }
+
+
+----------------------------------------------------------------------
+-- Freelists. Used to keep track of what positions are free underneath
+--   boxes
+----------------------------------------------------------------------
+newtype Freelist = MkFreelist { unFreelist :: (Int, [Int]) }
+
+emptyFreelist :: Freelist
+emptyFreelist = MkFreelist (0, [])
+
+freeGet :: Freelist -> (Int, Freelist)
+freeGet fl =
+    case unFreelist fl of
+      (k, []) -> (k, MkFreelist (k+1, []))
+      (k, e : es) -> (e, MkFreelist (k, es))
+
+freePut :: [Int] -> Freelist -> Freelist
+freePut p fl = MkFreelist (k, p ++ es)
+  where
+    (k, es) = unFreelist fl
+
+freeMax :: Freelist -> Int
+freeMax (MkFreelist (k, _)) = k
+
+----------------------------------------------------------------------
 
 -- Convert a box to its explicit representation
 process_box :: Box -> ExplicitOrder
@@ -93,7 +121,7 @@ topsort jnts =
       order vertices
 
 -- Helper function. Updated liveness w.r.t. a gen/kill set.
-update_liveness :: [Wire] -> [Wire] -> [(Wire, Int)] -> [Int] -> ([(Wire,Int)], [Int])
+update_liveness :: [Wire] -> [Wire] -> [(Wire, Int)] -> Freelist -> ([(Wire,Int)], Freelist)
 update_liveness genset killset liveelements freelist =
     let
         remove [] es fl = (es, fl)
@@ -101,25 +129,25 @@ update_liveness genset killset liveelements freelist =
             let
                 culprits = [n | (w, n) <- es, e == w]
             in
-              remove rest (filter (\(w, _) -> w /= e) es) (culprits ++ fl)
+              remove rest (filter (\(w, _) -> w /= e) es) (freePut culprits fl)
         -- Gather liveness not containing the numbers we killed
         (killed, freelist') =
             remove killset liveelements freelist
-        -- If we need a new position, we can use max_num which is the largest
-        -- number amongst the killed
-        max_num = foldl1 max $ fmap snd killed
         -- Add generated wires. If we need something, we take it from the freelist
         -- first
-        add _ fl [] es = (es, fl)
-        add n [] (e : rest) es = add (n+1) [] rest ((e, n+1) : es)
-        add n (free : slots) (e : rest) es = add n slots rest ((e, free) : es)
+        add fl [] es = (es, fl)
+        add fl (e : rest) es = add fl' rest ((e, n) : es)
+            where
+              (n, fl') = freeGet fl
     in
-      add max_num freelist' genset killed
+      add freelist' genset killed
 
 -- Analyze liveness for an explicitly ordered representation
-liveness_analyze :: [(Wire, Int)] -> [Int] -> [ExplicitOrder] -> [ExplicitOrder]
-liveness_analyze _ _ [] = []
-liveness_analyze l fl (b : rest) = b {live = updated_live } : (liveness_analyze updated_live fl' rest)
+liveness_analyze :: [(Wire, Int)] -> Freelist -> [ExplicitOrder] -> [ExplicitOrder]
+                 -> (Freelist, [ExplicitOrder])
+liveness_analyze _ fl [] accum = (fl, reverse accum)
+liveness_analyze l fl (b : rest) accum =
+  liveness_analyze updated_live fl' rest (b {live = updated_live } : accum)
     where
       find_gen [] = []
       find_gen (e : es) =
