@@ -13,13 +13,11 @@ Task 2a: Mikkel has looked at Parsec.
 Task 2b: We need 2 things here:
      New TODO:
 
-     * Use the generated liveness information to build up the EOM
-       start end end code. When this is done, it should be easier
-       to render the contents of boxes.
-
-     * Update binding code of rendering. Mostly straightforward.
-
      * Write the compiler. Easy I hope.
+     ** To write the compiler, start by looking at the language source.
+     ** Then begin adding the missing parts systematically. Write them down here first,
+        before attempting to write the compilation steps for them.
+
 
 
 
