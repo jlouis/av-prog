@@ -3,7 +3,6 @@ module Interpreter (
                    )
 where
 
-import State
 import SequenceState
 import Decode
 import Data.Bits
@@ -11,7 +10,6 @@ import Data.Word
 import Data.Array.IO
 import Data.Sequence (Seq)
 import Char
-import Numeric (showHex)
 
 import qualified Register as R
 
@@ -34,10 +32,8 @@ interpOpBin s rs op_ptr op1 op2 reg f = do
   R.writeReg rs reg (f op1' op2')
   interp s rs (op_ptr+1)
 
-pad orig = (take (8-(length orig)) (repeat '0')) ++ orig
-
 interp :: State s => s -> R.Reg -> Word32 -> IO ()
-interp s rs (-1)   = error "Wrapped around!"
+interp _ _ (-1)    = error "Wrapped around!"
 interp s rs op_ptr =
     let binop = interpOpBin s rs op_ptr
     in
