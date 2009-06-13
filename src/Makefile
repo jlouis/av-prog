@@ -3,6 +3,7 @@ UMZFILE=data/codex.umz
 SANDMARK=data/sandmark.umz
 DECRYPTOR=data/decrypt.command
 HAX0R=data/hack-attempt.input
+MULT=data/multAttempt.input
 PUBCHECK=data/pubcheck.input
 ADVISE_ARITH=data/advise.arith.input
 
@@ -37,6 +38,9 @@ decrypt: build
 
 hack: build
 	./uvm ${UMFILE} < ${HAX0R}
+
+mult: build
+	./uvm ${UMFILE} < ${MULT}
 
 pubcheck: build
 	./uvm ${UMFILE} < ${PUBCHECK}
