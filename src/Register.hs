@@ -7,7 +7,6 @@ module Register (
 where
 
 import Data.Word
-import Data.Array.MArray
 import Data.Array.IO
 
 {- Register sets as fast arrays -}
