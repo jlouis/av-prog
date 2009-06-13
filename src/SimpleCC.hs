@@ -68,6 +68,11 @@ compileE env (Contz exp cz cs) =
       ccs' <- return $ ccs { b_west = wire_e }
       mkBoxGrp (b_west c1) (b_north c1) (b_east ccz') (b_south ccs')
                [c1, ccz, ccs, b]
+compileE env (Call str ast) =
+    do
+      cx <- compileE env ast
+      b <- mkBox (Use str)
+      join_ew cx b
 
 compileF :: EnvValue -> Ast -> Mod
 compileF env ast = mkModule "main" ret
