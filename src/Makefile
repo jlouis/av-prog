@@ -6,7 +6,7 @@ HAX0R=data/hack-attempt.input
 PUBCHECK=data/pubcheck.input
 ADVISE_ARITH=data/advise.arith.input
 
-GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all -Wall
+GHCFLAGS+=-O2 -fglasgow-exts -XFlexibleInstances -auto-all -W
 
 .phony: all build run clean two
 all: build build-simple
