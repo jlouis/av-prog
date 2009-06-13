@@ -308,9 +308,10 @@ renderbox max_pos (crate@(EOB _ _ _)) =
        [line0 cw]
 
 render_eo :: [ExplicitOrder] -> [String]
-render_eo bxs = join $ fmap (renderbox (freeMax fl)) analyzed_boxes
+render_eo bxs = join $ fmap rndr analyzed_boxes
     where
       (fl, analyzed_boxes) = liveness_analyze [] emptyFreelist bxs []
+      rndr = renderbox (freeMax fl)
       join x = fmap mconcat $ transpose x
 
 create_module_boxes :: String -> Wire -> Wire -> [Wire] -> [ExplicitOrder]
@@ -332,19 +333,8 @@ render_module (Module bxs nam inp_n inp_w out_e) =
         [start_box, end_box] = create_module_boxes nam inp_n inp_w out_e
         eobs = explicit_wiring boxs
         rendered = render_eo ([start_box] ++ eobs ++ [end_box])
-        module_width = foldl1 max $ fmap length rendered
-        name_width = length nam
-        north_input = False -- TODO: Fix me.
-        l0 = mconcat [",", modhrule (name_width + module_width + 2),","]
-        l1 = mconcat [":", nam, " ", if north_input then "|" else " ",
-                         spaces (module_width), ":"]
-        -- Add the line here to get a west input
-        -- Add the lines here to start connecting via the rendered lines
-        -- Add the lines here to add exits from the box
-        lf = mconcat [",", modhrule (name_width + module_width + 2), ","]
-
     in
-      mconcat [l0, l1, lf]
+      mconcat rendered
 
 render :: [Mod] -> String -> String
 render modules stdlib = mconcat [rendered_mods, stdlib]
