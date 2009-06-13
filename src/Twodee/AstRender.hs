@@ -55,35 +55,40 @@ boxhrule = fillline "="
 wireline :: Int -> String
 wireline = fillline "-"
 
-line1 :: Bool -> Int -> String
-line1 n cw = mconcat ["    ", if n then "++" else "  ", spaces (cw+2)]
+line0 :: Int -> String
+line0 w = modhrule (w+7)
+
+line1 :: Int -> String
+line1 w = spaces (w+7)
 
 line2 :: Bool -> Int -> String
-line2 n cw = mconcat ["   ", if n then "++v" else "   ", spaces (cw+2)]
+line2 n cw = mconcat ["   ", if n then "++" else "  ", spaces (cw+2)]
 
 line3 :: Bool -> Int -> String
-line3 n cw = mconcat ["  ", if n then "++*" else "  *", boxhrule cw,
-                      "*  "]
+line3 n cw = mconcat [" ", if n then "+-+v" else "    ", spaces (cw+2)]
 
-line4 :: Bool -> Bool -> Bool -> Command -> String
-line4 n e w c = mconcat [if w then "+" else " ",
+line4 :: Bool -> Int -> String
+line4 n cw = mconcat [if n then " | *" else "   *", boxhrule cw, "*  "]
+
+line5 :: Bool -> Bool -> Bool -> Command -> String
+line5 n e w c = mconcat [if w then "+" else " ",
                          if w then
                              if n then "#>" else "->"
                          else "  ",
                          "!", show c, "!",
                          if e then "-+" else "  "]
 
-line5 :: Bool -> Bool -> Bool -> Int -> String
-line5 n e w cw = mconcat [if w then "|" else " ",
+line6 :: Bool -> Bool -> Bool -> Int -> String
+line6 n e w cw = mconcat [if w then "|" else " ",
                          if n then "|" else " ",
                          " ",
                          "*", boxhrule cw, "* ",
                          if e then "|" else " "]
 
-line6 :: Bool -> Bool -> Bool -> Bool -> Int -> String
-line6 n e w s cw = mconcat [if w then "|" else " ",
+line7 :: Bool -> Bool -> Bool -> Bool -> Int -> String
+line7 n e w s cw = mconcat [if w then "|" else " ",
                             if n then "|" else " ",
-                            "  ", spaces (cw-1),
+                            spaces (cw+1),
                             if s then "+-+" else "   ",
                             if e then "|" else " "]
 
@@ -157,12 +162,14 @@ renderbox (crate@(EOB _ _ _)) =
         circuitry = wires crate
         positions = live crate
     in
-      Just $ [line1 n cw,
+      Just $ [line0 cw,
+              line1 cw,
               line2 n cw,
               line3 n cw,
-              line4 n e w ctnts,
-              line5 n e w cw,
-              line6 n e w s cw] ++
+              line4 n cw,
+              line5 n e w ctnts,
+              line6 n e w cw,
+              line7 n e w s cw] ++
              create_lines cw circuitry positions n e w s
 
 render_eo :: [ExplicitOrder] -> [String]
