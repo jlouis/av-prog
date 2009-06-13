@@ -8,9 +8,10 @@
 
 \usepackage{semantic}
 \author{Jesper Louis
-  Andersen\\jesper.louis.andersen@gmail.com\\140280-2029
-  \and
-  Mikkel Kj\ae r Jensen \\ kjmikkel@gmail.com\\250185-1747}
+  Andersen\\jesper.louis.andersen@gmail.com\\140280-2029,
+  Mikkel Kj\ae r Jensen \\ kjmikkel@gmail.com\\250185-1747 \and
+  Johan Sejr Brinch Nielsen \\ zerrez@diku.dk \\ 260886-2547
+}
 \title{PIRC - Exam}
 \date{\today}
 
@@ -30,10 +31,26 @@
 
 \input{introduction}
 \input{parser}
-\input{features}
+%\input{features}
 \input{task-1}
 %\input{tooling}
 %\input{janus-syntax}
 %\input{syntax}
 \bibliography{biblio}
+
+\appendix
+
+\clearpage
+\section{Source}
+\lstinputlisting{../src/Twodee/Ast.hs}
+\clearpage
+\lstinputlisting{../src/Twodee/AstExplicit.hs}
+\clearpage
+\lstinputlisting{../src/Twodee/AstRender.hs}
+\clearpage
+\lstinputlisting{../src/Twodee/Layout.hs}
+\clearpage
+\lstinputlisting{../src/Twodee/Main.hs}
+
+
 \end{document}
