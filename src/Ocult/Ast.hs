@@ -1,11 +1,14 @@
-module Ocult.Ast(
-                Term(..),
-                Pattern(..),
-                Rule(..),
-                Program,
-                docPattern,
-                docProgram
-) where
+module Ocult.Ast(Term(..),
+                 Pattern(..),
+                 Rule(..),
+                 Program,
+                 docPattern,
+                 docProgram,
+                 numberize,
+                 numberPrg,
+                 numberRule,
+                 numberPat)
+where
 
 import Control.Monad.State
 import Data.Map as M
