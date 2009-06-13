@@ -167,7 +167,18 @@ create_start_lines :: Bool -> Bool -> [WireInfo] -> Int -> [String]
 create_start_lines n w wires max_pos = [] -- TODO
 
 create_end_lines :: [WireInfo] -> Position -> Int -> [String]
-create_end_lines wires p max_pos = [] -- TODO
+create_end_lines wires p max_pos =
+    let
+        ordered_wires = order_wires wires p
+        process k [] accum = reverse ((++ accum) $ take (max_pos - k) $ repeat ":")
+        process k ((pos, wr) : rest) accum =
+            if k == max_pos then reverse accum
+            else if k < pos then
+                     process (k+1) ((pos, wr) : rest) (":" : accum)
+                 else
+                     process (k+1) rest ("-" : accum)
+    in
+      process 0 ordered_wires []
 
 renderbox_start :: Int -> Position -> String -> [WireInfo] -> [String]
 renderbox_start max_pos pos name wires =
