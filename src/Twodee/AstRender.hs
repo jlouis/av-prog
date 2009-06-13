@@ -170,7 +170,8 @@ renderbox (crate@(EOB _ _ _)) =
               line5 n e w ctnts,
               line6 n e w cw,
               line7 n e w s cw] ++
-             create_lines cw circuitry positions n e w s
+             create_lines cw circuitry positions n e w s ++
+             [line0 cw]
 
 render_eo :: [ExplicitOrder] -> [String]
 render_eo bxs = join $ catMaybes $ fmap renderbox analyzed_boxes
