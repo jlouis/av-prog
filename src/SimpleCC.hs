@@ -1,6 +1,7 @@
 module SimpleCC (compile)
 where
 
+import Data.Maybe (fromJust)
 import Control.Monad.State hiding (join)
 
 import Simple.Ast
@@ -21,31 +22,45 @@ new = do
   put (count+1, outlist)
   return count
 
-compileE :: Ast -> Supply Box
-compileE Zero = mkBox (Send1 (Inr Unit) E)
-compileE (Succ x) =
+type VEnvironment = [(String, Ast)]
+env_to_list :: EnvValue -> VEnvironment
+env_to_list EnvEnd = []
+env_to_list (Env (Const str ast) rest) =
+    (str, ast) : (env_to_list rest)
+
+envL = lookup
+
+compileE :: VEnvironment -> Ast -> Supply Box
+compileE _ Zero = mkBox (Send1 (Inr Unit) E)
+compileE env (Succ x) =
     do
-      cx <- compileE x
+      cx <- compileE env x
       b <- mkBox (Send1 (Inl (Iface W)) E)
       join_ew cx b
-compileE (Plus e1 e2) =
+compileE env (Plus e1 e2) =
     do
-      c1 <- compileE e1
-      c2 <- compileE e2
+      c1 <- compileE env e1
+      c2 <- compileE env e2
       b <- (mkBox (Use "plus"))
       join c1 c2 b
-compileE (Mul e1 e2) =
+compileE env (Mul e1 e2) =
     do
-      c1 <- compileE e1
-      c2 <- compileE e2
+      c1 <- compileE env e1
+      c2 <- compileE env e2
       b <- (mkBox (Use "mul"))
       join c1 c2 b
+compileE env (Lookup s) = do
+    term <- return $ fromJust $ envL s env
+    cx <- compileE env term
+    b <- mkBox (Send1 (Iface W) E)
+    join_ew cx b
 
-compile :: Ast -> Mod
-compile ast = mkModule "main" ret
+compile :: EnvValue -> Ast -> Mod
+compile env ast = mkModule "main" ret
   where
+    env' = env_to_list env
     ret = do
-      x <- compileE ast
+      x <- compileE env' ast
       output_e x
 
 ----------------------------------------------------------------------
