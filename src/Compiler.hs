@@ -1,5 +1,6 @@
 -- The compiler from OCult to Twodee
-module Compiler ()
+module Compiler (compileInt,
+                 compileTerm)
 where
 
 import Twodee.Ast

@@ -1,16 +1,18 @@
-module Ocult.Ast(
-                Term(..),
-                Pattern(..),
-                Rule(..),
-                Program,
-                docPattern,
-                docProgram
-) where
+module Ocult.Ast(Term(..),
+                 Pattern(..),
+                 Rule(..),
+                 Program,
+                 docPattern,
+                 docProgram,
+                 numberize,
+                 numberPrg,
+                 numberRule,
+                 numberPat)
+where
 
 import Control.Monad.State
-import Data.List
 import Data.Map as M
-
+import Data.List
 import Text.PrettyPrint
 
 -- Terms are the objects the language manipulates

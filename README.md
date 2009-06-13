@@ -13,17 +13,13 @@ Task 2a: Mikkel has looked at Parsec.
 Task 2b: We need 2 things here:
      New TODO:
 
-     * Figure out the representation of modules w.r.t. the explicitorder.
-       DRAW THIS ON PAPER.
+     * Use the generated liveness information to build up the EOM
+       start end end code. When this is done, it should be easier
+       to render the contents of boxes.
 
-     * Build a renderer for the module.
+     * Update binding code of rendering. Mostly straightforward.
 
-     * Correct the way we introduce a module from the perspective of compilation.
+     * Write the compiler. Easy I hope.
 
-     * Compile a subset of our language.
-
-     * TEST
-
-     * Iteratively extend the compilation to more parts.
 
 

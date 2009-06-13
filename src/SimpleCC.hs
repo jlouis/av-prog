@@ -7,6 +7,7 @@ import Simple.Ast
 import Simple.Parse
 
 import Twodee.Ast
+import Twodee.AstRender
 
 -- Compilation from Simple values to 2d values. Not exhaustive.
 compileV Zero = Inr Unit
@@ -20,7 +21,7 @@ new = do
   put (count+1, outlist)
   return count
 
-mkBox :: Command -> Supply Joint
+mkBox :: Command -> Supply Box
 mkBox c = do
   wn <- new
   we <- new
@@ -39,7 +40,7 @@ output w = do
   (count, outs) <- get
   put (count, w : outs)
 
-mkModule :: String -> Supply Joint -> Mod
+mkModule :: String -> Supply Box -> Mod
 mkModule n jnt =
     Module { mod_boxes = [j],
              name = n,
@@ -56,7 +57,7 @@ mkBoxGrp w n e s grp =
                           b_east  = e,
                           b_west  = w }
 
-compile :: Ast -> Supply Joint
+compile :: Ast -> Supply Box
 compile Zero = mkBox (Send1 (Inr Unit) E)
 compile (Succ x) =
     do
@@ -76,13 +77,13 @@ compile (Mul e1 e2) =
       b <- (mkBox (Use "mul"))
       join c1 c2 b
 
-join_ew :: Joint -> Joint -> Supply Joint
+join_ew :: Box -> Box -> Supply Box
 join_ew b1 b2 = do
   wire <- return $ b_east b1
   b2' <- return $ b2 { west = wire }
   mkBoxGrp (b_west b1) (north b2) (east b2) (south b2) [b1, b2']
 
-join :: Joint -> Joint -> Joint -> Supply Joint
+join :: Box -> Box -> Box -> Supply Box
 join wi ni box = do
   wire1 <- return $ b_east wi
   wire2 <- return $ b_north ni
