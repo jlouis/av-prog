@@ -4,15 +4,15 @@ where
 import Control.Monad.State hiding (join)
 
 import Simple.Ast
-import Simple.Parse
 
 import Twodee.Ast
-import Twodee.AstRender
 
 -- Compilation from Simple values to 2d values. Not exhaustive.
-compileV Zero = Inr Unit
-compileV (Succ e) = Inl (compileV e)
+--compileV Zero = Inr Unit
+--compileV (Succ e) = Inl (compileV e)
 
+----------------------------------------------------------------------
+-- Name supplies for modules
 type Supply a = State (Int, [Int]) a
 
 new :: Supply Int
@@ -21,20 +21,51 @@ new = do
   put (count+1, outlist)
   return count
 
-mkBox :: Command -> Supply Box
-mkBox c = do
-  wn <- new
-  we <- new
-  ww <- new
-  ws <- new
-  return $ JBox { command = c,
-                  north = wn,
-                  east = we,
-                  west = ww,
-                  south = ws }
+compileE :: Ast -> Supply Box
+compileE Zero = mkBox (Send1 (Inr Unit) E)
+compileE (Succ x) =
+    do
+      cx <- compileE x
+      b <- mkBox (Send1 (Inl (Iface W)) E)
+      join_ew cx b
+compileE (Plus e1 e2) =
+    do
+      c1 <- compileE e1
+      c2 <- compileE e2
+      b <- (mkBox (Use "plus"))
+      join c1 c2 b
+compileE (Mul e1 e2) =
+    do
+      c1 <- compileE e1
+      c2 <- compileE e2
+      b <- (mkBox (Use "mul"))
+      join c1 c2 b
 
+compile :: Ast -> Mod
+compile ast = mkModule "main" ret
+  where
+    ret = do
+      x <- compileE ast
+      output_e x
+
+----------------------------------------------------------------------
+-- Helpers for box manipulation
+----------------------------------------------------------------------
+
+{-
+mod_in_n :: Int
 mod_in_n = 0
+
+mod_in_w :: Int
 mod_in_w = 1
+-}
+
+output_e x =
+    do
+      case x of
+        JBox _ _ _ _ _ -> output $east x
+        JBox_Group _ _ _ _ _ -> output $ b_east x
+      return x
 
 output w = do
   (count, outs) <- get
@@ -50,32 +81,24 @@ mkModule n jnt =
   where
     (j, (_, outs)) = (runState jnt) (2, [])
 
+mkBox :: Command -> Supply Box
+mkBox c = do
+  wn <- new
+  we <- new
+  ww <- new
+  ws <- new
+  return $ JBox { command = c,
+                  north = wn,
+                  east = we,
+                  west = ww,
+                  south = ws }
+
 mkBoxGrp w n e s grp =
     return $ JBox_Group { boxes = grp,
                           b_north = n,
                           b_south = s,
                           b_east  = e,
                           b_west  = w }
-
-compile :: Ast -> Supply Box
-compile Zero = mkBox (Send1 (Inr Unit) E)
-compile (Succ x) =
-    do
-      cx <- compile x
-      b <- mkBox (Send1 (Inl (Iface W)) E)
-      join_ew cx b
-compile (Plus e1 e2) =
-    do
-      c1 <- compile e1
-      c2 <- compile e2
-      b <- (mkBox (Use "plus"))
-      join c1 c2 b
-compile (Mul e1 e2) =
-    do
-      c1 <- compile e1
-      c2 <- compile e2
-      b <- (mkBox (Use "mul"))
-      join c1 c2 b
 
 join_ew :: Box -> Box -> Supply Box
 join_ew b1 b2 = do
