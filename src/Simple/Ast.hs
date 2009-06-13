@@ -5,12 +5,13 @@ module Simple.Ast (Ast(..), EnvValue(..), ConstValue(..), FuncEnvValue(..), Func
 where
 
 import Data.List
-import Text.PrettyPrint
-import Data.Map as M
-import Control.Monad.Reader.Class
 
 -- Syntax of the small language
-data Ast = Zero | Succ Ast | Plus Ast Ast | Mul Ast Ast | Lookup String | Call String Ast | Contz Ast Ast Ast | Pre Ast
+data Ast = Zero | Succ Ast
+         | Plus Ast Ast | Mul Ast Ast
+         | Lookup String | Call String Ast
+         | Contz Ast Ast Ast
+         | Pre Ast
 
 -- The environment
 data EnvValue = Env ConstValue EnvValue | EnvEnd
@@ -32,8 +33,8 @@ eval (Plus (Succ n) e) env fkt = Succ (eval (Plus n e) env fkt)
 eval (Plus e1 e2) env fkt = eval (Plus (eval e1 env fkt) (eval e2 env fkt)) env fkt
 
 -- If either is 0, then the result is 0
-eval (Mul Zero e) _ _ = Zero
-eval (Mul e Zero) _ _ = Zero
+eval (Mul Zero _) _ _ = Zero
+eval (Mul _ Zero) _ _ = Zero
 
 -- If one of them is 1, then the result is the other
 eval (Mul (Succ Zero) e) env fkt = eval e env fkt
@@ -47,7 +48,7 @@ eval (Mul (Succ e) n) env fkt = eval (Plus n (eval (Mul e n) env fkt)) env fkt
 eval (Mul e1 e2) env fkt = eval (Mul (eval e1 env fkt) (eval e2 env fkt)) env fkt
 
 -- Lookup mechanism
-eval (Lookup str) env fkt = envLookup str env env fkt 
+eval (Lookup str) env fkt = envLookup str env env fkt
 eval (Call str input) env fkt = fktCall str env (eval input env fkt) fkt fkt
 eval (Contz Zero first _) env fkt = eval first env fkt
 eval (Contz (Succ k) _ second) env fkt = eval second (Env (Const "k"  k) env) fkt
@@ -57,14 +58,14 @@ eval (Contz check first second) env fkt = eval (Contz (eval check env fkt) first
 --eval (Pre e) env fkt = eval (Pre (eval e env fkt)) env fkt
 
 envLookup _ EnvEnd _ _ = Zero
-envLookup str (Env (Const id calc) env) constantEnv fkt = 
-                                               if str == id 
+envLookup str (Env (Const id calc) env) constantEnv fkt =
+                                               if str == id
                                                then eval calc constantEnv fkt
                                                else envLookup str env constantEnv fkt
 fktCall _ _ _ FuncEnd _ = Zero
-fktCall str env input (FuncEnv (Func id ast localEnv) funcValue) constantFkt =
+fktCall str env input (FuncEnv (Func id ast _localEnv) funcValue) constantFkt =
                                                if str == id
-                                               then eval ast (Env (Const "input" input) env) constantFkt 
+                                               then eval ast (Env (Const "input" input) env) constantFkt
                                                else fktCall str env input funcValue constantFkt
 
 
@@ -72,19 +73,8 @@ fktCall str env input (FuncEnv (Func id ast localEnv) funcValue) constantFkt =
 -- Program mechanism
 start ast env = eval ast env
 
-class (Functor f) => Applicative f where
-   pure  :: a -> f a
-   (<*>) :: f (a -> b) -> f a -> f b
-
-
---instance Applicative ((->) EnvValue FuncEnvValue) where
-instance Applicative ((->) env) where
-    pure x = \env  -> x
-    ef <*> ex = \env -> (ef env)(ex env)
-
-
 astPrint :: String -> Ast -> String
-astPrint str Zero = "z"
+astPrint _ Zero = "z"
 astPrint str (Succ e) = str ++ "s " ++ result where
     result = astPrint str e
 astPrint str (Plus e1 e2) = str ++ r1 ++ " + " ++ r2 where
@@ -96,7 +86,7 @@ astPrint str (Mul e1 e2) = str ++ r1 ++ " * " ++ r2 where
 astPrint str (Lookup id) = str ++ "Lookup: " ++ id
 
 envPrint :: String -> EnvValue -> String
-envPrint str EnvEnd = "End; "
+envPrint _ EnvEnd = "End; "
 envPrint str (Env const env) = str ++ r1 ++ r2 where
     r1 = constPrint "" const;
     r2 = envPrint "" env
