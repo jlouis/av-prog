@@ -1,5 +1,6 @@
 module Twodee.AstExplicit (WireInfo(..),
                            ExplicitOrder(..),
+                           ModType(..),
                            emptyFreelist,
                            freeMax,
                            liveness_analyze,
@@ -34,10 +35,14 @@ wirenum w =
       Start_S k -> k
 
 -- This datatype orders wires explicitly
+data ModType = StartMod | EndMod
+
 data ExplicitOrder = EOB { contents :: Command,
                            wires :: [WireInfo],
                            live :: [(Wire, Int)] }
-                   | EOM { wires :: [WireInfo] }
+                   | EOM { wires :: [WireInfo],
+                           mod_name :: String,
+                           ty :: ModType}
 
 
 ----------------------------------------------------------------------
@@ -169,7 +174,7 @@ liveness_analyze l fl (b : rest) accum =
 -- First a number of helpers are declared. Then they are used.
 prune_kill :: [ExplicitOrder] -> Set.Set Int -> [ExplicitOrder]
 prune_kill [] _ = []
-prune_kill (w@(EOM wrs) : rest) pruneset = w { wires = filtered} : (prune_kill rest pruneset)
+prune_kill (w@(EOM wrs _ _) : rest) pruneset = w { wires = filtered} : (prune_kill rest pruneset)
   where
     filtered = filter (\wi -> not $ Set.member (wirenum wi) pruneset) wrs
 prune_kill (w@(EOB _ wrs _) : rest) pruneset = w { wires = filtered } : (prune_kill rest pruneset)
@@ -182,7 +187,7 @@ search_wire wn ((EOB _ wrs _) : rest) =
     if wn `elem` (fmap wirenum wrs)
     then True
     else search_wire wn rest
-search_wire wn ((EOM wrs) : rest) =
+search_wire wn ((EOM wrs _ _) : rest) =
     if wn `elem` (fmap wirenum wrs)
     then True
     else search_wire wn rest
@@ -192,7 +197,7 @@ mkPruneSet [] s = s
 mkPruneSet (wr : rest) s =
     case wr of
       EOB _ wrs _ -> p wrs
-      EOM wrs     -> p wrs
+      EOM wrs _ _ -> p wrs
   where
     p wrs = mkPruneSet rest s'
       where
