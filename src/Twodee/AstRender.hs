@@ -106,10 +106,44 @@ order_wires wrs positions =
           findpos wire =
               (fromJust $ lookup (wirenum wire) positions, wire)
 
-create_lines :: Int -> [WireInfo] -> Position -> Bool -> Bool -> Bool -> Bool -> [String]
-create_lines cw wrs p n1 e1 w1 s1 =
+find_end :: [WireInfo] -> Maybe WireInfo
+find_end [] = Nothing
+find_end ((End_W k) : rest) = Just (End_W k)
+find_end ((End_N k) : rest) = Just (End_N k)
+find_end (_ : rest) = find_end rest
+
+find_start :: [WireInfo] -> Maybe WireInfo
+find_start [] = Nothing
+find_start ((Start_E k) : rest) = Just (Start_E k)
+find_start ((Start_S k) : rest) = Just (Start_S k)
+find_start (_ : rest) = find_start rest
+
+create_lines :: Int -> Int -> [WireInfo] -> Position -> Bool -> Bool -> Bool -> Bool -> [String]
+create_lines max_pos cw wrs p n e w s =
     let
         ordered_wires = order_wires wrs p
+        process _ _ _ _ k [] accum = take (max_pos - k) $ repeat line
+            where
+              line = spaces (cw+7)
+        process n e w s k ((pos, wrs) : rest) accum =
+            if k == max_pos then reverse accum
+            else if k < pos then
+                     let line = mconcat [if w then "|" else " ",
+                                         if n then "|" else " ",
+                                         spaces (cw+3),
+                                         if s then "|" else " ",
+                                         if e then "|" else " "]
+                     in
+                       process n e w s (k+1) ((pos, wrs) : rest) (line : accum)
+                 else
+                     let
+                         ending = find_end wrs
+                         starting = find_start wrs
+                         (n1, e1, w1, s1) = (n, e, w, s)
+                         line = ""
+                     in
+                       process n1 e1 w1 s1 (k+1) rest (line : accum)
+{-
         process_wire [] _ _ _ _ accum = reverse accum
         process_wire (wire : rest) n e w s accum =
             case snd wire of
@@ -147,9 +181,9 @@ create_lines cw wrs p n1 e1 w1 s1 =
                                     spaces (cw+3),
                                     if s then "|" else " ",
                                     if e then "|" else " "]
+-}
     in
-      []
---      process_wire ordered_wires n1 e1 w1 s1 []
+      process n e w s 0 ordered_wires []
 
 start_line0 :: String -> Bool -> String
 start_line0 name n = mconcat [",", modhrule $ length name + 1,
@@ -163,11 +197,11 @@ start_line :: String -> Bool -> String
 start_line name n = mconcat [":", spaces $ length name + 1,
                              if n then "|" else " "]
 
-create_start_lines :: Bool -> Bool -> [WireInfo] -> Int -> Position -> Int -> [String]
-create_start_lines n w wires max_pos p nl =
+create_start_lines :: Bool -> [WireInfo] -> Int -> Position -> Int -> [String]
+create_start_lines n wires max_pos p nl =
     let
         ordered_wires = order_wires wires p
-        process n k [] accum = reverse ((++ accum) $ take (max_pos - k) $ repeat line)
+        process _ k [] accum = reverse ((++ accum) $ take (max_pos - k) $ repeat line)
             where
               line = mconcat [":", spaces (nl+2)]
         process n k ((pos, wr) : rest) accum =
@@ -210,7 +244,6 @@ renderbox_start :: Int -> Position -> String -> [WireInfo] -> [String]
 renderbox_start max_pos pos name wires =
     let
         n = has_north_input wires
-        w = has_west_input wires
     in
        [start_line0 name n,
         start_line1 name n,
@@ -220,7 +253,7 @@ renderbox_start max_pos pos name wires =
         start_line name n,
         start_line name n, -- 6
         start_line name n] ++
-       create_start_lines n w wires max_pos pos (length name) ++
+       create_start_lines n wires max_pos pos (length name) ++
        [start_line0 name n]
 
 renderbox_end :: Int -> Position -> [WireInfo] -> [String]
@@ -231,7 +264,7 @@ renderbox_end max_pos pos wires = [",",
                                   [","]
 
 renderbox :: Int -> ExplicitOrder -> [String]
-renderbox max_pos (crate@(EOM wires name ty liveness)) =
+renderbox max_pos ((EOM wires name ty liveness)) =
     case ty of
       StartMod -> renderbox_start max_pos liveness name wires
       EndMod   -> renderbox_end   max_pos liveness wires
@@ -254,7 +287,7 @@ renderbox max_pos (crate@(EOB _ _ _)) =
        line5 n e w ctnts,
        line6 n e w cw,
        line7 n e w s cw] ++
-      create_lines cw circuitry positions n e w s ++
+      create_lines max_pos cw circuitry positions n e w s ++
        [line0 cw]
 
 render_eo :: [ExplicitOrder] -> [String]
