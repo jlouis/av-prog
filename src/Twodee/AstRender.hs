@@ -92,7 +92,9 @@ line7 n e w s cw = mconcat [if w then "|" else " ",
                             if s then "+-+" else "   ",
                             if e then "|" else " "]
 
-order_wires :: [WireInfo] -> [(Wire, Int)] -> [(Int, [WireInfo])]
+type Position = [(Wire, Int)]
+
+order_wires :: [WireInfo] -> Position -> [(Int, [WireInfo])]
 order_wires wrs positions =
     collect $ groupBy (\(p1, _) -> \(p2, _) -> p1 == p2) $ sort poslist
         where
@@ -104,7 +106,7 @@ order_wires wrs positions =
           findpos wire =
               (fromJust $ lookup (wirenum wire) positions, wire)
 
-create_lines :: Int -> [WireInfo] -> [(Wire, Int)] -> Bool -> Bool -> Bool -> Bool -> [String]
+create_lines :: Int -> [WireInfo] -> Position -> Bool -> Bool -> Bool -> Bool -> [String]
 create_lines cw wrs p n1 e1 w1 s1 =
     let
         ordered_wires = order_wires wrs p
@@ -164,11 +166,11 @@ start_line name n = mconcat [":", spaces $ length name + 1,
 create_start_lines :: Bool -> Bool -> [WireInfo] -> Int -> [String]
 create_start_lines n w wires max_pos = [] -- TODO
 
-create_end_lines :: [WireInfo] -> Int -> [String]
-create_end_lines wires max_pos = [] -- TODO
+create_end_lines :: [WireInfo] -> Position -> Int -> [String]
+create_end_lines wires p max_pos = [] -- TODO
 
-renderbox_start :: Int -> String -> [WireInfo] -> [String]
-renderbox_start max_pos name wires =
+renderbox_start :: Int -> Position -> String -> [WireInfo] -> [String]
+renderbox_start max_pos pos name wires =
     let
         n = has_north_input wires
         w = has_west_input wires
@@ -184,18 +186,18 @@ renderbox_start max_pos name wires =
        create_start_lines n w wires max_pos ++
        [start_line0 name n]
 
-renderbox_end :: Int -> [WireInfo] -> [String]
-renderbox_end max_pos wires = [",",
-                               ":", ":", ":", -- 3
-                               ":", ":", ":", ":"] ++
-                              create_end_lines wires max_pos ++
-                              [","]
+renderbox_end :: Int -> Position -> [WireInfo] -> [String]
+renderbox_end max_pos pos wires = [",",
+                                   ":", ":", ":", -- 3
+                                   ":", ":", ":", ":"] ++
+                                  create_end_lines wires pos max_pos ++
+                                  [","]
 
 renderbox :: Int -> ExplicitOrder -> [String]
-renderbox max_pos (crate@(EOM wires name ty)) =
+renderbox max_pos (crate@(EOM wires name ty liveness)) =
     case ty of
-      StartMod -> renderbox_start max_pos name wires
-      EndMod   -> renderbox_end   max_pos wires
+      StartMod -> renderbox_start max_pos liveness name wires
+      EndMod   -> renderbox_end   max_pos liveness wires
 renderbox max_pos (crate@(EOB _ _ _)) =
     let
         n = has_north_input $ wires crate
@@ -230,10 +232,12 @@ create_module_boxes n inp_n inp_w out_e = [start_box, end_box]
       -- Map the Start_S to the north input and the Start_E to the west input
       start_box = EOM { wires = [Start_S inp_n, Start_E inp_w],
                         mod_name = n,
-                        ty = StartMod }
+                        ty = StartMod,
+                        live = []}
       end_box   = EOM { wires = fmap End_W out_e,
                         mod_name = n,
-                        ty = EndMod }
+                        ty = EndMod,
+                        live = [] }
 
 render_module :: Mod -> String
 render_module (Module bxs nam inp_n inp_w out_e) =
