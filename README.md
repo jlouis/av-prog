@@ -17,5 +17,9 @@ Task 2b: We need 2 things here:
        start end end code. When this is done, it should be easier
        to render the contents of boxes.
 
+     * Update binding code of rendering. Mostly straightforward.
+
+     * Write the compiler. Easy I hope.
+
 
 
