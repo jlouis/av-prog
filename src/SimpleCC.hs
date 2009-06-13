@@ -1,4 +1,4 @@
-module SimpleCC (compile)
+module SimpleCC (compileF)
 where
 
 import Data.Maybe (fromJust)
@@ -49,14 +49,28 @@ compileE env (Mul e1 e2) =
       c2 <- compileE env e2
       b <- (mkBox (Use "mul"))
       join c1 c2 b
-compileE env (Lookup s) = do
-    term <- return $ fromJust $ envL s env
-    cx <- compileE env term
-    b <- mkBox (Send1 (Iface W) E)
-    join_ew cx b
+compileE env (Lookup s) =
+    do
+      term <- return $ fromJust $ envL s env
+      cx <- compileE env term
+      b <- mkBox (Send1 (Iface W) E)
+      join_ew cx b
+compileE env (Contz exp cz cs) =
+    do
+      c1 <- compileE env exp
+      ccz <- compileE env cz
+      ccs <- compileE env cs
+      b <- mkBox (Case (Iface W) S E)
+      grp <- join_ew c1 b
+      wire_e <- return $ b_east grp
+      wire_s <- return $ b_south grp
+      ccz' <- return $ ccz { b_west = wire_s }
+      ccs' <- return $ ccs { b_west = wire_e }
+      mkBoxGrp (b_west c1) (b_north c1) (b_east ccz') (b_south ccs')
+               [c1, ccz, ccs, b]
 
-compile :: EnvValue -> Ast -> Mod
-compile env ast = mkModule "main" ret
+compileF :: EnvValue -> Ast -> Mod
+compileF env ast = mkModule "main" ret
   where
     env' = env_to_list env
     ret = do
