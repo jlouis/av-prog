@@ -7,6 +7,8 @@ module Ocult.Ast(Term(..),
                  numberize,
                  numberPrg,
                  numberRule,
+                 findContext,
+                 patternSubst,
                  numberPat)
 where
 
@@ -19,7 +21,7 @@ import Text.PrettyPrint
 data Term a = TConst a | TApp (Term a) (Term a)
 
 -- Patterns are things we *MATCH* terms against and substitute by. A program defines these
-data Pattern a b = PConst a | PVar b | PApp (Pattern a b) (Pattern a b) | PSingleton String
+data Pattern a b = PConst a | PVar b | PApp (Pattern a b) (Pattern a b)
 
 -- A Rule defines a pattern to *MATCH* and a *REPLACEMENT* pattern.
 data Rule a b = Rl (Pattern a b) (Pattern a b)
@@ -76,7 +78,7 @@ instance (Show a, Show b) => Show (Program a b) where
 -- Look up the term in a context
 findContext :: Eq b => Context a b -> b -> Maybe (Term a)
 findContext context var =
-    find (\(v, tm) -> v == var) context >>= (return . snd)
+    find (\(v, _) -> v == var) context >>= (return . snd)
 
 -- Substitute a patterns variables with what is in a context.
 patternSubst :: Eq b => Context a b -> Pattern a b -> Term a

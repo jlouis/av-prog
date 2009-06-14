@@ -40,14 +40,14 @@ functions = do {
               }
               <|>
               do{
-                return FuncEnd 
+                return FuncEnd
               }
             }
 
 function :: Parser (Ast, EnvValue, String)
 function = do {
              whiteSpace;
-             name <- many1 letter; 
+             name <- many1 letter;
              whiteSpace;
              string "=>";
              whiteSpace;
@@ -55,7 +55,7 @@ function = do {
              ast <- op;
              return (ast, env, name)
            }
-           
+
 constStart :: Parser EnvValue
 constStart = do{
                whiteSpace;
@@ -76,24 +76,24 @@ constStart = do{
              }
 
 consts :: Parser EnvValue
-consts = do { 
+consts = do {
            c <- Simple.Parse.const;
-           do 
+           do
              {
                whiteSpace;
                try(string ",");
                whiteSpace;
                rest <- consts;
                return (Env c rest);
-             } 
-           <|> 
+             }
+           <|>
            do {
              return (Env c EnvEnd);
            }
          }
-           
+
 const :: Parser ConstValue
-const = do 
+const = do
   whiteSpace
   str <- many1 letter
   whiteSpace
@@ -154,17 +154,17 @@ lookUp = do {
            return (Lookup look);
          }
 
-opTest sign = 
+opTest sign =
       do {whiteSpace;
           try(string sign);
           whiteSpace;
          }
 
 table = [[tableOp (opTest "*") mul_expr AssocLeft],
-         [tableOp (opTest "+") (plus_expr) AssocLeft]] where 
-           tableOp s f assoc = Infix (do {try(s); return f}) assoc 
+         [tableOp (opTest "+") (plus_expr) AssocLeft]] where
+           tableOp s f assoc = Infix (do {try(s); return f}) assoc
 
-op = buildExpressionParser table expr     
+op = buildExpressionParser table expr
 
 parens :: Parser Ast -> Parser Ast
 parens exp = do

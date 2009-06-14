@@ -108,23 +108,28 @@ order_wires wrs positions =
 
 find_end :: [WireInfo] -> Maybe WireInfo
 find_end [] = Nothing
-find_end ((End_W k) : rest) = Just (End_W k)
-find_end ((End_N k) : rest) = Just (End_N k)
+find_end ((End_W k) : _) = Just (End_W k)
+find_end ((End_N k) : _) = Just (End_N k)
 find_end (_ : rest) = find_end rest
 
 find_start :: [WireInfo] -> Maybe WireInfo
 find_start [] = Nothing
-find_start ((Start_E k) : rest) = Just (Start_E k)
-find_start ((Start_S k) : rest) = Just (Start_S k)
+find_start ((Start_E k) : _) = Just (Start_E k)
+find_start ((Start_S k) : _) = Just (Start_S k)
 find_start (_ : rest) = find_start rest
+
+find_passthrough :: [WireInfo] -> Maybe WireInfo
+find_passthrough [] = Nothing
+find_passthrough ((PassThrough k) : _) = Just (PassThrough k)
+find_passthrough (_ : rest) = find_passthrough rest
 
 create_lines :: Int -> Int -> [WireInfo] -> Position -> Bool -> Bool -> Bool -> Bool -> [String]
 create_lines max_pos cw wrs p n e w s =
     let
         ordered_wires = order_wires wrs p
-        process _ _ _ _ k [] accum = take (max_pos - k) $ repeat line
-            where
-              line = spaces (cw+7)
+        process _ _ _ _ k [] accum = reverse
+                                     (take (max_pos - k) $ repeat (spaces (cw + 7))
+                                               ++ accum)
         process n e w s k ((pos, wrs) : rest) accum =
             if k == max_pos then reverse accum
             else if k < pos then
@@ -139,49 +144,61 @@ create_lines max_pos cw wrs p n e w s =
                      let
                          ending = find_end wrs
                          starting = find_start wrs
-                         (n1, e1, w1, s1) = (n, e, w, s)
-                         line = ""
+                         passthrough = find_passthrough wrs
+
                      in
-                       process n1 e1 w1 s1 (k+1) rest (line : accum)
-{-
-        process_wire [] _ _ _ _ accum = reverse accum
-        process_wire (wire : rest) n e w s accum =
-            case snd wire of
-              PassThrough _ -> process_wire rest n e w s (line : accum)
-                  where
-                    line = mconcat [if w then "#" else "-",
-                                    if n then "#" else "-",
-                                    wireline (cw + 3),
-                                    if s then "#" else "-",
-                                    if e then "#" else "-"]
-              End_W _ -> process_wire rest n e False s (line : accum)
-                  where
-                    line = mconcat ["+", if n then "|" else " ",
-                                    spaces (cw+3),
-                                    if s then "|" else " ",
-                                    if e then "|" else " "]
-              Start_S _ -> process_wire rest n e w False (line : accum)
-                  where
-                    line = mconcat [if w then "|" else " ",
-                                    if n then "|" else " ",
-                                    spaces (cw+3),
-                                    "+",
-                                    if e then "#" else "-"]
-              Start_E _ -> process_wire rest n False w s (line : accum)
-                  where
-                    line = mconcat [if w then "|" else " ",
-                                    if n then "|" else " ",
-                                    spaces (cw+3),
-                                    if s then "|" else " ",
-                                    "+"]
-              End_N _ -> process_wire rest False e w s (line : accum)
-                  where
-                    line = mconcat [if w then "#" else "-",
-                                    "+",
-                                    spaces (cw+3),
-                                    if s then "|" else " ",
-                                    if e then "|" else " "]
--}
+                       case passthrough of
+                         Just (PassThrough k) ->
+                             let line = mconcat [if w then "#" else "-",
+                                                 if n then "#" else "-",
+                                                 wireline (cw + 3),
+                                                 if s then "#" else "-",
+                                                 if e then "#" else "-"]
+                             in
+                               process n e w s (k+1) rest (line : accum)
+                         Nothing ->
+                             let
+                                 start_part n w =
+                                     case ending of
+                                       Just (End_W _) ->
+                                           ["+", if n then "|" else " "]
+                                       Just (End_N _) ->
+                                           [if w then "#" else "-", "+"]
+                                       Nothing ->
+                                           [if w then "|" else " ",
+                                            if n then "|" else " "]
+                                       _ -> error "Impossible"
+                                 end_part s e =
+                                     case starting of
+                                       Just (Start_S _) ->
+                                           ["+", if e then "#" else "-"]
+                                       Just (Start_E _) ->
+                                           [if s then "|" else " ",
+                                            "+"]
+                                       Nothing ->
+                                           [if s then "|" else " ",
+                                            if e then "|" else " "]
+                                       _ -> error "Impossible"
+                                 (n1, e1, w1, s1) =
+                                     (case ending of
+                                        Just (End_N _) -> False
+                                        _ -> n,
+                                      case starting of
+                                        Just (Start_E _) -> False
+                                        _ -> e,
+                                      case ending of
+                                        Just (End_W _) -> False
+                                        _ -> w,
+                                      case starting of
+                                        Just (Start_S _) -> False
+                                        _ -> s)
+                                 line =
+                                     mconcat [mconcat $ start_part n w,
+                                              spaces (cw+3),
+                                              mconcat $ end_part s e]
+                             in
+                               process n1 e1 w1 s1 (k+1) rest (line : accum)
+                         _ -> error "Impossible"
     in
       process n e w s 0 ordered_wires []
 
@@ -291,9 +308,10 @@ renderbox max_pos (crate@(EOB _ _ _)) =
        [line0 cw]
 
 render_eo :: [ExplicitOrder] -> [String]
-render_eo bxs = join $ fmap (renderbox (freeMax fl)) analyzed_boxes
+render_eo bxs = join $ fmap rndr analyzed_boxes
     where
       (fl, analyzed_boxes) = liveness_analyze [] emptyFreelist bxs []
+      rndr = renderbox (freeMax fl)
       join x = fmap mconcat $ transpose x
 
 create_module_boxes :: String -> Wire -> Wire -> [Wire] -> [ExplicitOrder]
@@ -315,19 +333,8 @@ render_module (Module bxs nam inp_n inp_w out_e) =
         [start_box, end_box] = create_module_boxes nam inp_n inp_w out_e
         eobs = explicit_wiring boxs
         rendered = render_eo ([start_box] ++ eobs ++ [end_box])
-        module_width = foldl1 max $ fmap length rendered
-        name_width = length nam
-        north_input = False -- TODO: Fix me.
-        l0 = mconcat [",", modhrule (name_width + module_width + 2),","]
-        l1 = mconcat [":", nam, " ", if north_input then "|" else " ",
-                         spaces (module_width), ":"]
-        -- Add the line here to get a west input
-        -- Add the lines here to start connecting via the rendered lines
-        -- Add the lines here to add exits from the box
-        lf = mconcat [",", modhrule (name_width + module_width + 2), ","]
-
     in
-      mconcat [l0, l1, lf]
+      mconcat rendered
 
 render :: [Mod] -> String -> String
 render modules stdlib = mconcat [rendered_mods, stdlib]
