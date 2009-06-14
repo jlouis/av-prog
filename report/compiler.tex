@@ -1,18 +1,18 @@
-\section{Compiler}
+\chapter*{Task 3: 2D code generator}
 \label{compiler}
 
-\subsection{Problems faced}
+\paragraph{Problems faced}
 \label{compiler:problems}
 
-\subsubsection{Layout}
+\paragraph{Layout}
 \label{compiler:layout}
 The main challenge of writing a compiler from the SEL to the 2d
 language, was making a layout system that would output a valid 2d program. 
 
-\subsubsection{Placement of wires}
+\paragraph{Placement of wires}
 \label{compiler:placement}
 
-\subsection{Modules}
+\paragraph{Modules}
 \label{compiler:modules}
 In order to cut down on the needed work, we decided to encapsulate
 many of our functions in predefined modules. An example of this could
@@ -24,4 +24,4 @@ the construction was not straightforward. We found the biggetst
 problem to be flow-control, as this required many wires, even for
 small cases, which made the program much harder to write and modify.\\
 
-We therefore abondoned this approch, even for basic features of our language, and instead began to use our layouter to create the needed modules.
+We therefore abondoned this approch, even for basic features of our language, and instead began to use our layouter to create the needed modules.\\

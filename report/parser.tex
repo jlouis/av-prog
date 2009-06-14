@@ -1,17 +1,15 @@
-\section{Parser}
+\chapter*{Task 2 -- Parse}
 In order to translate the code into 2d, we must first parse the Simple Expression Language (SEL) and turn it into an abstract syntax tree. This will be done in an independent module in order to maximize the modularity of the code.
 
-\subsection{Use of Parsec}
+\paragraph{Use of Parsec}
 Due to its age and stability we have chosen to use the Parsec Haskell module to write our Parser. Even though it might be possible to create something better through the use of Monad transformers as described in \cite{partial+parsing}, this might a long time, as well as introducing errors that already have been found and eliminated in Parsec.
 
-\subsection{Experiences with Parsec}
+\paragraph{Experiences with Parsec}
 Through our use of Parsec we have learned, that while it can be coaxed into parsing languages, it is not always entirely straightforward. A good example of this is when left recursion is required, where one needs to use the built-in expressionBuilder to solve the problem. More problematic were some of the errors we origionally tried to implement the parser for Occult, which included the expression ``e ::= e e''.\\
 
 This lead to the problem where we could not parse such strings as ``Add S Z => S Z'', as the parser would fail on the ``='', no matter what we did. This, amongst other things, eventually lead us to abandon Ocult, and instead using an advanced version of the Simple Expression language, that was described on the website.
 
-\subsection{}
-
-\subsection{Grammar}
+\paragraph{Grammar}
 The syntax of our language can be found in its native form in our
 Parse.hs file. However, for completeness we have included it here. In
 the following text written like \bnf{so} is termanating, while
