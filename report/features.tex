@@ -1,8 +1,5 @@
-\section{Language}
-
-
 \subsection{Language features}
-\subsubsection{Variables}
+\paragraph{Variables}
 We have added variables to our language, so that the user can specify any (reasonable) number of variables, which then can be looked up later in the program. We have limited the creation of Variables to the start of the function, as well made the restriction that the user cannot change the value of the values at runtime.
 
 In the current version the values are stored as a Abstract Syntax
@@ -12,11 +9,11 @@ multiply expressions (and indeed contain other variables and function
 calls). The variables are stored in a list since this is natively
 supported by 2d.
 
-\subsubsection{Function calls}
+\paragraph{Function calls}
 
 We have expanded our language to allow the use of functions, that can be called from anywhere in the code. Like variables, the functions are stored in a list, which is searched through each time there is a function call. A function takes exactly one input, and returns exactly one output.
 
-\subsubsection{ZeroControl}
+\paragraph{ZeroControl}
 We have implemented flow control in our language in the form of a
 zeroCont. Given a condition and 2 expressions, zeroCont first checks
 whether the condition is zero or the successor of some k. If the
@@ -24,15 +21,22 @@ condition evaluates to zero then the first expression is executed. If
 the condition is the successor of some k, then the second expression
 is evaluated - with a new variable list, where the value of k (under the variable name ``k'') has been added as the first element in the variable list.
 
-\subsection{Expressiveness of the language}
-Our language is expressive enough to describe the faculty function, since we can call functions recursively, has flow control, as well as basic arithmetic operations such as multiply. 
+\paragraph{Expressiveness of the language}
+Our language is expressive enough to describe the faculty function,
+since we can call functions recursively, has flow control, as well as
+basic arithmetic operations such as multiply. 
 
-
-\subsection{Possible further expansions}
+\paragraph{Possible further expansions}
 If the language had to be further expanded, to allow it to calculate
 more elaborate functions. We would first start by allowing variables
 being added in the code itself, and not only at the start of the
-function. Furthermore it would be wise to allow functions to take
+function. 
+Furthermore it would be wise to allow functions to take
 multiple arguments, since it would both increase the scope of what
 could be calculated by the program, but also the convenience - though
-this should be tempered the need to be able to compile it to 2d.\\
+this should be tempered the need to be able to compile it to 2d.\\\\
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End: 
