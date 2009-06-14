@@ -1,0 +1,117 @@
+\section{Layouting 2d}
+
+In this section we describe how we decided to lay out 2d
+programs. Recall from the compiler, that we construct a graph of
+boxes. This graph is the input to the 2d layouter and we provide one
+for each function. Each graph is compiled into a module and these are
+gathered together for output.
+
+The layout-process can best be described as a series of phases where
+each phase make the representation more explicit. Finally, we have so
+much information we can print out the layout, one line at a time.
+
+The input-graph is first made explicit: We note the source and target
+of each wire, taking special care of wires that enters or leaves the
+module. The graph is then represented as a list of boxes, which we run
+topological sort on. The sorted boxes are ordered from left to right
+inside the module with the wiring underneath boxes (we call this part
+the bus). Effectively this means we save space and can represent any
+box configuration allowed for in 2d by linearization.
+
+We then run liveness analysis on the bus. This tells us what wires are
+live over which boxes and gives us knowledge of where a wire can run
+safely -- without colliding with other wires in invalid ways.
+
+After this, we can output each box-section individually as we have
+full knowledge of which wires are entering and leaving the box and
+what wires are passed through on the bus below the boxes. An example
+of this wiring principle is given in figure \ref{fig:1}
+\begin{figure}
+  \centering
+
+  \begin{center}
+\begin{verbatim}
+       &                               &
+       &                               &
+,.....|&...............................&, line0
+:name |&                               &: line1
+:     |&   ++                          &: line2
+:     |& +-+v                          &: line3
+:     |& | *========================*  &: line4
+:     |&+#>!Box contents            !-+&: line5
+:     |&|| *========================* |&: line6
+:     |&||                         +-+|&: line7
+:     +&+|                           ||&:
+-------&-+                           ||&:
+:      &-----------------------------##&:
+:      &-----------------------------##&:
+:      &                             +#&-
+:      &------------------------------#&-
+:      &                              +&-
+,......&...............................&,
+       &                               &
+       &                               &
+\end{verbatim}
+  \end{center}
+  \caption{Box layout example}\label{fig:1}
+\end{figure}
+
+As can be seen, we handle the entry and exit of the module specially
+by crafting two fake boxes that gets special treatment. Each box is
+laid out by a seperate function for each line. The functions are fed
+with knowledge of which wires are present and the required width of
+the box; they produce the correct layout in each case. Rendering the
+bus is carried out by a tail-recursive function that keeps track of
+when wires crosses.
+
+We can only do it this way because we have made a number of passes
+that gives us the exact information we need to draw each line
+separately.
+
+\paragraph{Use of language features in the layouter}
+\label{sec:use-lang-feat}
+
+Our layouter uses very few special language features. In particular,
+no monads or other structures are at work. This is due to time
+constraint -- one could easily imagine using a State monad to keep
+track of crossing wires. It could have removed a considerable amount
+of arguments from the functions.
+
+\paragraph{Alternative layouting methods}
+\label{sec:altern-layo-meth}
+
+In hindsigt, the approach of drawing line-by-line is more complex than
+drawing directly on a canvas. In the canvas-approach one can represent
+the canvas as a mapping $\mathbb{N} \times \mathbb{N} \to
+\texttt{Char}$. The canvas is then put inside a State-monad and one
+creates a combinator language (a DSL) for plotting on the canvas as
+well as querying the current state of the canvas. These combinators
+would work on the monad.
+
+Each thing you need to draw is then written in the combinator-language
+giving an abstraction of 2d layouting. This approach has 2 distinct
+advantages from ours:
+\begin{itemize}
+\item It is modular. Each drawing primitive can act independently of
+  other primitives. In contrast, our approach means you can only draw
+  a line when you know everything.
+\item It is adaptive/iterative. Assume a set of invariants
+  ensuring it is always possible to draw wiring in some valid
+  way. Then the drawing primitives can automatically adapt to earlier
+  plotting on the canvas. If one wants to draw a '|' where there is
+  already a '-', the plotter can automatically plot '\#'.
+
+  The same approach simplifies wire-drawing on the bus. We could
+  simply query the canvas for the first place we could safely draw the
+  wire and then lay it out in that place. Contrast this with our
+  approach where we need a seperate step of liveness analysis and
+  afterwards a (rather crude) wire-allocation to make it work.
+\end{itemize}
+Finally, the approach would be a much better fit for a monad, which we
+acknowledge was part of the idea in this course.
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End: 
