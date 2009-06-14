@@ -1,10 +1,10 @@
 \documentclass[a4paper, oneside, 10pt, draft]{memoir}
 \chapterstyle{culver}
 \usepackage{fixme}
-\usepackage[osf,sc]{mathpazo}
-\linespread{1.05}
 %\usepackage[utopia]{mathdesign}
 \input{preamble_memoir.tex}
+\usepackage[osf,sc]{mathpazo}
+\linespread{1.05}
 
 \usepackage{semantic}
 \author{Jesper Louis
@@ -18,12 +18,12 @@
 \renewcommand*{\titleM}{\begingroup% Misericords, T&H p 153
   \drop = 0.08\textheight
   \centering
-  {\Huge\bfseries CORRECT ME!}\\[\baselineskip]
-  {\scshape And me! And authors!}\\[\baselineskip]
+  {\Huge\bfseries Advanced Programming}\\[\baselineskip]
+  {\scshape Tasks}\\[\baselineskip]
   {\scshape by}\\[\baselineskip]
-  {\large\scshape Jesper Louis Andersen\\jesper.louis.andersen@gmail.com}\par
-  {\large\scshape Mikkel Kj\ae r Jensen\\kjmikkel@gmail.com}\par
-  {\large\scshape Johan Brinch\\zerrez@gmail.com}\par
+  {\large\scshape Jesper Louis Andersen\\jesper.louis.andersen@gmail.com}\\[\baselineskip]
+  {\large\scshape Mikkel Kj\ae r Jensen\\kjmikkel@gmail.com}\\[\baselineskip]
+  {\large\scshape Johan Brinch\\zerrez@gmail.com}\\[\baselineskip]
   \endgroup}
 \newcommand{\bnf}[1]{\texttt{#1}}
 \newcommand{\hide}[1]{}
@@ -33,14 +33,14 @@
 \titleM
 
 \input{introduction}
+\input{task-1}
+% Task-2
 \input{parser}
 \input{compiler}
 \input{features}
-\input{task-1}
+% Conclusion
+%\input{conclusion}
 
-%\input{tooling}
-%\input{janus-syntax}
-%\input{syntax}
 \bibliography{biblio}
 
 \appendix

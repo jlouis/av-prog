@@ -68,8 +68,6 @@ fktCall str env input (FuncEnv (Func id ast _localEnv) funcValue) constantFkt =
                                                then eval ast (Env (Const "input" input) env) constantFkt
                                                else fktCall str env input funcValue constantFkt
 
-
-
 -- Program mechanism
 start ast env = eval ast env
 
