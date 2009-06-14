@@ -26,6 +26,7 @@
   {\large\scshape Johan Brinch\\zerrez@gmail.com}\\[\baselineskip]
   \endgroup}
 \newcommand{\bnf}[1]{\texttt{#1}}
+\newcommand{\hide}[1]{}
 \newcommand{\OO}[1]{\mathcal{O}(#1)}
 \bibliographystyle{plain}
 \begin{document}
@@ -39,16 +40,17 @@
 % Task-2
 \chapter{A compiler}
 \input{parser}
-\input{compiler}
 \input{features}
+\input{compiler}
 \input{layout}
+
 % Conclusion
-%\input{conclusion}
+\input{conclusion}
 
 \bibliography{biblio}
 
 \appendix
-
+\hide{
 \clearpage
 \section{Source}
 \lstinputlisting{../src/Twodee/Ast.hs}
@@ -60,6 +62,13 @@
 \lstinputlisting{../src/Twodee/Layout.hs}
 \clearpage
 \lstinputlisting{../src/Twodee/Main.hs}
-
-
+\clearpage
+\section{Twelf}
+\label{appendix:twelf}
+\lstinputlisting{../twelf/bool.elf}
+\clearpage
+\lstinputlisting{../twelf/nat.elf}
+\clearpage
+\lstinputlisting{../twelf/twodee.elf}
+}
 \end{document}

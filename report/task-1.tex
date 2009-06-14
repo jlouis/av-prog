@@ -3,8 +3,8 @@
 In this task, we implement the Universal Machine from the 2006 ICFP
 contest in Haskell. The file \cite{um+spec} contains the specification
 of the machine which are to be implemented. We can readily observe
-that this machine is pretty simple once you have decoded the wording
-of the specification: it is a register machine with a store of
+that this machine is simple once the wording of the specification has
+been decoded: it is a register machine with a store of
 arrays. The instruction set is minimal at 13 instructions. It is pretty
 clever as many instructions are chosen such that they can be used for
 multiple purposes in the machine.
@@ -15,7 +15,7 @@ To implement the UM, one needs four pieces in the puzzle:
   opcodes (unsigned 32-bit words)
 \item Provide an implementation of the store of the machine.
 \item Provide an implementation of the register set of the machine.
-\item Prove the interpreter proper. The interpreter loads the next
+\item Provide a proper interpreter. The interpreter loads the next
   instruction and dispatches it for execution before looping again.
 \end{itemize}
 Of these, the latter two has to be reasonably fast. One can expect the
@@ -38,7 +38,7 @@ IO monad to give us access to file I/O etc.
 \paragraph{Store}
 \label{sec:store}
 
-The machine store underwent several iterations before settling. We
+The machine store underwent several iterations before the final version. We
 knew from the start the store was important, so we created a type
 class, \texttt{State}, for stores. The type class supports a simple
 set of values suitable for implementation of the register-to-memory
@@ -48,7 +48,7 @@ Our first implementation was list-based in a peculiar way. We stored
 triples $(arr, idx, v)$ noting that the array $arr$ at location $idx$
 had the value $v$. Lookup was done by linear search through this
 list. \fixme{Johan: Check this} Of course, this was too slow for the
-full UM and blew the stack quickly.
+full UM and quickly resulted in an overflow of the stack.
 
 The second iteration changed to using \texttt{Data.Sequence} from the
 Haskell Standard Library. Sequences are finger-tree based so we could
@@ -65,10 +65,10 @@ was converted to a list keeping track of the free array segments. If
 no element is on the free-list, we create a new one. This cut memory
 usage down.
 
-The performance of the UM was still too lousy however. We ran
-another iteration. The store was living inside the \texttt{Maybe}
+However, the performance of the UM was still not satisfactionary, which
+necessitated another iteration. The store was living inside the \texttt{Maybe}
 monad at this point to keep track of errors. This was first changed to the
-\texttt{IO} monad and errors was made fatal as in thread with the um
+\texttt{IO} monad and errors was made fatal as in thread with the UM
 specification \cite{um+spec}. Then the inner arrays were changed to
 unboxed arrays of unsigned integers: \texttt{IOUArray Word32 Word32}
 which in theory would improve the run-time from $\OO{\lg n} + \OO{\lg
@@ -87,7 +87,7 @@ type Store = ([Word32], Arr, Seq (Arr))
 The interpreter consist of an instruction decoder and the
 step-loop. The instruction decoder takes an unsigned integer and
 decodes the instruction to an internal algebraic datatype. This
-internal representation is then dispatched. Great care was taken to
+internal representation is then dispatched. Great care has been taken to
 decode the registers into meaningful names so the interpreter would
 become easier to maintain and lower the margin for errors. Rather than
 passing around a tuple \texttt{(Word32, Word32, Word32)}, we use a
@@ -111,8 +111,8 @@ register set.
 \label{sec:registers}
 
 Originally, we just used a store as the register-set with a single
-array containing 8 slots. In the course of the development and with
-the advent of the \texttt{IO} monad in the interpreter loop it was
+array containing 8 slots. In the course of the development, and with
+the advent of the \texttt{IO} monad in the interpreter loop, it was
 changed to an implementation based on an unboxed array of size 8.
 
 \subsection*{Code layout}
