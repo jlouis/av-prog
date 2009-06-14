@@ -2,7 +2,68 @@
 \section{Compiling SEL to 2d}
 \label{sec:compiling-sel-2d}
 
-\fixme{Write this chapter}
+In this section, we present the methodology behind compiling from SEL
+into 2d. The basic idea is that we define a representation of natural
+numbers in 2d and then we use boxes of 2d to represent SEL programs in
+2d. We begin by noting that most of our operations are straightforward
+to compile into 2d code. The hard part is how to handle the boxes.
+
+Recall that a box contains wires in each direction, NESW. To
+interconnect two boxes, we just have to set the wire of one box to the
+wire of the other. We prune unneeded wires in the layout code later
+on.
+
+We compile each SEL function seperately into its own module. When
+compiling a SEL expression, we do it inside a state monad. The state
+in the monad tracks what the next free wire-number is, the currently
+operating environment, what wires have left the module and a list of
+input wires. The monad allows us to quickly create new wires and
+eliminates the need for passing around a large amount of boring
+information. We note that some of this information is deemed static
+and as such the state monad could have been wrapped in a reader
+transformer. But it was seen as too complicated for a problem this
+simple.
+
+A set of helper functions allows us to join boxes together in groups
+in various ways. When we join the boxes into groups, we identify a
+public interface to the group in each direction. The public interface
+simplifies later join operations.
+
+
+\paragraph{Compiling Expressions}
+\label{sec:compiling-numbers}
+
+Natural numbers are compiled like it was laid out in the hints PDF to
+task 3. Zero is represented as one injection in the sum-type, and Succ
+x is represented as the other. Expressions that use arithmetic makes
+use of the standard library and simply calls the appropriate module.
+
+Looking up in the environment compiles the tree in the environment and
+sends its result to the place in the AST where it is needed. Finally,
+a function call compiles its single input and then uses the
+appropriate module.
+
+\paragraph{Compiling the zeroCheck}
+\label{sec:compiling-zerochk}
+
+\fixme{Write this}
+
+\paragraph{Compiling functions}
+\label{sec:compiling-functions}
+
+Compiling a function has the complication that there is only a single
+wire of input, but the input might be used multiple times in the
+function body. We solve this problem by first counting the number of
+occurrences in the body. We note that for the few cases we have there
+is no problem in handling this. For a greater number of cases, one could
+have utilized the generics of Haskell here.
+
+We then construct a series of boxes, duplicating the input by
+splitting tuples. The wires with the input is gathered and when
+compiling expressions we keep these input wires in a list in the state
+of the monad.
+
+\fixme{Handling multiple outputs}
 
 %%% Local Variables: 
 %%% mode: latex

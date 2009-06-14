@@ -18,6 +18,10 @@ inside the module with the wiring underneath boxes (we call this part
 the bus). Effectively this means we save space and can represent any
 box configuration allowed for in 2d by linearization.
 
+Next, we prune all wires with no endpoint. This decision allows us to
+simplify the code generator, as it can just let wires dangle rather
+than keeping track of where wires are connected.
+
 We then run liveness analysis on the bus. This tells us what wires are
 live over which boxes and gives us knowledge of where a wire can run
 safely -- without colliding with other wires in invalid ways.
