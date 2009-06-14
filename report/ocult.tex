@@ -1,0 +1,43 @@
+
+We used considerable time on the langauge of O'cult while attempting
+to write a code generator from O'cult to 2d. In this section we
+present the work done on this.
+
+In order to understand the languages of O'cult and 2d, we wrote down
+its operational semantics. The tool of choice for getting the
+semantics type checked was the logical framework Twelf. The
+development corresponds to a typed prolog written in the LF system, a
+dependently typed variant of the lambda calculus. This was necessary
+as O'cult has a rather evil evaluation rule on ``juxtaposition''
+applications.
+
+We then choose to eliminate the single odd rule from O'cult, namely
+the rule ``Advice is least heeded where it is most needed''. This rule
+eliminated, O'cult is a simple term rewriting language. A list of
+rules are tried in succession. Each rule is a pattern match. If the
+pattern matches, a replacement-term describes how the rewriting is to
+be done.
+
+The idea was to encode enough in 2d (eventually by hand) to be able to
+store variable bindings and operating on these. Then rules could be
+compiled such that if a rule failed to match then the next rule would
+be tried. If the rule did match on the other hand, we would call the
+appropriate replacer and then use the program itself, effectively
+tail-calling to the next term-rewrite.
+
+It became apparent however, as time progressed, that we would not be
+able to complete this task. We initally estimated that we needed some
+$3000$ to $3500$ lines of source code to complete such a work. Hence
+we abandoned the idea of compiling O'cult and looked at a simpler
+language.
+
+In hindsight, we wasted quite some time on O'cult. But we envisioned
+the SEL language we then created as a work towards a middle-ground
+between 2d and O'cult. The idea was to construct a language extending
+2d with the primitives we needed to compile O'cult. The SEL is work
+towards this goal.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End: 
