@@ -26,6 +26,7 @@
   {\large\scshape Johan Brinch\\zerrez@gmail.com}\par
   \endgroup}
 \newcommand{\bnf}[1]{\texttt{#1}}
+\newcommand{\hide}[1]{}
 \newcommand{\OO}[1]{\mathcal{O}(#1)}
 \bibliographystyle{plain}
 \begin{document}
@@ -43,7 +44,7 @@
 \bibliography{biblio}
 
 \appendix
-
+\hide{
 \clearpage
 \section{Source}
 \lstinputlisting{../src/Twodee/Ast.hs}
@@ -55,6 +56,5 @@
 \lstinputlisting{../src/Twodee/Layout.hs}
 \clearpage
 \lstinputlisting{../src/Twodee/Main.hs}
-
-
+}
 \end{document}

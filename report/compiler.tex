@@ -6,13 +6,22 @@
 
 \subsubsection{Layout}
 \label{compiler:layout}
-The main challenge of writing a compiler from our language to the 2d language, was making a system for layout out a valid 2d program. 
+The main challenge of writing a compiler from the SEL to the 2d
+language, was making a layout system that would output a valid 2d program. 
 
 \subsubsection{Placement of wires}
 \label{compiler:placement}
 
-
 \subsection{Modules}
 \label{compiler:modules}
-In order to cut down on the needed work, we decided to encapsulate many of our functions in predefined modules. An example of this could be the multiplication operator, which we choose to handwriting, since we had no real way of automatically translating the language from a description to the 2d code \fixme{I am unsure if this is true - and if it is, whether how to describe it probably}. Even though we had already specified much of the logic needed for unary multiplication, the construction was not straightforward, as many of the particulars of the 2d language presented itself. We found the biggetst problem to be flow-control, as this required many wires, even for small cases, which made the program much harder to understand.
+In order to cut down on the needed work, we decided to encapsulate
+many of our functions in predefined modules. An example of this could
+be the multiplication operator, which we attempted to write manually,
+both to get a sense of how 2d worked, as well as optimizing our use of
+time until the layout system was up and running. Even though we had
+already specified much of the logic needed for unary multiplication,
+the construction was not straightforward. We found the biggetst
+problem to be flow-control, as this required many wires, even for
+small cases, which made the program much harder to write and modify.\\
 
+We therefore abondoned this approch, even for basic features of our language, and instead began to use our layouter to create the needed modules.
