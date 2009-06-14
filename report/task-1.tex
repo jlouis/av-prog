@@ -133,7 +133,8 @@ The code is written in Haskell and comprises a number of files:
 
 To build the program, we use:
 \begin{verbatim}
-ghc -O2 -fglasgow-exts -XFlexibleInstances -auto-all --make *.hs -o uvm
+ghc -O2 -fglasgow-exts -XFlexibleInstances -auto-all --make \
+  *.hs -o uvm
 \end{verbatim}
 
 The optimization parameter \texttt{-O2} is fairly important because we
@@ -151,7 +152,7 @@ which will halt when the UM-program halts.
 
 We get to the decryption key prompt in $2.26$ seconds run-time a
 $2.4$Ghz Core 2 Duo machine. The sandmark benchmark completes in
-$12:58.25$ on the same machine, which is acceptable performance for
+$13$ minutes on the same machine, which is acceptable performance for
 playing with the UM.
 
 %%% Local Variables: 
