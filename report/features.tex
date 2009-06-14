@@ -11,7 +11,7 @@ In the current version the values are stored as a Abstract Syntax Tree, which ha
 
 We have expanded our language to allow the use of functions, that can be called from anywhere in the code. Like variables, the functions are stored in a list, which is searched through each time there is a function call. A function takes exactly one input, and returns exactly one output.
 
-\subsubsection{Zero }
+\subsubsection{ZeroControl}
 We have implemented flow control in our language in the form of a zeroCont. Given a condition and 2 expressions, zeroCont first checks whether the condition is zero or the successor of some k. If the condition evaluates to zero then the first expression is executed. If the condition is the successor of some k, then the second expression is evaluated - with a new environment, where the value of k (under the variable name k) has been added as the first element in the environment list.
 
 \subsection{Expressiveness of the language}
