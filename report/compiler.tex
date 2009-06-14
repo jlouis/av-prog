@@ -1,5 +1,5 @@
-\chapter*{Task 3: 2D code generator}
-\label{compiler}
+
+\fixme{Remind the reader where we are}
 
 \paragraph{Problems faced}
 \label{compiler:problems}
@@ -12,6 +12,8 @@ language, was making a layout system that would output a valid 2D program.
 \paragraph{Placement of wires}
 \label{compiler:placement}
 
+\fixme{Introduce our representation of 2d inside Haskell}
+
 \paragraph{Modules}
 \label{compiler:modules}
 In order to cut down on the needed work, we decided to encapsulate
@@ -22,9 +24,11 @@ time until the layout system was up and running. Even though we had
 already specified much of the logic needed for unary multiplication,
 the construction was not straightforward. We found the biggetst
 problem to be flow-control, as this required many wires, even for
-small cases, which made the program much harder to write and modify.\\
+small cases, which made the program much harder to write and modify.
 
-We therefore abondoned this approch, even for basic features of our language, and instead began to use our layouter to create the needed modules.\\
+We therefore abondoned this approch, even for basic features of our
+language, and instead began to use our layouter to create the needed
+modules.
 
 %%% Local Variables: 
 %%% mode: latex
