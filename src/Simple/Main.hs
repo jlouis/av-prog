@@ -9,8 +9,8 @@ import Twodee.AstRender
 
 main = do
   (ast, env, fkt) <- return $ parsePrg "Main => [] (Call Fact (s(s (s z)))), Fact => [] zeroCheck(Lookup input){(s z)} else {(Lookup input) * (Call Fact (Lookup k))}"
-  compiled <- return $ compile ast
-  rendered <- return $ render [compiled] "" -- last parameter here is the stdLib
+  compiled <- return $ compile ast env fkt
+  rendered <- return $ render compiled "" -- stdlib
   putStrLn rendered
 -- Fact
 --(Lookup input) * contz(Lookup input){(s z)} else {Call Fact (Pre (Lookup input))}"

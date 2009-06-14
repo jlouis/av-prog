@@ -63,10 +63,10 @@ data Box = JBox { command :: Command,
                     south :: Wire,
                     west :: Wire }
            | JBox_Group { boxes :: [Box],
-                          b_north :: Wire,
-                          b_south :: Wire,
-                          b_east  :: Wire,
-                          b_west  :: Wire }
+                          north :: Wire,
+                          south :: Wire,
+                          east  :: Wire,
+                          west  :: Wire }
 
 data Mod = Module { mod_boxes :: [Box],
                     name :: String,
