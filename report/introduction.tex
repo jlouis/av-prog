@@ -1,21 +1,38 @@
 \chapter*{Introduction}
 
-In this project we we had there tasks:
+In this project we conduct the tasks we were given at the beginning of
+the course:
 \begin{enumerate}
-\item Task 1: Implementation of universal machine specification
-\item Task 2: Parse
-\item Task 3: 2D code generator 
+\item Implementation of universal machine specification (UM)
+\item Parse a language
+\item 2D code generator -- compilation into 2d.
 \end{enumerate}
+We have decided to implement the solution in Haskell, despite none of
+us have great knowledge with the platform. The F\# language was deemed
+too young, especially on the Mono platform we would be using. The
+advantage of the Haskell GHC compiler is its known stability.
 
-\paragraph{Choice of language}
-We started out trying to parse and implement a subsection of the Ocult
-language. In order to understand the Ocult language we began
+This report comprises 3 main parts corresponding to each of the
+above tasks.
+
+We started out trying to parse and implement a subsection of the O'cult
+language. In order to understand the O'cult language we began
 formalizing the semantics, which proved to be a fruit-full labour, as
 it resulted in a twelf formalization, which can be found in
-\ref{appendix:twelf}. However, due to problems in parsing the Ocult
+\ref{appendix:twelf}. However, due to problems in parsing the O'cult
 language, as well as lack of time, we decided to instead implement the
-Simple Expression Language proposed at the website, with a few
+Simple Expression Language (SEL) proposed at the website, with a few
 additions - such as function calls and variables, in order to make it interesting.
+
+We expect the reader to understand the concepts introduced in the
+course as well as the basics of Haskell programming. As such, we won't
+explain, for example, what a Monad is.
+
+\paragraph{Overview}
+In the first part, we report on the UM interpreter we wrote in
+Haskell. Then we quickly cover our attempts of compiling O'cult before
+we focus on the SEL: We have a section covering parsing, a section
+covering compilation and a section with code layout in 2d.
 
 %%% Local Variables: 
 %%% mode: latex
