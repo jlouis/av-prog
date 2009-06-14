@@ -52,7 +52,7 @@ full UM and blew the stack quickly.
 
 The second iteration changed to using \texttt{Data.Sequence} from the
 Haskell Standard Library. Sequences are finger-tree based so we could
-expect $\OO{lg n}$ lookup performance. We use data-structural
+expect $\OO{\lg n}$ lookup performance. We use data-structural
 bootstrapping \cite{okasaki+pfds} to provide two-dimensional arrays
 where the size of one dimension may differ in length. Each array is a
 \texttt{Seq Word32} which is then wrapped up inside a \texttt{Seq}. A
@@ -71,8 +71,8 @@ monad at this point to keep track of errors. This was first changed to the
 \texttt{IO} monad and errors was made fatal as in thread with the um
 specification \cite{um+spec}. Then the inner arrays were changed to
 unboxed arrays of unsigned integers: \texttt{IOUArray Word32 Word32}
-which in theory would improve the run-time from $\OO{lg n} + \OO{lg
-  m}$ to $\OO{lg n}$, shaving off the last lookup. Finally, the
+which in theory would improve the run-time from $\OO{\lg n} + \OO{\lg
+  m}$ to $\OO{\lg n}$, shaving off the last lookup. Finally, the
 $0$-array, containing the program was moved to its own tuple-slot such
 that the often occurring opcode lookup could run in constant
 time. This yielded the final type of the store as:
