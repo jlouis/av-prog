@@ -108,7 +108,7 @@ whiteSpace = skipMany space
 expr = contz <|> zero_expr <|> succ_expr <|> parens op <|> lookUp <|> call <|> contz <|> op
 
 contz :: Parser Ast
- contz = do {
+contz = do {
            whiteSpace;
            try(string "zeroCheck");
            whiteSpace;
