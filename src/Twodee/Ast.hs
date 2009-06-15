@@ -67,12 +67,14 @@ data Box = JBox { command :: Command,
                           south :: Wire,
                           east  :: Wire,
                           west  :: Wire }
+           deriving Show
 
 data Mod = Module { mod_boxes :: [Box],
                     name :: String,
                     input_north :: Wire,
                     input_west :: Wire,
                     outputs_east :: [Wire] }
+           deriving Show
 
 -- Simplify the boxs, removing the Groups
 extract_base_box :: [Box] -> [Box]

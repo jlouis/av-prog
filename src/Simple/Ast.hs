@@ -5,7 +5,6 @@ module Simple.Ast (Ast(..), EnvValue(..), ConstValue(..), FuncEnvValue(..), Func
 where
 
 import Data.List
-import Data.Monoid
 
 -- Syntax of the small language
 data Ast = Zero | Succ Ast
@@ -16,12 +15,17 @@ data Ast = Zero | Succ Ast
 
 -- The environment
 data EnvValue = Env ConstValue EnvValue | EnvEnd
+                deriving Show
+
 data ConstValue = Const String Ast
+                  deriving Show
 
 -- The functions
 data FuncEnvValue = FuncEnv FuncInstValue FuncEnvValue | FuncEnd
-data FuncInstValue = Func String Ast EnvValue
+                    deriving Show
 
+data FuncInstValue = Func String Ast EnvValue
+                   deriving Show
 
 
 -- Evaluation operation
@@ -82,9 +86,17 @@ astPrint str (Plus e1 e2) = str ++ r1 ++ " + " ++ r2 where
 astPrint str (Mul e1 e2) = str ++ r1 ++ " * " ++ r2 where
     r1 = astPrint "" e1;
     r2 = astPrint "" e2
-astPrint str (Lookup id) = str ++ "Lookup: " ++ id
-astPrint str (Call fnk ast)  = str ++ "Call " ++ fnk ++ "( " ++
+astPrint str (Lookup id) = str ++ "Lookup('" ++ id ++ "')"
+astPrint str (Call fnk ast) = str ++ fnk ++ "( " ++
                                (astPrint "" ast) ++ " )"
+astPrint str (Contz ast0 ast1 ast2) =
+  str ++ "checkZero( " ++ (astPrint "" ast0) ++ " ) " ++
+          "{ " ++ (astPrint "" ast1) ++ " } " ++
+          "{ " ++ (astPrint "" ast2) ++ " }"
+
+instance Show Ast where
+    show ast = astPrint "" ast
+
 
 envPrint :: String -> EnvValue -> String
 envPrint _ EnvEnd = "End; "

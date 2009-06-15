@@ -108,30 +108,30 @@ whiteSpace = skipMany space
 expr = contz <|> zero_expr <|> succ_expr <|> parens op <|> lookUp <|> call <|> contz <|> op
 
 contz :: Parser Ast
-contz = do {
-          whiteSpace;
-          try(string "zeroCheck");
-          whiteSpace;
-          string "(";
-          whiteSpace;
-          compare <- expr;
-          whiteSpace;
-          string ")";
-          whiteSpace;
-          string "{";
-          whiteSpace;
-          first <- expr;
-          whiteSpace;
-          string "}";
-          whiteSpace;
-          string "else";
-          whiteSpace;
-          string "{";
-          whiteSpace;
-          second <- op;
-          whiteSpace;
-          string "}";
-          return (Contz compare first second);
+ contz = do {
+           whiteSpace;
+           try(string "zeroCheck");
+           whiteSpace;
+           string "(";
+           whiteSpace;
+           compare <- expr;
+           whiteSpace;
+           string ")";
+           whiteSpace;
+           string "{";
+           whiteSpace;
+           first <- expr;
+           whiteSpace;
+           string "}";
+           whiteSpace;
+           string "else";
+           whiteSpace;
+           string "{";
+           whiteSpace;
+           second <- op;
+           whiteSpace;
+           string "}";
+           return (Contz compare first second);
         }
 
 call :: Parser Ast

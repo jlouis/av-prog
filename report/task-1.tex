@@ -1,5 +1,3 @@
-
-
 In this task, we implement the Universal Machine from the 2006 ICFP
 contest in Haskell. The file \cite{um+spec} contains the specification
 of the machine which are to be implemented. We can readily observe
@@ -33,7 +31,9 @@ store is then initialized with this program and the main interpreter
 is entered. When the program halts, we exit the interpreter.
 
 Since this is Haskell, most of the top-level program lives inside the
-IO monad to give us access to file I/O etc.
+IO monad to give us access to file I/O etc. The interpreter itself
+lives inside the IO monad too, to allow standard input and output while
+running the UM.
 
 \paragraph{Store}
 \label{sec:store}
@@ -47,18 +47,21 @@ operations in the UM.
 Our first implementation was list-based in a peculiar way. We stored
 triples $(arr, idx, v)$ noting that the array $arr$ at location $idx$
 had the value $v$. Lookup was done by linear search through this
-list. \fixme{Johan: Check this} Of course, this was too slow for the
-full UM and quickly resulted in an overflow of the stack.
+list. This gave us a quick storage implementation that could be used
+for testing, while the interpreter was being developed. Of course,
+this was too slow for the full UM and quickly resulted in an overflow
+of the stack.
 
 The second iteration changed to using \texttt{Data.Sequence} from the
 Haskell Standard Library. Sequences are finger-tree based so we could
 expect $\OO{\lg n}$ lookup performance. We use data-structural
 bootstrapping \cite{okasaki+pfds} to provide two-dimensional arrays
-where the size of one dimension may differ in length. Each array is a
-\texttt{Seq Word32} which is then wrapped up inside a \texttt{Seq}. A
-separate counter keeps track of the next allocation index. Sequences
-in Haskell are always indexed by signed integers, so we change them to
-unsigned integers with the \texttt{fromIntegral} converter.
+where the size of one dimension may differ in length. Each array
+element is a \texttt{Seq Word32} which is then wrapped up inside
+another \texttt{Seq}. A separate counter keeps track of the next
+allocation index. Sequences in Haskell are always indexed by signed
+integers. We convert to and from signed/unsigned integers using the
+\texttt{fromIntegral} converter.
 
 The next iteration provided correct freeing of storage. The counter
 was converted to a list keeping track of the free array segments. If
@@ -84,11 +87,11 @@ type Store = ([Word32], Arr, Seq (Arr))
 \paragraph{Interpreter}
 \label{sec:interpreter}
 
-The interpreter consist of an instruction decoder and the
+The interpreter consists of an instruction decoder and the
 step-loop. The instruction decoder takes an unsigned integer and
 decodes the instruction to an internal algebraic datatype. This
-internal representation is then dispatched. Great care has been taken to
-decode the registers into meaningful names so the interpreter would
+internal representation is then dispatched. Great care has been taken
+to decode the registers into meaningful names so the interpreter would
 become easier to maintain and lower the margin for errors. Rather than
 passing around a tuple \texttt{(Word32, Word32, Word32)}, we use a
 named record to tag each register.
@@ -150,12 +153,12 @@ which will halt when the UM-program halts.
 
 \paragraph{Performance notes}
 
-We get to the decryption key prompt in $2.26$ seconds run-time a
-$2.4$Ghz Core 2 Duo machine. The sandmark benchmark completes in
-$13$ minutes on the same machine, which is acceptable performance for
+We get to the decryption key prompt in $2.26$ seconds run-time on a
+$2.4$Ghz Core 2 Duo machine. The sandmark benchmark completes in $13$
+minutes on the same machine, which is acceptable performance for
 playing with the UM.
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "master"
-%%% End: 
+%%% End:
