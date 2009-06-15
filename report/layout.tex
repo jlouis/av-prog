@@ -60,7 +60,7 @@ of this wiring principle is given in Figure \ref{fig:1}.
 
 As can be seen, we handle the entry and exit of the module specially
 by crafting two fake boxes that gets special treatment. Each box is
-laid out by a seperate function for each line. The functions are fed
+laid out by a separate function for each line. The functions are fed
 with knowledge of which wires are present and the required width of
 the box; they produce the correct layout in each case. Rendering the
 bus is carried out by a tail-recursive function that keeps track of
@@ -82,7 +82,7 @@ of arguments from the functions.
 \paragraph{Alternative layouting methods}
 \label{sec:altern-layo-meth}
 
-In hindsigt, the approach of drawing line-by-line is more complex than
+In hindsight, the approach of drawing line-by-line is more complex than
 drawing directly on a canvas. In the canvas-approach one can represent
 the canvas as a mapping $\mathbb{N} \times \mathbb{N} \to
 \texttt{Char}$. The canvas is then put inside a State-monad and one
@@ -106,7 +106,7 @@ advantages from ours:
   The same approach simplifies wire-drawing on the bus. We could
   simply query the canvas for the first place we could safely draw the
   wire and then lay it out in that place. Contrast this with our
-  approach where we need a seperate step of liveness analysis and
+  approach where we need a separate step of liveness analysis and
   afterwards a (rather crude) wire-allocation to make it work.
 \item It is vastly simpler. We estimate that you only need half the
   amount of lines to implement this approach. In addition each

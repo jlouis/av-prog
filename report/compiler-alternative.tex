@@ -4,10 +4,10 @@
 Late in the project, due to the problems with compiling the zeroCheck,
 we discovered a smarter compilation scheme of SEL to 2D. Recall, that
 the compiler introduced in Section \ref{compiler} works by recursively
-compiling subexpressions. However, a module in 2D has continuation
+compiling sub expressions. However, a module in 2D has continuation
 semantics. A use of a module define a continuation point where the
 program will continue once the program returns. Thus, one can
-CPS-transfrom SEL and output each part of the CPS transformed
+CPS-transform SEL and output each part of the CPS transformed
 program. It turns out this is surprisingly simple, though a
 disadvantage is the excessive use of modules.
 

@@ -68,7 +68,7 @@ was converted to a list keeping track of the free array segments. If
 no element is on the free-list, we create a new one. This cut memory
 usage down.
 
-However, the performance of the UM was still not satisfactionary, which
+However, the performance of the UM was still not satisfactory, which
 necessitated another iteration. The store was living inside the \texttt{Maybe}
 monad at this point to keep track of errors. This was first changed to the
 \texttt{IO} monad and errors was made fatal as in thread with the UM
