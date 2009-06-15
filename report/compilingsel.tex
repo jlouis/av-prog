@@ -13,7 +13,7 @@ interconnect two boxes, we just have to set the wire of one box to the
 wire of the other. We prune unneeded wires in the layout code later
 on.
 
-We compile each SEL function seperately into its own module. When
+We compile each SEL function separately into its own module. When
 compiling a SEL expression, we do it inside a state monad. The state
 in the monad tracks what the next free wire-number is, the currently
 operating environment, what wires have left the module and a list of
@@ -45,6 +45,8 @@ appropriate module.
 
 \paragraph{Compiling the zeroCheck}
 \label{sec:compiling-zerochk}
+
+Compiling the zeroCheck is rather straightforward. We link the check into a case box. The Inr case is then then linked to the first case's North side, ensuring that it is only executed if the value is unary zero (in this case the function called must take care to ensure that the input from the North is corrected), while the Inl case is inserted in the environment and then sent to the North side of the module calling the second expression.
 
 \fixme{Write this}
 \fixme{Change the code here as well}

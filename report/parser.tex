@@ -11,8 +11,7 @@ something better through the use of Monad transformers as described in
 errors that already have been found and eliminated in Parsec.
 
 \paragraph{Experiences with Parsec}
-Through our use of Parsec we have learned, that while it can be coaxed
-into parsing languages, it is not always entirely straightforward. A
+While parsec as a rule has been usable, there have still been areas that have given us a great deal of problems. A
 good example of this is when left recursion is required, where one
 needs to use the built-in expressionBuilder to solve the problem. More
 problematic were some of the errors we originally tried to implement
@@ -21,8 +20,7 @@ the parser for O'cult, which included the expression ``e ::= e e''.
 This lead to the problem where we could not parse such strings as
 ``Add S Z => S Z'', as the parser would fail on the ``=>'', no matter
 what we did. This, amongst other things, eventually lead us to abandon
-O'cult, and instead using an advanced version of the Simple Expression
-Language, that was described on the website.
+O'cult, and instead using an extended version of the SEL, which was described on the website.
 
 \paragraph{Grammar}
 The syntax of our language can be found in its native form in our
@@ -34,7 +32,7 @@ exp ::= zeroCont $\mid$ \bnf{z} $\mid$ succ $\mid$ parens op $\mid$ lookUp $\mid
 
 program ::= function $\mid$ function functions\\
 
-function ::= [a-zA-Z]+ \bnf{=>} constStart op\\
+function ::= name \bnf{=>} constStart op\\
 
 functions ::= \bnf{,} function functions $\mid$ $\epsilon$\\
 
@@ -42,13 +40,13 @@ constStart \bnf{[} consts \bnf{]}\\
 
 consts ::= const \bnf{,} consts $\mid$ $\epsilon$\\
 
-const ::= [a-zA-Z]+ \bnf{=} op\\
+const ::= name \bnf{=} op\\
 
 zeroCont ::= \bnf{zeroCheck} \bnf{(} expr \bnf{)} \bnf{\{} expr \bnf{\}} \bnf{else} \bnf{\{} expr \bnf{\}}\\
 
-call ::= Call [a-zA-Z] op\\
+call ::= \bnf{Call} name op\\
 
-lookUp ::= \bnf{Lookup} [a-zA-Z]\\
+lookUp ::= \bnf{Lookup} name\\
 
 op ::= expr sign op | expr\\
 
@@ -57,6 +55,16 @@ sign ::= \bnf{+} | \bnf{*}\\
 parens ::=\bnf{(} exp \bnf{)}\\
 
 succ ::= \bnf{s} op\\
+
+name ::= [a-zA-Z]+
+
+\paragraph{Interpreter}
+During the creation of the parser we wrote an interpreter in Haskell. We did this for the twofold purpose of 
+\begin{enumerate}
+\item Checking whether the parser parsed the language correctly
+\item Gain a better understanding on how to do to the various operations on unary values. This proved to be especially beneficial for multiplication. 
+\end{enumerate}
+Likewise we made an Abstract Syntax Tree (AST) printer, in order to check the result of both the final and intermediate stages. We likewise made a printer for the environment and the functions.
 
 %%% Local Variables: 
 %%% mode: latex
