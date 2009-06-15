@@ -7,11 +7,11 @@ the program. We have limited the creation of Variables to the start of
 a function, as well made the restriction that the user cannot change
 the value of the variables at runtime.
 
-In the current version the values are stored as a Abstract Syntax
-Tree, which have to be evaluated when they are needed. This means that
-the values not only can be constants, but it can also be plus and
-multiply expressions (and indeed contain other variables and function
-calls). The variables are stored in a simple list.
+In the current version the values are stored as a AST, which have to
+be evaluated when they are needed. This means that the values not only
+can be constants, but it can also be plus and multiply expressions
+(and indeed contain other variables and function calls). The variables
+are stored in a simple list.
 
 \paragraph{Function calls}
 We have expanded our language to allow the use of functions that can

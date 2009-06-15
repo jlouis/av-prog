@@ -13,7 +13,7 @@ interconnect two boxes, we just have to set the wire of one box to the
 wire of the other. We prune unneeded wires in the layout code later
 on.
 
-We compile each SEL function seperately into its own module. When
+We compile each SEL function separately into its own module. When
 compiling a SEL expression, we do it inside a state monad. The state
 in the monad tracks what the next free wire-number is, the currently
 operating environment, what wires have left the module and a list of
@@ -46,7 +46,10 @@ appropriate module.
 \paragraph{Compiling the zeroCheck}
 \label{sec:compiling-zerochk}
 
+Compiling the zeroCheck is rather straightforward. We link the check into a case box. The Inr case is then then linked to the first case's North side, ensuring that it is only executed if the value is unary zero (in this case the function called must take care to ensure that the input from the North is corrected), while the Inl case is inserted in the environment and then sent to the North side of the module calling the second expression.
+
 \fixme{Write this}
+\fixme{Change the code here as well}
 
 \paragraph{Compiling functions}
 \label{sec:compiling-functions}
@@ -65,7 +68,80 @@ of the monad.
 
 \fixme{Handling multiple outputs}
 
-%%% Local Variables: 
+\section{Compiler Alternative}
+\label{chap:compiler-alter}
+
+Late in the project, due to the problems with compiling the zeroCheck,
+we discovered a smarter compilation scheme of SEL to 2d. Note that
+a module in 2d has continuation semantics. A use of a module define a
+continuation point where the program will continue once the program
+returns. Thus, one can CPS-transfrom SEL and output each part of the
+CPS transformed program. It turns out this is surprisingly simple
+though it uses modules heavily.
+
+\begin{figure}
+  \begin{center}
+\begin{verbatim}
+,...................................,
+: zerocont3214                      :
+: *===============*                 :
+: !use "test3251" !                 :
+: *===============*                 :
+:        v                          :
+: *============*  *================*:
+: !case[N] E S !->!use "zcase3526" !-
+: *============*  *================*:
+:      	 |        *================*:
+:        +------->!use "scase6543" !-
+:                 *================*:
+,...................................,
+\end{verbatim}
+  \end{center}
+  \caption{Case compilation example}
+  \label{fig:2}
+\end{figure}
+
+As an example, consider the compilation of a zero control. In Figure
+\ref{fig:2}, we present the continuation-compilation of the zero
+control. The Monad we need for this contain a writer transformer so we
+can output modules as we go (\texttt{MonadState s (WriterT w m)}). The
+control is compiled as a hardcoded module where the values of the
+``uses'' can be replaced. The pseudocode for compilation is then:
+\begin{verbatim}
+compileE (ZCont test zcase scase) =
+  do
+    test_id <- compileE test
+    zcase_id <- compileE zcase
+    scase_id <- compileE scase
+    zerocont_id <- new
+    tell $ mkZerocont zerocont_id test_id zcase_id scase_id
+    return zerocont_id
+\end{verbatim}
+where the \texttt{mkZerocont} function outputs the hardcoded box with
+the identifiers substituted.
+
+We believe this compilation scheme is much easier to implement that
+the one we tried to implement. The key observation is that
+continuation passing style fits 2d directly. We believe that all other
+SEL-constructs are as easy to compile.
+
+Unfortunately time prevents us from implementing this idea even though
+we estimate it would take a couple of days at most. We also estimate
+that this can be done in less than 150 lines of code. Comparing this
+to our current implementation of above 1000 lines, this is a gain of
+considerable size.
+
+\paragraph{Optimization}
+\label{sec:optimization}
+
+In the above example, one does not even need to take care of 2d layout
+at all. One can simply output all the modules. Optimization is
+possible with a layouter however. One can easily implement an
+optimizer inlining modules if the module always returns to the same
+continuation. This optimization will reify as large modules as
+possible and is fairly easy to program.
+
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "master"
-%%% End: 
+%%% End:
