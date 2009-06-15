@@ -13,21 +13,11 @@ introducing errors that already have been found and eliminated in
 Parsec.
 
 \paragraph{Experiences with Parsec}
-Through our use of Parsec we have learned that while it can be coaxed
-into parsing languages, it is not always entirely
-straightforward. There have been areas that have given us a great deal
-of problems. A good example of this is when left recursion is
-required, where one needs to use the built-in expressionBuilder to
-solve the problem. More problematic were some of the errors we
-originally tried to implement the parser for O'cult, which included
-the expression ``e ::= e e''.
-
-This leads to the problem where we could not parse such strings as
-``Add S Z => S Z'', as the parser would fail on the ``=>'' operator,
-no matter what we did. This, amongst other things, eventually lead us
-to abandon O'cult, and instead use an extended version of the Simple
-Expression Language (SEL), that was described on the website.
-
+While parsec as a rule has been usable, there have still been areas that have given us a great deal of problems. A
+good example of this is when left recursion is required, where one
+needs to use the built-in expressionBuilder to solve the problem. More
+problematic were some of the errors we originally tried to implement
+the parser for O'cult, which included the expression ``e ::= e e''.\\
 
 \paragraph{Grammar}
 The syntax of our language can be found in its native form in our

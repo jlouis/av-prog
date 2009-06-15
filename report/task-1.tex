@@ -40,8 +40,8 @@ running the UM.
 
 The machine store underwent several iterations before the final version. We
 knew from the start the store was important, so we created a type
-class, \texttt{State}, for stores. The type class supports a simple
-set of values suitable for implementation of the register-to-memory
+class \texttt{State} for stores. The type class supports a simple
+set of values suitable sparse for implementation of the register-to-memory
 operations in the UM.
 
 Our first implementation was list-based in a peculiar way. We stored
@@ -59,9 +59,9 @@ bootstrapping \cite{okasaki+pfds} to provide two-dimensional arrays
 where the size of one dimension may differ in length. Each array
 element is a \texttt{Seq Word32} which is then wrapped up inside
 another \texttt{Seq}. A separate counter keeps track of the next
-allocation index. Sequences in Haskell are always indexed by signed
+allocation index for malloc. Sequences in Haskell are always indexed by signed
 integers. We convert to and from signed/unsigned integers using the
-\texttt{fromIntegral} converter.
+\texttt{fromIntegral} converter.\\
 
 The next iteration provided correct freeing of storage. The counter
 was converted to a list keeping track of the free array segments. If
@@ -121,6 +121,7 @@ changed to an implementation based on an unboxed array of size 8.
 \subsection*{Code layout}
 
 The code is written in Haskell and comprises a number of files:
+\fixme{code description for the other parts}
 \begin{description}
 \item[Decode.hs] The instruction decoder for the interpreter. Also
   contains the algebraic datatype for the instruction set
