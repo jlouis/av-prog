@@ -11,7 +11,8 @@ to compile into 2d code. The hard part is how to handle the boxes.
 Recall that a box contains wires in each direction, NESW. To
 interconnect two boxes, we just have to set the wire of one box to the
 wire of the other. We prune unneeded wires in the layout code later
-on.
+on. This means we construct a graph of boxes, and then render it with
+the layouter, described below.
 
 We compile each SEL function separately into its own module. When
 compiling a SEL expression, we do it inside a state monad. The state
@@ -46,10 +47,19 @@ appropriate module.
 \paragraph{Compiling the zeroCheck}
 \label{sec:compiling-zerochk}
 
-Compiling the zeroCheck is rather straightforward. We link the check into a case box. The Inr case is then then linked to the first case's North side, ensuring that it is only executed if the value is unary zero (in this case the function called must take care to ensure that the input from the North is corrected), while the Inl case is inserted in the environment and then sent to the North side of the module calling the second expression.
+Compiling the zeroCheck is not straightforward. We link the check
+into a case box. The Inr case is then then linked to the first case's
+North side, ensuring that it is only executed if the value is unary
+zero (in this case the function called must take care to ensure that
+the input from the North is corrected), while the Inl case is inserted
+in the environment and then sent to the North side of the module
+calling the second expression.
 
-\fixme{Write this}
-\fixme{Change the code here as well}
+The problem with this construction is that we have no way to merge
+multiple outputs into one. Our solution will not work in the general
+case and is inadequate. The problem of merging outputs in 2D is
+solvable by using multiple module outputs, but this requires another
+compilation strategy (see below).
 
 \paragraph{Compiling functions}
 \label{sec:compiling-functions}
@@ -66,7 +76,10 @@ splitting tuples. The wires with the input is gathered and when
 compiling expressions we keep these input wires in a list in the state
 of the monad.
 
-\fixme{Handling multiple outputs}
+For the outputs, we track the wires currently outputted from the
+module. This tracking is done with a list inside a state monad. Upon
+having created the module, we then know exactly what wires exit the
+module.
 
 
 %%% Local Variables:
