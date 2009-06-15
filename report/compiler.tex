@@ -1,12 +1,13 @@
-\fixme{Remind the reader where we are}At this point we need to make the actual 2d layout that will
-interpreted by the 2d interpreter. This is a nontrivial process,
-since the placement of each new command is nontrivially dependent on all the
-previous commands. Command boxes could
+At this point we need to make the actual 2d layout that will
+interpreted by the 2d interpreter. This is a non-trivial process,
+since the placement of each new command is dependent on all the
+previous commands, and not in a trivial way. Command boxes could
 overlap with each other or perhaps block already placed wires or
 arrows.
 
 \paragraph{Problems faced}
 \label{compiler:problems}
+\fixme{we had problems}
 
 \paragraph{Layout}
 \label{compiler:layout}
@@ -15,14 +16,13 @@ language, was making a layout system that would output a valid 2D program.
 
 \paragraph{Placement of wires}
 \label{compiler:placement}
-
 \fixme{Introduce our representation of 2d inside Haskell}
 
 \paragraph{Modules}
 \label{compiler:modules}
 In order to cut down on the needed work, we decided to encapsulate
 many of our functions in predefined modules. An example of this could
-be the multiplication operator, which we attempted to write manually,
+be the multiplication operator which we attempted to write manually,
 both to get a sense of how 2D worked, as well as optimizing our use of
 time until the layout system was up and running. Even though we had
 already specified much of the logic needed for unary multiplication,

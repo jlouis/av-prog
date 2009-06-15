@@ -1,20 +1,20 @@
 \subsection{Language features}
 
 \paragraph{Variables}
-We have added variables to our language, so that the user can specify
-any number of variables, which then can be looked up
-later in the program. We have limited the creation of Variables to the
-start of the function, as well made the restriction that the user
-cannot change the value of the variables at runtime.
+We have added variables to our language, so the user can specify any
+(reasonable) number of variables, which can then be looked up later in
+the program. We have limited the creation of Variables to the start of
+a function, as well made the restriction that the user cannot change
+the value of the variables at runtime.
 
-In the current version the values are stored as a AST, which have to be evaluated when they are needed. This means that
-the values not only can be constants, but it can also be plus and
-multiply expressions (and indeed contain other variables and function
-calls). The variables are stored in a list.
+In the current version the values are stored as a AST, which have to
+be evaluated when they are needed. This means that the values not only
+can be constants, but it can also be plus and multiply expressions
+(and indeed contain other variables and function calls). The variables
+are stored in a simple list.
 
 \paragraph{Function calls}
-
-We have expanded our language to allow the use of functions, that can
+We have expanded our language to allow the use of functions that can
 be called from anywhere in the code. Like variables, the functions are
 stored in a list, which is searched through each time there is a
 function call. A function takes exactly one input, and returns exactly
@@ -23,27 +23,53 @@ one output.
 \paragraph{ZeroControl}
 We have implemented flow control in our language in the form of a
 zeroCont. Given a condition and 2 expressions, zeroCont first checks
-whether the condition is zero or the successor of some k. If the
-condition evaluates to zero then the first expression is executed. If
-the condition is the successor of some k, then the second expression
-is evaluated - with a new variable list, where the value of k (under
-the variable name ``k'') has been added as the first element in the
-variable list.
+whether the condition is zero or the successor of some $k$. If the
+condition evaluates to zero the first expression is executed. If the
+condition is the successor of some $k$ the second expression is
+evaluated - with a new variable list, where the value of $k$ has been
+added as the first element in the variable list (under the variable
+name ``k'').
 
 \paragraph{Expressiveness of the language}
 Our language is expressive enough to describe the factorial function,
-since we can call functions recursively, has flow control, as well as
+since we can call functions recursively, have flow control, as well as
 basic arithmetic operations such as multiply.
 
 \paragraph{Possible further expansions}
-If the language had to be expanded further, to allow it to calculate
-more elaborate functions. We would first start by allowing variables
-being added in the code itself, and not only at the start of the
-function. Furthermore it would be wise to allow functions to take
+If the language had to be further expanded, to allow it to calculate
+more elaborate functions, we would first start by allowing variables
+being added in the code itself (and not only at the start of the
+function). Furthermore it would be wise to allow functions to take
 multiple arguments, since it would both increase the scope of what
-could be computed, as well as the ease of which some (already
-computable things) can be written. However, in doing so one should
-keep in mind the limitations of 2d.
+could be calculated by the program, but also the convenience - though
+this should be tempered by the need to be able to compile it to
+2d.
+%\fixme{I don't understand this sentence}
+
+
+\subsection{SEL Interpreter}
+\fixme{Find a place to write that we implemented an interpreter}
+In order to test the SEL parser we implemented an SEL interpreter
+that interprets the AST returned by the parser. This is implemented
+in the function \texttt{eval} that given an AST together with an
+environment, evaluates and returns the result.
+
+\begin{samepage}
+  \begin{exmp}
+    The AST representing the faculty function applied to $3$:
+\begin{verbatim}
+  Main => [] (Call Fact (s s s z)),
+  Fact => [] (zeroCheck(Lookup input) {(s z)}
+               else {(Lookup input) * (Call Fact (Lookup k))}
+\end{verbatim}
+    Evaluates to:
+\begin{verbatim}
+  (s s s s s s z)
+\end{verbatim}
+    Showing that the factulty of $3$ evaluates to $6$ (as expected).
+  \end{exmp}
+\end{samepage}
+
 
 %%% Local Variables:
 %%% mode: latex

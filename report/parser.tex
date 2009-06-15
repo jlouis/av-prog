@@ -1,3 +1,4 @@
+\label{parser}
 In order to translate the code into 2d, we must first parse the Simple
 Expression Language (SEL) and turn it into an abstract syntax
 tree. This will be done in an independent module in order to maximize
@@ -7,20 +8,26 @@ the modularity of the code.
 Due to its age and stability we have chosen to use the Parsec Haskell
 module to write our Parser. Even though it might be possible to create
 something better through the use of Monad transformers as described in
-\cite{partial+parsing}, this might a long time, as well as introducing
-errors that already have been found and eliminated in Parsec.
+\cite{partial+parsing}, this might take a long time, as well as
+introducing errors that already have been found and eliminated in
+Parsec.
 
 \paragraph{Experiences with Parsec}
-While parsec as a rule has been usable, there have still been areas that have given us a great deal of problems. A
-good example of this is when left recursion is required, where one
-needs to use the built-in expressionBuilder to solve the problem. More
-problematic were some of the errors we originally tried to implement
-the parser for O'cult, which included the expression ``e ::= e e''.
+Through our use of Parsec we have learned that while it can be coaxed
+into parsing languages, it is not always entirely
+straightforward. There have been areas that have given us a great deal
+of problems. A good example of this is when left recursion is
+required, where one needs to use the built-in expressionBuilder to
+solve the problem. More problematic were some of the errors we
+originally tried to implement the parser for O'cult, which included
+the expression ``e ::= e e''.
 
-This lead to the problem where we could not parse such strings as
-``Add S Z => S Z'', as the parser would fail on the ``=>'', no matter
-what we did. This, amongst other things, eventually lead us to abandon
-O'cult, and instead using an extended version of the SEL, which was described on the website.
+This leads to the problem where we could not parse such strings as
+``Add S Z => S Z'', as the parser would fail on the ``=>'' operator,
+no matter what we did. This, amongst other things, eventually lead us
+to abandon O'cult, and instead use an extended version of the Simple
+Expression Language (SEL), that was described on the website.
+
 
 \paragraph{Grammar}
 The syntax of our language can be found in its native form in our
@@ -28,7 +35,7 @@ Parse.hs file. However, for completeness we have included it here. In
 the following text written like \bnf{so} is terminating, while
 everything else is not:\\
 
-exp ::= zeroCont $\mid$ \bnf{z} $\mid$ succ $\mid$ parens op $\mid$ lookUp $\mid$ call $\mid$ op\\
+expr ::= zeroCont $\mid$ \bnf{z} $\mid$ succ $\mid$ parens op $\mid$ lookUp $\mid$ call $\mid$ op\\
 
 program ::= function $\mid$ function functions\\
 
@@ -52,10 +59,13 @@ op ::= expr sign op | expr\\
 
 sign ::= \bnf{+} | \bnf{*}\\
 
-parens ::=\bnf{(} exp \bnf{)}\\
+parens ::=\bnf{(} expr \bnf{)}\\
 
 succ ::= \bnf{s} op\\
 
+<<<<<<< HEAD:report/parser.tex
+%%% Local Variables:
+=======
 name ::= [a-zA-Z]+
 
 \paragraph{Interpreter}
@@ -67,6 +77,7 @@ During the creation of the parser we wrote an interpreter in Haskell. We did thi
 Likewise we made an Abstract Syntax Tree (AST) printer, in order to check the result of both the final and intermediate stages. We likewise made a printer for the environment and the functions.
 
 %%% Local Variables: 
+>>>>>>> 60a9e451869350685dff11cf11acf8dc7427c4da:report/parser.tex
 %%% mode: latex
 %%% TeX-master: "master"
-%%% End: 
+%%% End:
