@@ -7,16 +7,16 @@ for each function. Each graph is compiled into a module and these are
 gathered together for output.
 
 The layout-process can best be described as a series of phases where
-each phase make the representation more explicit. Finally, we have so
-much information we can print out the layout, one line at a time.
+each phase make the representation more explicit. Finally, we have
+enough information to print the layout, one line at a time.
 
 The input-graph is first made explicit: We note the source and target
 of each wire, taking special care of wires that enters or leaves the
 module. The graph is then represented as a list of boxes, which we run
-topological sort on. The sorted boxes are ordered from left to right
-inside the module with the wiring underneath boxes (we call this part
-the bus). Effectively this means we save space and can represent any
-box configuration allowed for in 2d by linearization.
+topological sort on. The sorted boxes are layed out from left to
+right, inside the module, with the wiring underneath them (we call
+this part the bus). Effectively this means we save space and can
+represent any box configuration allowed for in 2d by linearization.
 
 Next, we prune all wires with no endpoint. This decision allows us to
 simplify the code generator, as it can just let wires dangle rather
@@ -29,11 +29,9 @@ safely -- without colliding with other wires in invalid ways.
 After this, we can output each box-section individually as we have
 full knowledge of which wires are entering and leaving the box and
 what wires are passed through on the bus below the boxes. An example
-of this wiring principle is given in figure \ref{fig:1}
+of this wiring principle is given in Figure \ref{fig:1}.
 \begin{figure}
-  \centering
-
-  \begin{center}
+\begin{quote}
 \begin{verbatim}
        &                               &
        &                               &
@@ -56,7 +54,7 @@ of this wiring principle is given in figure \ref{fig:1}
        &                               &
        &                               &
 \end{verbatim}
-  \end{center}
+  \end{quote}
   \caption{Box layout example}\label{fig:1}
 \end{figure}
 
@@ -120,7 +118,7 @@ Finally, the approach would be a much better fit for a monad, which we
 acknowledge was part of the idea in this course.
 
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "master"
-%%% End: 
+%%% End:
