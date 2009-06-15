@@ -15,7 +15,7 @@ While parsec as a rule has been usable, there have still been areas that have gi
 good example of this is when left recursion is required, where one
 needs to use the built-in expressionBuilder to solve the problem. More
 problematic were some of the errors we originally tried to implement
-the parser for O'cult, which included the expression ``e ::= e e''.
+the parser for O'cult, which included the expression ``e ::= e e''.\\
 
 This lead to the problem where we could not parse such strings as
 ``Add S Z => S Z'', as the parser would fail on the ``=>'', no matter
