@@ -5,6 +5,7 @@ module Simple.Ast (Ast(..), EnvValue(..), ConstValue(..), FuncEnvValue(..), Func
 where
 
 import Data.List
+import Data.Monoid
 
 -- Syntax of the small language
 data Ast = Zero | Succ Ast
@@ -82,6 +83,8 @@ astPrint str (Mul e1 e2) = str ++ r1 ++ " * " ++ r2 where
     r1 = astPrint "" e1;
     r2 = astPrint "" e2
 astPrint str (Lookup id) = str ++ "Lookup: " ++ id
+astPrint str (Call fnk ast)  = str ++ "Call " ++ fnk ++ "( " ++
+                               (astPrint "" ast) ++ " )"
 
 envPrint :: String -> EnvValue -> String
 envPrint _ EnvEnd = "End; "
