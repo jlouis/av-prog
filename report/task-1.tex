@@ -118,21 +118,6 @@ array containing 8 slots. In the course of the development, and with
 the advent of the \texttt{IO} monad in the interpreter loop, it was
 changed to an implementation based on an unboxed array of size 8.
 
-\subsection*{Code layout}
-
-The code is written in Haskell and comprises a number of files:
-\fixme{code description for the other parts}
-\begin{description}
-\item[Decode.hs] The instruction decoder for the interpreter. Also
-  contains the algebraic datatype for the instruction set
-\item[Interpreter.hs] The interpreter step-loop and its helpers
-\item[Main.hs] Main function and execution
-\item[Register.hs] Implementation of the register set
-\item[SequenceState.hs] Instances of the \texttt{State} typeclass
-  implementing the Store
-\item[State.hs] The type class of \texttt{State}, the class of UM stores.
-\item[UmixVM] The converter from byte streams to opcode streams.
-\end{description}
 \subsection*{Program Usage}
 
 To build the program, we use:

@@ -1,0 +1,55 @@
+
+%\subsection{Code layout}
+
+\subsection{UM Interpreter}
+This section describes the files used in the UM interpreter:
+\begin{description}
+\item[Decode.hs] The instruction decoder for the interpreter. Also
+  contains the algebraic datatype for the instruction set
+\item[Interpreter.hs] The interpreter step-loop and its helpers
+\item[Register.hs] Implementation of the register set
+\item[SequenceState.hs] Instances of the \texttt{State} typeclass
+  implementing the Store
+\item[State.hs] The type class of \texttt{State}, the class of UM stores
+\item[UmixVM] The converter from byte streams to opcode streams
+\item[UM/Main.hs] Main function and execution
+\end{description}
+
+\subsection{SEL Parser and Interpreter}
+This section describes the files used by the SEL Parser:
+\begin{description}
+\item[Simple/Ast.hs]    Algebraic datatypes for the language
+\item[Simple/AstApp.hs] Evaluation and pretty printing of the AST
+\item[Simple/Main.hs]   Main function
+\item[Simple/Parse.hs]  SEL Parser using Parsec
+\end{description}
+
+\subsection{TwoDee}
+This section describes the files used by the Twodee compiler and layouter:
+\begin{description}
+\item[SimpleCC.hs]   Convert SEL AST to Twodee AST
+\item[Twodee/Ast.hs] Algebraic datatype for the Twodee language
+\item[Twodee/AstRender.hs] Renderer for the AST
+\item[Twodee/AstExplicit.hs] Functions to pull off abstraction levels
+  from the AST
+\item[Twodee/Layout.hs] Functions to layout an explicit AST
+\item[Twodee/Main.hs] Main function
+\end{description}
+
+
+\subsection{Occult}
+This section describes the files produced while working on Ocult:
+\begin{description}
+\item[Compiler.hs]   Partial compiler from Ocult to Twodee
+\item[Ocult/Ast.hs]  Algebraic datatype for the language
+\item[Ocult/Main.hs] Main function
+\item[Ocult/OcultParser.hs] Partial Ocult parser
+\end{description}
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "master"
+%%% End:
