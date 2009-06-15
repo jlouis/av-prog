@@ -93,7 +93,7 @@ well as querying the current state of the canvas. These combinators
 would work on the monad.
 
 Each thing you need to draw is then written in the combinator-language
-giving an abstraction of 2d layouting. This approach has 2 distinct
+giving an abstraction of 2d layouting. This approach has three distinct
 advantages from ours:
 \begin{itemize}
 \item It is modular. Each drawing primitive can act independently of
@@ -110,6 +110,11 @@ advantages from ours:
   wire and then lay it out in that place. Contrast this with our
   approach where we need a seperate step of liveness analysis and
   afterwards a (rather crude) wire-allocation to make it work.
+\item It is vastly simpler. We estimate that you only need half the
+  amount of lines to implement this approach. In addition each
+  function you need is simpler. Also, due to the closure of the
+  combinator language, it is less error-prone: as soon as the
+  combinators are error-free, it affects many functions.
 \end{itemize}
 Finally, the approach would be a much better fit for a monad, which we
 acknowledge was part of the idea in this course.
