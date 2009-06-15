@@ -63,21 +63,22 @@ parens ::=\bnf{(} expr \bnf{)}\\
 
 succ ::= \bnf{s} op\\
 
-<<<<<<< HEAD:report/parser.tex
-%%% Local Variables:
-=======
 name ::= [a-zA-Z]+
 
 \paragraph{Interpreter}
-During the creation of the parser we wrote an interpreter in Haskell. We did this for the twofold purpose of 
+During the creation of the parser we wrote an interpreter in
+Haskell. We did this for the twofold purpose of
 \begin{enumerate}
 \item Checking whether the parser parsed the language correctly
-\item Gain a better understanding on how to do to the various operations on unary values. This proved to be especially beneficial for multiplication. 
+\item Gain a better understanding on how to do to the various
+  operations on unary values. This proved to be especially beneficial
+  for multiplication.
 \end{enumerate}
-Likewise we made an Abstract Syntax Tree (AST) printer, in order to check the result of both the final and intermediate stages. We likewise made a printer for the environment and the functions.
+Likewise we made an Abstract Syntax Tree (AST) printer, in order to
+check the result of both the final and intermediate stages. We
+likewise made a printer for the environment and the functions.
 
-%%% Local Variables: 
->>>>>>> 60a9e451869350685dff11cf11acf8dc7427c4da:report/parser.tex
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "master"
 %%% End:
