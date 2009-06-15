@@ -8,22 +8,24 @@ numbers in 2d and then we use boxes of 2d to represent SEL programs in
 2d. We begin by noting that most of our operations are straightforward
 to compile into 2d code. The hard part is how to handle the boxes.
 
-Recall that a box contains wires in each direction, NESW. To
+We let a box be a command and a set of wires, one for each direction
+NESW. When creating a box, we just create 4 wires for the box. To
 interconnect two boxes, we just have to set the wire of one box to the
 wire of the other. We prune unneeded wires in the layout code later
 on. This means we construct a graph of boxes, and then render it with
 the layouter, described below.
 
-We compile each SEL function separately into its own module. When
-compiling a SEL expression, we do it inside a state monad. The state
-in the monad tracks what the next free wire-number is, the currently
-operating environment, what wires have left the module and a list of
-input wires. The monad allows us to quickly create new wires and
-eliminates the need for passing around a large amount of boring
-information. We note that some of this information is deemed static
-and as such the state monad could have been wrapped in a reader
-transformer. But it was seen as too complicated for a problem this
-simple.
+Compiling SEL to 2d requires us to construct the right boxes and wire
+them together in the correct way. We compile each SEL function
+separately into its own module. When compiling a SEL expression, we do
+it inside a state monad. The state in the monad tracks what the next
+free wire-number is, the currently operating environment, what wires
+have left the module and a list of input wires. The monad allows us to
+quickly create new wires and eliminates the need for passing around a
+large amount of boring information. We note that some of this
+information is deemed static and as such the state monad could have
+been wrapped in a reader transformer. But it was seen as too
+complicated for a problem this simple.
 
 A set of helper functions allows us to join boxes together in groups
 in various ways. When we join the boxes into groups, we identify a
